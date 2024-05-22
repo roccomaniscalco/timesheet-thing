@@ -1,21 +1,19 @@
 import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-} from "@tanstack/react-query";
-import { hc } from "hono/client";
-import { useState } from "react";
-import type { ApiType } from "../functions/api/[[route]]";
-import {
   ClerkProvider,
   SignInButton,
   SignedIn,
   SignedOut,
   UserButton,
-  useUser,
 } from "@clerk/clerk-react";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from "@tanstack/react-query";
+import { hc } from "hono/client";
+import type { ApiType } from "../functions/api/[[route]]";
 
-const api = hc<ApiType>("/").api;
+const { api } = hc<ApiType>("/");
 const queryClient = new QueryClient();
 
 export default function App() {
@@ -23,8 +21,9 @@ export default function App() {
     <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY!}>
       <QueryClientProvider client={queryClient}>
         <Header />
-        <Hello />
-        <Timesheets />
+        <SignedIn>
+          <Timesheets />
+        </SignedIn>
       </QueryClientProvider>
     </ClerkProvider>
   );
@@ -43,32 +42,19 @@ function Header() {
   );
 }
 
-function Hello() {
-  const [name, setName] = useState("world");
-  const user = useUser();
-  console.log(user);
-
-  const helloQuery = useQuery({
-    queryKey: ["hello", name],
-    queryFn: () =>
-      api.hello.$get({ query: { name } }).then((res) => res.json()),
-    placeholderData: (previousData) => previousData,
-  });
-
-  return (
-    <div>
-      <h1 style={{ opacity: helloQuery.isPlaceholderData ? 0.5 : 1 }}>
-        {helloQuery.data?.message}
-      </h1>
-      <input value={name} onChange={(e) => setName(e.target.value)} />
-    </div>
-  );
-}
-
 function Timesheets() {
   const { data: timesheets } = useQuery({
     queryKey: ["timesheets"],
-    queryFn: () => api.timesheets.$get().then((res) => res.json()),
+    queryFn: async () => {
+      const res = await api.timesheets.$get();
+      if (!res.ok) {
+        console.log(res.status);
+        console.log(res.statusText);
+        console.log(await res.json());
+        throw new Error("Failed to fetch timesheets");
+      }
+      return res.json();
+    },
   });
 
   return (

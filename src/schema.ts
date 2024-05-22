@@ -16,7 +16,7 @@ export const managers = pgTable(
     clerkId: varchar("clerk_id").notNull(),
   },
   (table) => ({
-    clerkIdIdx: uniqueIndex("clerk_id_idx").on(table.clerkId),
+    clerkIdIdx: uniqueIndex("managers_clerk_id_idx").on(table.clerkId),
   })
 );
 
@@ -29,7 +29,7 @@ export const contractors = pgTable(
     approvedHours: integer("approved_hours").notNull().default(0),
   },
   (table) => ({
-    clerkIdIdx: uniqueIndex("clerk_id_idx").on(table.clerkId),
+    clerkIdIdx: uniqueIndex("contractors_clerk_id_idx").on(table.clerkId),
   })
 );
 
