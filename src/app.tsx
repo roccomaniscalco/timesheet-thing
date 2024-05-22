@@ -1,12 +1,11 @@
-import { useState } from "react";
-import type { ApiType } from "../functions/api/[[route]]";
-import { hc } from "hono/client";
 import {
   QueryClient,
   QueryClientProvider,
-  useMutation,
   useQuery,
 } from "@tanstack/react-query";
+import { hc } from "hono/client";
+import { useState } from "react";
+import type { ApiType } from "../functions/api/[[route]]";
 
 const api = hc<ApiType>("/").api;
 const queryClient = new QueryClient();
@@ -15,7 +14,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Hello />
-      <Sum />
+      <Timesheets />
     </QueryClientProvider>
   );
 }
@@ -40,23 +39,22 @@ function Hello() {
   );
 }
 
-function Sum() {
-  const [a, setA] = useState(0);
-  const [b, setB] = useState(0);
-
-  const sumMutation = useMutation({
-    mutationKey: ["sum"],
-    mutationFn: (data: { a: number; b: number }) =>
-      api.sum.$post({ json: data }).then((res) => res.json()),
+function Timesheets() {
+  const { data: timesheets } = useQuery({
+    queryKey: ["timesheets"],
+    queryFn: () => api.timesheets.$get().then((res) => res.json()),
   });
 
   return (
     <div>
-      <h1>Sum: {sumMutation.data?.sum}</h1>
-      <input value={a} onChange={(e) => setA(Number(e.target.value))} />
-      {" "}+{" "}
-      <input value={b} onChange={(e) => setB(Number(e.target.value))} />
-      <button onClick={() => sumMutation.mutate({ a, b })}>Calculate</button>
+      <h2>Timesheets</h2>
+      <ul>
+        {timesheets?.map((timesheet) => (
+          <li key={timesheet.id}>
+            {timesheet.weekOf}
+          </li>
+        ))}
+      </ul>
     </div>
-  );
+  )
 }
