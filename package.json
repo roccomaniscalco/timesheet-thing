@@ -1,11 +1,11 @@
 {
-  "name": "react-hono",
+  "name": "timesheet-thing",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "wrangler pages dev --compatibility-date=2023-02-05 -- pnpm vite",
+    "dev": "wrangler pages dev --proxy=5173 -- vite",
     "build": "vite build",
-    "wrangle": "pnpm build && wrangler pages deploy pages"
+    "ship": "pnpm build && wrangler pages deploy dist"
   },
   "license": "MIT",
   "devDependencies": {
