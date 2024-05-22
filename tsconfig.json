@@ -12,12 +12,14 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    /* React */
-    "jsx": "react-jsx",
-    /* If NOT transpiling with TypeScript: */
+    /* NOT transpiling with typescript (Vite handles transpiling) */
     "module": "preserve",
     "noEmit": true,
-    /* If your code doesn't run in the DOM: */
-    "lib": ["es2022", "dom", "dom.iterable"]
+    /* Dom */
+    "lib": ["es2022", "dom", "dom.iterable"],
+    /* React */
+    "jsx": "react-jsx",
+    /* Vite */
+    "types": ["vite/client"]
   }
 }
