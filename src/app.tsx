@@ -6,21 +6,47 @@ import {
 import { hc } from "hono/client";
 import { useState } from "react";
 import type { ApiType } from "../functions/api/[[route]]";
+import {
+  ClerkProvider,
+  SignInButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+  useUser,
+} from "@clerk/clerk-react";
 
 const api = hc<ApiType>("/").api;
 const queryClient = new QueryClient();
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Hello />
-      <Timesheets />
-    </QueryClientProvider>
+    <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY!}>
+      <QueryClientProvider client={queryClient}>
+        <Header />
+        <Hello />
+        <Timesheets />
+      </QueryClientProvider>
+    </ClerkProvider>
+  );
+}
+
+function Header() {
+  return (
+    <header>
+      <SignedOut>
+        <SignInButton />
+      </SignedOut>
+      <SignedIn>
+        <UserButton />
+      </SignedIn>
+    </header>
   );
 }
 
 function Hello() {
   const [name, setName] = useState("world");
+  const user = useUser();
+  console.log(user);
 
   const helloQuery = useQuery({
     queryKey: ["hello", name],
@@ -50,11 +76,9 @@ function Timesheets() {
       <h2>Timesheets</h2>
       <ul>
         {timesheets?.map((timesheet) => (
-          <li key={timesheet.id}>
-            {timesheet.weekOf}
-          </li>
+          <li key={timesheet.id}>{timesheet.weekOf}</li>
         ))}
       </ul>
     </div>
-  )
+  );
 }
