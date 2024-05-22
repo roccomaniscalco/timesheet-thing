@@ -29,7 +29,7 @@ const api = new Hono<{ Bindings: Bindings; Variables: Variables }>()
     });
   })
   .get("/timesheets", async (c) => {
-    const timesheets = await c.var.db.query.timesheetTable.findMany();
+    const timesheets = await c.var.db.query.timesheets.findMany();
     return c.json(timesheets);
   });
 
