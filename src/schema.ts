@@ -1,3 +1,4 @@
+import { STATUS, WEEK_DAY } from "@/constants";
 import {
   date,
   decimal,
@@ -33,31 +34,18 @@ export const contractors = pgTable(
   })
 );
 
-export const status = pgEnum("status", [
-  "draft",
-  "submitted",
-  "approved",
-  "rejected",
-]);
+export const status = pgEnum("status", STATUS);
 
 export const timesheets = pgTable("timesheets", {
   id: serial("id").primaryKey(),
-  weekOf: date("date"),
+  weekStart: date("week_start"),
   status: status("status").notNull(),
   contractorId: integer("contractor_id").references(() => contractors.id),
 });
 
-export const weekDay = pgEnum("week_day", [
-  "mon",
-  "tue",
-  "wed",
-  "thu",
-  "fri",
-  "sat",
-  "sun",
-]);
+export const weekDay = pgEnum("week_day", WEEK_DAY);
 
-export const tasks = pgTable("task", {
+export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
   weekDay: weekDay("week_day").notNull(),
   name: varchar("name"),

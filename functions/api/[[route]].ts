@@ -5,6 +5,7 @@ import { Hono, type Env } from "hono";
 import { handle } from "hono/cloudflare-pages";
 import { createMiddleware } from "hono/factory";
 import * as schema from "@/schema";
+import { eq, sql, sum } from "drizzle-orm";
 
 type Bindings = {
   DATABASE_URL: string;
@@ -46,9 +47,21 @@ const contractor = new Hono<Options>()
     });
     if (!contractor) return c.json({ message: "Forbidden" }, 403);
 
-    const timesheets = await c.var.db.query.timesheets.findMany({
-      where: (timesheets, { eq }) => eq(timesheets.contractorId, 1),
-    });
+    const timesheets = await c.var.db
+      .select({
+        id: schema.timesheets.id,
+        status: schema.timesheets.status,
+        weekStart: schema.timesheets.weekStart,
+        totalHours: sql<number>`coalesce(sum(${schema.tasks.hours}), 0)`.mapWith(Number),
+        contractorId: schema.timesheets.contractorId,
+      })
+      .from(schema.tasks)
+      .where(eq(schema.timesheets.contractorId, contractor.id))
+      .groupBy(schema.timesheets.id)
+      .rightJoin(
+        schema.timesheets,
+        eq(schema.timesheets.id, schema.tasks.timesheetId)
+      );
     return c.json(timesheets, 200);
   })
   .post("/timesheet", async (c) => {
