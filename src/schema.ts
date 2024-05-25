@@ -42,7 +42,7 @@ export const status = pgEnum("status", [
 
 export const timesheets = pgTable("timesheets", {
   id: serial("id").primaryKey(),
-  weekOf: date("date").notNull(),
+  weekOf: date("date"),
   status: status("status").notNull(),
   contractorId: integer("contractor_id").references(() => contractors.id),
 });

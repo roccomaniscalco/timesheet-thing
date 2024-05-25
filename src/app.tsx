@@ -8,10 +8,12 @@ import {
 import {
   QueryClient,
   QueryClientProvider,
+  useMutation,
   useQuery,
 } from "@tanstack/react-query";
 import { hc } from "hono/client";
 import type { ApiType } from "../functions/api/[[route]]";
+import { Button } from "@/components/ui/button";
 
 const { api } = hc<ApiType>("/");
 const queryClient = new QueryClient();
@@ -43,18 +45,22 @@ function Header() {
 }
 
 function Timesheets() {
-  const { data: timesheets } = useQuery({
-    queryKey: ["timesheets"],
+  const { data: timesheets, error } = useQuery({
+    queryKey: ["get-timesheets"],
     queryFn: async () => {
-      const res = await api.timesheets.$get();
-      if (!res.ok) {
-        console.log(res.status);
-        console.log(res.statusText);
-        console.log(await res.json());
-        throw new Error("Failed to fetch timesheets");
-      }
-      return res.json();
+      const res = await api.contractor.timesheets.$get();
+      if (res.ok) return res.json();
     },
+  });
+
+  const { mutate: createTImesheet } = useMutation({
+    mutationKey: ["create-timesheet"],
+    mutationFn: async () => {
+      const res = await api.contractor.timesheet.$post();
+      if (res.ok) return res.json();
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["get-timesheets"] }),
   });
 
   return (
@@ -62,9 +68,10 @@ function Timesheets() {
       <h2>Timesheets</h2>
       <ul>
         {timesheets?.map((timesheet) => (
-          <li key={timesheet.id}>{timesheet.weekOf}</li>
+          <li key={timesheet.id}>{timesheet.id}</li>
         ))}
       </ul>
+      <Button onClick={() => createTImesheet()}> create timesheet</Button>
     </div>
   );
 }

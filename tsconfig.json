@@ -20,6 +20,13 @@
     /* React */
     "jsx": "react-jsx",
     /* Vite */
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    /* Path Resolution */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
   }
 }
