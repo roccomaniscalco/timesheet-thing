@@ -41,7 +41,7 @@ export const timesheets = pgTable("timesheets", {
   id: serial("id").primaryKey(),
   slug: varchar("slug").$defaultFn(() => generateSlug()).notNull(),
   status: status("status").notNull(),
-  weekStart: date("week_start"),
+  weekStart: date("week_start").unique(),
   contractorId: integer("contractor_id").references(() => contractors.id),
 });
 
