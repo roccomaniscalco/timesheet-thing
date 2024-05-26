@@ -6,6 +6,7 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/clerk-react";
+import { ArrowPathIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { useMutation } from "@tanstack/react-query";
 import { Outlet, createRootRoute, useNavigate } from "@tanstack/react-router";
 import { hc } from "hono/client";
@@ -48,26 +49,33 @@ function Header() {
 
 function NewTimesheetButton() {
   const navigate = useNavigate();
-  const { mutate: createTimesheet } = useMutation({
-    mutationKey: ["create-timesheet"],
-    mutationFn: async () => {
-      const res = await api.contractor.timesheet.$post();
-      if (!res.ok) throw new Error("Failed to create timesheet");
-      const data = await res.json();
-      return data;
-    },
-    onSuccess: (data) => {
-      console.log(data);
-      navigate({
-        to: "/timesheets/$id",
-        params: { id: String(data.id) },
-      });
-    },
-  });
+  const { mutate: createTimesheet, isPending: isCreatingTimesheet } =
+    useMutation({
+      mutationKey: ["create-timesheet"],
+      mutationFn: async () => {
+        const res = await api.contractor.timesheet.$post();
+        if (!res.ok) throw new Error("Failed to create timesheet");
+        const data = await res.json();
+        return data;
+      },
+      onSuccess: (data) => {
+        console.log(data);
+        navigate({
+          to: "/timesheets/$id",
+          params: { id: String(data.id) },
+        });
+      },
+    });
 
   return (
-    <Button size="sm" onClick={() => createTimesheet()}>
+    <Button
+      disabled={isCreatingTimesheet}
+      className="flex gap-2"
+      size="sm"
+      onClick={() => createTimesheet()}
+    >
       New Timesheet
+      <PlusIcon className="w-4 h-4" />
     </Button>
   );
 }
