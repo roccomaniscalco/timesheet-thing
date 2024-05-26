@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { StatusBadge } from "@/components/status-badge";
 import {
   ClerkProvider,
   SignedIn,
