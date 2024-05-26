@@ -12,12 +12,18 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
+import { Route as TimesheetsIndexImport } from './routes/timesheets.index'
 import { Route as TimesheetsIdImport } from './routes/timesheets.$id'
 
 // Create/Update Routes
 
 const IndexRoute = IndexImport.update({
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const TimesheetsIndexRoute = TimesheetsIndexImport.update({
+  path: '/timesheets/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -44,6 +50,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TimesheetsIdImport
       parentRoute: typeof rootRoute
     }
+    '/timesheets/': {
+      id: '/timesheets/'
+      path: '/timesheets'
+      fullPath: '/timesheets'
+      preLoaderRoute: typeof TimesheetsIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -52,6 +65,7 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren({
   IndexRoute,
   TimesheetsIdRoute,
+  TimesheetsIndexRoute,
 })
 
 /* prettier-ignore-end */
@@ -63,7 +77,8 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/timesheets/$id"
+        "/timesheets/$id",
+        "/timesheets/"
       ]
     },
     "/": {
@@ -71,6 +86,9 @@ export const routeTree = rootRoute.addChildren({
     },
     "/timesheets/$id": {
       "filePath": "timesheets.$id.tsx"
+    },
+    "/timesheets/": {
+      "filePath": "timesheets.index.tsx"
     }
   }
 }

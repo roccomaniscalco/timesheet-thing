@@ -4,7 +4,7 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { hc } from "hono/client";
 
 export const Route = createFileRoute("/timesheets/$id")({
-  component: () => <Timesheet />,
+  component: Timesheet,
 });
 
 const { api } = hc<ApiType>("/");

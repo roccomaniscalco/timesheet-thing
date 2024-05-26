@@ -6,7 +6,7 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/clerk-react";
-import { ArrowPathIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { PlusIcon } from "@heroicons/react/16/solid";
 import { useMutation } from "@tanstack/react-query";
 import { Outlet, createRootRoute, useNavigate } from "@tanstack/react-router";
 import { hc } from "hono/client";
