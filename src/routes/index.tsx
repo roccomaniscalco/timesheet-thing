@@ -1,10 +1,11 @@
 import { StatusBadge } from "@/components/status-badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/components/utils";
 import type { ApiType } from "@/server/api";
 import { ClockIcon } from "@heroicons/react/16/solid";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { hc, type InferResponseType } from "hono/client";
 
 const { api } = hc<ApiType>("/");
@@ -68,22 +69,24 @@ function TimesheetCard(props: TimesheetCardProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="truncate">
-          {props.weekStart ? getWeekRange(props.weekStart) : "Undated"}
-        </CardTitle>
-        <div className="text-sm text-secondary-foreground">{props.slug}</div>
-      </CardHeader>
-      <CardContent className="grid gap-2">
-        <div className="flex items-center justify-between">
-          <StatusBadge status={props.status} />
-          <div className="flex items-center gap-2 border-none p-0">
-            <ClockIcon className="w-4 h-4" />
-            {props.totalHours}h
+    <Link className="group outline-none" to="/timesheets/$id" params={{ id: String(props.id) }}>
+      <Card className="group-focus:ring-1 ring-ring outline-none">
+        <CardHeader>
+          <CardTitle className="truncate">
+            {props.weekStart ? getWeekRange(props.weekStart) : "Undated"}
+          </CardTitle>
+          <div className="text-sm text-muted-foreground">{props.slug}</div>
+        </CardHeader>
+        <CardContent className="grid gap-2">
+          <div className="flex items-center justify-between">
+            <StatusBadge status={props.status} />
+            <div className="flex items-center gap-2 border-none p-0">
+              <ClockIcon className="w-4 h-4" />
+              {props.totalHours}h
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
