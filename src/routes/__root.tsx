@@ -55,10 +55,9 @@ function NewTimesheetButton() {
     useMutation({
       mutationKey: ["create-timesheet"],
       mutationFn: async () => {
-        const res = await api.contractor.timesheet.$post();
+        const res = await api.contractor.timesheets.$post();
         if (!res.ok) throw new Error("Failed to create timesheet");
-        const data = await res.json();
-        return data;
+        return res.json();
       },
       onSuccess: (data) => {
         navigate({

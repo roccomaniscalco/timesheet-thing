@@ -50,8 +50,8 @@ export const weekDay = pgEnum("week_day", WEEK_DAY);
 export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
   weekDay: weekDay("week_day").notNull(),
+  hours: decimal("hours").notNull(),
   name: varchar("name"),
-  hours: decimal("hours"),
   timesheetId: integer("timesheet_id")
     .references(() => timesheets.id, { onDelete: "cascade" })
     .notNull(),
