@@ -9,8 +9,9 @@ import { eq, sql, sum } from "drizzle-orm";
 type Bindings = {
   DATABASE_URL: string;
   CLERK_SECRET_KEY: string;
+  CLERK_PUBLISHABLE_KEY: string;
 };
-
+  
 type Variables = {
   db: NeonHttpDatabase<typeof schema>;
 };
