@@ -4,14 +4,14 @@ import { NeonHttpDatabase, drizzle } from "drizzle-orm/neon-http";
 import { Hono, type Env } from "hono";
 import { createMiddleware } from "hono/factory";
 import * as schema from "@/server/schema";
-import { eq, sql, sum } from "drizzle-orm";
+import { desc, eq, sql, sum } from "drizzle-orm";
 
 type Bindings = {
   DATABASE_URL: string;
   CLERK_SECRET_KEY: string;
   CLERK_PUBLISHABLE_KEY: string;
 };
-  
+
 type Variables = {
   db: NeonHttpDatabase<typeof schema>;
 };
@@ -62,7 +62,8 @@ const contractor = new Hono<Options>()
       .rightJoin(
         schema.timesheets,
         eq(schema.timesheets.id, schema.tasks.timesheetId)
-      );
+      )
+      .orderBy(desc(schema.timesheets.id));
     return c.json(timesheets, 200);
   })
   .post("/timesheet", async (c) => {
