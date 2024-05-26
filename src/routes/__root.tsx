@@ -21,7 +21,9 @@ function RootLayout() {
   return (
     <>
       <Header />
-      <Outlet />
+      <main className="p-6 flex flex-col gap-6 max-w-6xl mx-auto">
+        <Outlet />
+      </main>
     </>
   );
 }
@@ -59,7 +61,6 @@ function NewTimesheetButton() {
         return data;
       },
       onSuccess: (data) => {
-        console.log(data);
         navigate({
           to: "/timesheets/$id",
           params: { id: String(data.id) },

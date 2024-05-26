@@ -32,12 +32,10 @@ function TimesheetsGrid() {
   });
 
   return (
-    <div className="p-6 flex flex-col gap-6 max-w-6xl mx-auto">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {timesheets?.map((timesheet) => (
-          <TimesheetCard key={timesheet.id} {...timesheet} />
-        ))}
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {timesheets?.map((timesheet) => (
+        <TimesheetCard key={timesheet.id} {...timesheet} />
+      ))}
     </div>
   );
 }
@@ -69,7 +67,11 @@ function TimesheetCard(props: TimesheetCardProps) {
   };
 
   return (
-    <Link className="group outline-none" to="/timesheets/$id" params={{ id: String(props.id) }}>
+    <Link
+      className="group outline-none"
+      to="/timesheets/$id"
+      params={{ id: String(props.id) }}
+    >
       <Card className="group-focus:ring-1 ring-ring outline-none">
         <CardHeader>
           <CardTitle className="truncate">
@@ -81,7 +83,7 @@ function TimesheetCard(props: TimesheetCardProps) {
           <div className="flex items-center justify-between">
             <StatusBadge status={props.status} />
             <div className="flex items-center gap-2 border-none p-0">
-              <ClockIcon className="w-4 h-4" />
+              <ClockIcon className="w-4 h-4 text-muted-foreground" />
               {props.totalHours}h
             </div>
           </div>
