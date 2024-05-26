@@ -81,7 +81,7 @@ const contractor = new Hono<Options>()
         status: "draft",
       })
       .returning();
-    return c.json(newTimesheet, 201);
+    return c.json(newTimesheet[0], 201);
   });
 
 const api = baseApi.route("/contractor", contractor);

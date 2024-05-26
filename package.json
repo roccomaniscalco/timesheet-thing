@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "wrangler pages dev --proxy=5173 -- vite",
+    "dev": "wrangler pages dev --compatibility-date=2024-05-12 --proxy=5173 -- vite",
     "build": "vite build",
     "ship": "pnpm build && wrangler pages deploy .dist",
     "db:studio": "drizzle-kit studio",

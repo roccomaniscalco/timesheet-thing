@@ -6,8 +6,8 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/clerk-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Outlet, createRootRoute } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
+import { Outlet, createRootRoute, useNavigate } from "@tanstack/react-router";
 import { hc } from "hono/client";
 
 const { api } = hc<ApiType>("/");
@@ -47,14 +47,22 @@ function Header() {
 }
 
 function NewTimesheetButton() {
-  const qc = useQueryClient();
+  const navigate = useNavigate();
   const { mutate: createTimesheet } = useMutation({
     mutationKey: ["create-timesheet"],
     mutationFn: async () => {
       const res = await api.contractor.timesheet.$post();
-      if (res.ok) return res.json();
+      if (!res.ok) throw new Error("Failed to create timesheet");
+      const data = await res.json();
+      return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["get-timesheets"] }),
+    onSuccess: (data) => {
+      console.log(data);
+      navigate({
+        to: "/timesheets/$id",
+        params: { id: String(data.id) },
+      });
+    },
   });
 
   return (
