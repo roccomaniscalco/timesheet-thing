@@ -1,5 +1,6 @@
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/components/utils";
 import type { ApiType } from "@/server/api";
 import { ClockIcon } from "@heroicons/react/16/solid";
 import { useQuery } from "@tanstack/react-query";
@@ -56,11 +57,8 @@ function TimesheetCard(props: TimesheetCardProps) {
     year: "numeric",
   });
 
-  const getWeekRange = (weekStart: string | null) => {
-    if (!weekStart) return "-";
-
+  const getWeekRange = (weekStart: string) => {
     let date = new Date(weekStart);
-
     // Fix timezone offset that causes date to be a day behind
     date = new Date(date.getTime() - date.getTimezoneOffset() * -60000);
     const start = startDateFormatter.format(date);
@@ -73,7 +71,7 @@ function TimesheetCard(props: TimesheetCardProps) {
     <Card>
       <CardHeader>
         <CardTitle className="truncate">
-          {getWeekRange(props.weekStart)}
+          {props.weekStart ? getWeekRange(props.weekStart) : "Undated"}
         </CardTitle>
         <div className="text-sm text-secondary-foreground">{props.slug}</div>
       </CardHeader>
