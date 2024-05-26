@@ -1,11 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
-import {
-  ClerkProvider,
-  SignedIn,
-  UserButton
-} from "@clerk/clerk-react";
+import { ClerkProvider, SignedIn, UserButton } from "@clerk/clerk-react";
 import { ClockIcon } from "@heroicons/react/16/solid";
 import {
   QueryClient,
@@ -14,7 +10,7 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 import { hc, type InferResponseType } from "hono/client";
-import type { ApiType } from "../functions/api/[[route]]";
+import type { ApiType } from "@/server/api";
 
 const { api } = hc<ApiType>("/");
 const queryClient = new QueryClient();
@@ -118,10 +114,10 @@ function TimesheetCard(props: TimesheetCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="truncate">Weekly Timesheet</CardTitle>
-        <div className="text-sm text-secondary-foreground">
+        <CardTitle className="truncate">
           {getWeekRange(props.weekStart)}
-        </div>
+        </CardTitle>
+        <div className="text-sm text-secondary-foreground">{props.slug}</div>
       </CardHeader>
       <CardContent className="grid gap-2">
         <div className="flex items-center justify-between">

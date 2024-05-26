@@ -1,4 +1,5 @@
 import { STATUS, WEEK_DAY } from "@/constants";
+import { generateSlug } from "@/server/generate-slug";
 import {
   date,
   decimal,
@@ -38,8 +39,9 @@ export const status = pgEnum("status", STATUS);
 
 export const timesheets = pgTable("timesheets", {
   id: serial("id").primaryKey(),
-  weekStart: date("week_start"),
+  slug: varchar("slug").$defaultFn(() => generateSlug()).notNull(),
   status: status("status").notNull(),
+  weekStart: date("week_start"),
   contractorId: integer("contractor_id").references(() => contractors.id),
 });
 
