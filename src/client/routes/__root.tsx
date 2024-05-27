@@ -1,4 +1,3 @@
-import { Button } from "@/client/components/ui/button";
 import type { ApiType } from "@/server/api";
 import {
   SignInButton,
@@ -6,10 +5,9 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/clerk-react";
-import { PlusIcon } from "@heroicons/react/16/solid";
-import { useMutation } from "@tanstack/react-query";
-import { Outlet, createRootRoute, useNavigate } from "@tanstack/react-router";
+import { Outlet, createRootRoute } from "@tanstack/react-router";
 import { hc } from "hono/client";
+import tunnel from "tunnel-rat";
 
 const { api } = hc<ApiType>("/");
 
@@ -28,6 +26,8 @@ function RootLayout() {
   );
 }
 
+export const headerActionTunnel = tunnel();
+
 function Header() {
   return (
     <header className="sticky top-0 bg-background/70 backdrop-blur border-border border-b">
@@ -43,39 +43,10 @@ function Header() {
             Timesheets
           </h1>
         </div>
-        <NewTimesheetButton />
+        <div className="flex gap-2">
+        <headerActionTunnel.Out />
+        </div>
       </nav>
     </header>
-  );
-}
-
-function NewTimesheetButton() {
-  const navigate = useNavigate();
-  const { mutate: createTimesheet, isPending: isCreatingTimesheet } =
-    useMutation({
-      mutationKey: ["create-timesheet"],
-      mutationFn: async () => {
-        const res = await api.contractor.timesheets.$post();
-        if (!res.ok) throw new Error("Failed to create timesheet");
-        return res.json();
-      },
-      onSuccess: (data) => {
-        navigate({
-          to: "/timesheets/$id",
-          params: { id: String(data.id) },
-        });
-      },
-    });
-
-  return (
-    <Button
-      disabled={isCreatingTimesheet}
-      className="flex gap-2"
-      size="sm"
-      onClick={() => createTimesheet()}
-    >
-      New Timesheet
-      <PlusIcon className="w-4 h-4" />
-    </Button>
   );
 }

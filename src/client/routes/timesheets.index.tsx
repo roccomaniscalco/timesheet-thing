@@ -1,4 +1,5 @@
 import { StatusBadge } from "@/client/components/status-badge";
+import { Button } from "@/client/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,19 +7,62 @@ import {
   CardTitle,
 } from "@/client/components/ui/card";
 import type { ApiType } from "@/server/api";
-import { ClockIcon } from "@heroicons/react/16/solid";
-import { useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { ClockIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { InferResponseType } from "hono";
 import { hc } from "hono/client";
+import { headerActionTunnel } from "@/client/routes/__root.js";
 
 export const Route = createFileRoute("/timesheets/")({
-  component: TimesheetsGrid,
+  component: TimesheetsPage,
 });
+
+function TimesheetsPage() {
+  return (
+    <>
+      <headerActionTunnel.In>
+        <NewTimesheetButton />
+      </headerActionTunnel.In>
+      <TimesheetGrid />
+    </>
+  );
+}
+
+function NewTimesheetButton() {
+  const navigate = useNavigate();
+  const { mutate: createTimesheet, isPending: isCreatingTimesheet } =
+    useMutation({
+      mutationKey: ["create-timesheet"],
+      mutationFn: async () => {
+        const res = await api.contractor.timesheets.$post();
+        if (!res.ok) throw new Error("Failed to create timesheet");
+        return res.json();
+      },
+      onSuccess: (data) => {
+        navigate({
+          to: "/timesheets/$id",
+          params: { id: String(data.id) },
+        });
+      },
+    });
+
+  return (
+    <Button
+      disabled={isCreatingTimesheet}
+      className="flex gap-2"
+      size="sm"
+      onClick={() => createTimesheet()}
+    >
+      New Timesheet
+      <PlusIcon className="w-4 h-4" />
+    </Button>
+  );
+}
 
 const { api } = hc<ApiType>("/");
 
-function TimesheetsGrid() {
+function TimesheetGrid() {
   const { data: timesheets } = useQuery({
     queryKey: ["get-timesheets"],
     queryFn: async () => {
