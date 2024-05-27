@@ -1,4 +1,4 @@
-import { cn } from "@/components/utils";
+import { cn } from "@/client/components/utils";
 import type { Status } from "@/constants";
 import {
   CheckCircleIcon,

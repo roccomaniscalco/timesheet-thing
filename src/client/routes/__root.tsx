@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/client/components/ui/button";
 import type { ApiType } from "@/server/api";
 import {
   SignInButton,

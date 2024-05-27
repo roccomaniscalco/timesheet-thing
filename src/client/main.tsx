@@ -1,5 +1,5 @@
-import App from "@/app";
-import "@/global.css";
+import App from "@/client/app";
+import "@/client/global.css";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 

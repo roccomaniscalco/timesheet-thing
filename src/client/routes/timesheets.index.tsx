@@ -1,5 +1,10 @@
-import { StatusBadge } from "@/components/status-badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge } from "@/client/components/status-badge";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/client/components/ui/card";
 import type { ApiType } from "@/server/api";
 import { ClockIcon } from "@heroicons/react/16/solid";
 import { useQuery } from "@tanstack/react-query";
