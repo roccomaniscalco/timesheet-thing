@@ -1,3 +1,4 @@
+import { api } from "@/client/api-caller";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -7,17 +8,13 @@ import {
   BreadcrumbSeparator,
 } from "@/client/components/ui/breadcrumb";
 import { headerBreadcrumbTunnel } from "@/client/routes/__root.js";
-import type { ApiType } from "@/server/api";
 import { UserButton } from "@clerk/clerk-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, useParams } from "@tanstack/react-router";
-import { hc } from "hono/client";
 
 export const Route = createFileRoute("/timesheets/$id")({
   component: Timesheet,
 });
-
-const { api } = hc<ApiType>("/");
 
 function Timesheet() {
   const { id } = useParams({ from: "/timesheets/$id" });

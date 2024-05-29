@@ -112,7 +112,7 @@ const contractor = new Hono<Options>()
     return c.json(newTimesheet[0], 201);
   });
 
-const api = baseApi.route("/contractor", contractor);
-type ApiType = typeof api;
+const apiRoutes = baseApi.route("/contractor", contractor);
+type ApiRoutesType = typeof apiRoutes;
 
-export { api, type ApiType };
+export { apiRoutes, type ApiRoutesType };

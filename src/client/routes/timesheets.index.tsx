@@ -1,3 +1,4 @@
+import { api } from "@/client/api-caller";
 import { StatusBadge } from "@/client/components/status-badge";
 import {
   Breadcrumb,
@@ -17,13 +18,11 @@ import {
   headerActionTunnel,
   headerBreadcrumbTunnel,
 } from "@/client/routes/__root.js";
-import type { ApiType } from "@/server/api";
 import { UserButton } from "@clerk/clerk-react";
 import { ClockIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { InferResponseType } from "hono";
-import { hc } from "hono/client";
 
 export const Route = createFileRoute("/timesheets/")({
   component: TimesheetsPage,
@@ -83,8 +82,6 @@ function NewTimesheetButton() {
     </Button>
   );
 }
-
-const { api } = hc<ApiType>("/");
 
 function TimesheetGrid() {
   const { data: timesheets } = useQuery({
