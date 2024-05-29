@@ -7,21 +7,35 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/client/components/ui/breadcrumb";
-import { headerBreadcrumbTunnel } from "@/client/routes/__root.js";
-import { UserButton } from "@clerk/clerk-react";
-import { useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute, useParams } from "@tanstack/react-router";
-import type { InferResponseType } from "hono";
+import { Button } from "@/client/components/ui/button";
+import { Calendar } from "@/client/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/client/components/ui/popover";
 import {
   Table,
   TableBody,
   TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/client/components/ui/table";
+import { cn, formatDateRange } from "@/client/components/utils";
+import {
+  headerActionTunnel,
+  headerBreadcrumbTunnel,
+} from "@/client/routes/__root.js";
+import { UserButton } from "@clerk/clerk-react";
+import { CalendarIcon } from "@heroicons/react/16/solid";
+import { useQuery } from "@tanstack/react-query";
+import { Link, createFileRoute, useParams } from "@tanstack/react-router";
+import { endOfWeek, startOfWeek } from "date-fns";
+import type { InferResponseType } from "hono";
+import { useState } from "react";
+import type { DateRange } from "react-day-picker";
 
 export const Route = createFileRoute("/timesheets/$id")({
   component: Timesheet,
@@ -59,9 +73,58 @@ function Timesheet() {
           </BreadcrumbList>
         </Breadcrumb>
       </headerBreadcrumbTunnel.In>
+      <headerActionTunnel.In>
+        <WeekPicker />
+      </headerActionTunnel.In>
 
-      {timesheet && <TaskTable tasks={timesheet.tasks}/>}
+      {timesheet && <TaskTable tasks={timesheet.tasks} />}
     </>
+  );
+}
+
+export function WeekPicker() {
+  const [selectedWeek, setSelectedWeek] = useState<DateRange | undefined>();
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            "justify-start text-left font-normal",
+            !selectedWeek && "text-muted-foreground"
+          )}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {selectedWeek ? (
+            formatDateRange(selectedWeek)
+          ) : (
+            <span>Pick week</span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="flex w-auto flex-col space-y-2 p-2"
+        align="end"
+      >
+        <Calendar
+          modifiers={{
+            // @ts-expect-error
+            selected: selectedWeek,
+          }}
+          onDayClick={(day, modifiers) => {
+            if (modifiers.selected) {
+              setSelectedWeek(undefined);
+              return;
+            }
+            setSelectedWeek({
+              from: startOfWeek(day),
+              to: endOfWeek(day),
+            });
+          }}
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
 
