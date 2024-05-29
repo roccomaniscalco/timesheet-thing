@@ -2,7 +2,7 @@ import * as schema from "@/server/schema";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { neon } from "@neondatabase/serverless";
-import { desc, eq, sql, sum } from "drizzle-orm";
+import { and, desc, eq, sql, sum } from "drizzle-orm";
 import { NeonHttpDatabase, drizzle } from "drizzle-orm/neon-http";
 import { Hono, type Env } from "hono";
 import { createMiddleware } from "hono/factory";
@@ -68,9 +68,28 @@ const contractor = new Hono<Options>()
       .orderBy(desc(schema.timesheets.id));
     return c.json(timesheets, 200);
   })
-  .get(
-    "/timesheets/$id",
-    zValidator("query", z.object({ id: z.string() })),
+  .get("/timesheets/:id", async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) return c.json({ message: "Unauthorized" }, 401);
+    const contractor = await c.var.db.query.contractors.findFirst({
+      where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId),
+    });
+    if (!contractor) return c.json({ message: "Forbidden" }, 403);
+
+    const id = Number(c.req.param("id"));
+    const timesheet = await c.var.db.query.timesheets.findFirst({
+      where: (timesheets, { and, eq }) =>
+        and(eq(timesheets.id, id), eq(timesheets.contractorId, contractor.id)),
+    });
+    if (!timesheet) return c.json({ message: "Not Found" }, 404);
+    const tasks = await c.var.db.query.tasks.findMany({
+      where: (tasks, { eq }) => eq(tasks.timesheetId, timesheet.id),
+    });
+    return c.json({ ...timesheet, tasks }, 200);
+  })
+  .put(
+    "/timesheets/:id",
+    zValidator("json", z.object({ weekStart: z.string().nullable() })),
     async (c) => {
       const auth = getAuth(c);
       if (!auth?.userId) return c.json({ message: "Unauthorized" }, 401);
@@ -79,19 +98,19 @@ const contractor = new Hono<Options>()
       });
       if (!contractor) return c.json({ message: "Forbidden" }, 403);
 
-      const id = Number(c.req.valid("query").id);
-      const timesheet = await c.var.db.query.timesheets.findFirst({
-        where: (timesheets, { and, eq }) =>
+      const weekStart = c.req.valid("json").weekStart;
+      const id = Number(c.req.param("id"));
+      const timeseheets = await c.var.db
+        .update(schema.timesheets)
+        .set({ weekStart })
+        .where(
           and(
-            eq(timesheets.id, id),
-            eq(timesheets.contractorId, contractor.id)
-          ),
-      });
-      if (!timesheet) return c.json({ message: "Not Found" }, 404);
-      const tasks = await c.var.db.query.tasks.findMany({
-        where: (tasks, { eq }) => eq(tasks.timesheetId, timesheet.id),
-      });
-      return c.json({ ...timesheet, tasks }, 200);
+            eq(schema.timesheets.id, id),
+            eq(schema.timesheets.contractorId, contractor.id)
+          )
+        )
+        .returning();
+      return c.json(timeseheets[0], 200);
     }
   )
   .post("/timesheets", async (c) => {

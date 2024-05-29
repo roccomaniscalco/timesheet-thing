@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/client/components/ui/card";
+import { formatDateRange, getWeekRange } from "@/client/components/utils";
 import {
   headerActionTunnel,
   headerBreadcrumbTunnel,
@@ -56,7 +57,6 @@ function NewTimesheetButton() {
   const navigate = useNavigate();
   const { mutate: createTimesheet, isPending: isCreatingTimesheet } =
     useMutation({
-      mutationKey: ["create-timesheet"],
       mutationFn: async () => {
         const res = await api.contractor.timesheets.$post();
         if (!res.ok) throw new Error("Failed to create timesheet");
@@ -107,27 +107,6 @@ type Timesheet = Timesheets[number];
 
 interface TimesheetCardProps extends Timesheet {}
 function TimesheetCard(props: TimesheetCardProps) {
-  const startDateFormatter = Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-
-  const endDateFormatter = Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  const getWeekRange = (weekStart: string) => {
-    let date = new Date(weekStart);
-    // Fix timezone offset that causes date to be a day behind
-    date = new Date(date.getTime() - date.getTimezoneOffset() * -60000);
-    const start = startDateFormatter.format(date);
-    date.setDate(date.getDate() + 6);
-    const end = endDateFormatter.format(date);
-    return `${start} - ${end}`;
-  };
-
   return (
     <Link
       className="group outline-none"
@@ -137,7 +116,9 @@ function TimesheetCard(props: TimesheetCardProps) {
       <Card className="group-focus:ring-1 ring-ring outline-none">
         <CardHeader>
           <CardTitle className="truncate">
-            {props.weekStart ? getWeekRange(props.weekStart) : "Undated"}
+            {props.weekStart
+              ? formatDateRange(getWeekRange(props.weekStart))
+              : "Undated"}
           </CardTitle>
           <div className="text-sm text-muted-foreground">{props.slug}</div>
         </CardHeader>

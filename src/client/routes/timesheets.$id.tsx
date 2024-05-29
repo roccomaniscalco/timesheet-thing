@@ -23,19 +23,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/client/components/ui/table";
-import { cn, formatDateRange } from "@/client/components/utils";
+import { cn, formatDateRange, getWeekRange } from "@/client/components/utils";
 import {
   headerActionTunnel,
   headerBreadcrumbTunnel,
 } from "@/client/routes/__root.js";
 import { UserButton } from "@clerk/clerk-react";
 import { CalendarIcon } from "@heroicons/react/16/solid";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, useParams } from "@tanstack/react-router";
-import { endOfWeek, startOfWeek } from "date-fns";
+import { startOfWeek } from "date-fns";
 import type { InferResponseType } from "hono";
-import { useState } from "react";
-import type { DateRange } from "react-day-picker";
 
 export const Route = createFileRoute("/timesheets/$id")({
   component: Timesheet,
@@ -46,8 +44,8 @@ function Timesheet() {
   const { data: timesheet } = useQuery({
     queryKey: ["get-timesheet", id],
     queryFn: async () => {
-      const res = await api.contractor.timesheets["$id"].$get({
-        query: { id },
+      const res = await api.contractor.timesheets[":id"].$get({
+        param: { id },
       });
       if (!res.ok) throw new Error("Failed to get timesheet");
       return res.json();
@@ -74,7 +72,7 @@ function Timesheet() {
         </Breadcrumb>
       </headerBreadcrumbTunnel.In>
       <headerActionTunnel.In>
-        <WeekPicker />
+        <WeekPicker weekStart={timesheet?.weekStart} />
       </headerActionTunnel.In>
 
       {timesheet && <TaskTable tasks={timesheet.tasks} />}
@@ -82,8 +80,34 @@ function Timesheet() {
   );
 }
 
-export function WeekPicker() {
-  const [selectedWeek, setSelectedWeek] = useState<DateRange | undefined>();
+type WeekPickerProps = {
+  weekStart?: string | null;
+};
+export function WeekPicker(props: WeekPickerProps) {
+  const { id } = useParams({ from: "/timesheets/$id" });
+  const queryClient = useQueryClient();
+  const timesheetMutation = useMutation({
+    mutationFn: async (timesheet: { weekStart: string | null }) => {
+      const res = await api.contractor.timesheets[":id"].$put({
+        param: { id },
+        json: timesheet,
+      });
+      if (!res.ok) throw new Error("Failed to update timesheet");
+      return res.json();
+    },
+    onSettled: async () => {
+      return await queryClient.invalidateQueries({
+        queryKey: ["get-timesheet", id],
+      });
+    },
+  });
+
+  // Optimistically update week while mutation is pending
+  const weekStart = timesheetMutation.isPending
+    ? timesheetMutation.variables.weekStart
+    : props.weekStart;
+  // Convert weekStart to DateRange
+  const week = weekStart ? getWeekRange(weekStart) : null;
 
   return (
     <Popover>
@@ -92,15 +116,11 @@ export function WeekPicker() {
           variant="outline"
           className={cn(
             "justify-start text-left font-normal",
-            !selectedWeek && "text-muted-foreground"
+            !week && "text-muted-foreground"
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {selectedWeek ? (
-            formatDateRange(selectedWeek)
-          ) : (
-            <span>Pick week</span>
-          )}
+          {week ? formatDateRange(week) : <span>Pick week</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -110,17 +130,15 @@ export function WeekPicker() {
         <Calendar
           modifiers={{
             // @ts-expect-error
-            selected: selectedWeek,
+            selected: week,
           }}
           onDayClick={(day, modifiers) => {
             if (modifiers.selected) {
-              setSelectedWeek(undefined);
-              return;
+              timesheetMutation.mutate({ weekStart: null });
+            } else {
+              const weekStart = startOfWeek(day).toDateString();
+              timesheetMutation.mutate({ weekStart });
             }
-            setSelectedWeek({
-              from: startOfWeek(day),
-              to: endOfWeek(day),
-            });
           }}
         />
       </PopoverContent>
@@ -129,7 +147,7 @@ export function WeekPicker() {
 }
 
 type Tasks = InferResponseType<
-  (typeof api.contractor.timesheets)["$id"]["$get"],
+  (typeof api.contractor.timesheets)[":id"]["$get"],
   200
 >["tasks"];
 
