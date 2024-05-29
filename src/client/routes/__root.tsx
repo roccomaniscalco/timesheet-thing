@@ -1,3 +1,11 @@
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/client/components/ui/breadcrumb";
 import type { ApiType } from "@/server/api";
 import {
   SignInButton,
@@ -27,26 +35,19 @@ function RootLayout() {
 }
 
 export const headerActionTunnel = tunnel();
+export const headerBreadcrumbTunnel = tunnel();
 
 function Header() {
   return (
     <header className="sticky top-0 bg-background/70 backdrop-blur border-border border-b">
-      <nav className="flex justify-between items-center gap-6 px-6 py-4 max-w-6xl mx-auto">
-        <div className="flex items-center gap-4">
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
-          <SignedOut>
-            <SignInButton />
-          </SignedOut>
-          <h1 className="text-xl font-semibold tracking-tight leading-none">
-            Timesheets
-          </h1>
+      <div className="flex justify-between items-center gap-6 px-6 h-14 max-w-6xl mx-auto">
+        <div className="flex-1">
+        <headerBreadcrumbTunnel.Out />
         </div>
         <div className="flex gap-2">
-        <headerActionTunnel.Out />
+          <headerActionTunnel.Out />
         </div>
-      </nav>
+      </div>
     </header>
   );
 }

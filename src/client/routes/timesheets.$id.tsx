@@ -1,6 +1,16 @@
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/client/components/ui/breadcrumb";
+import { headerBreadcrumbTunnel } from "@/client/routes/__root.js";
 import type { ApiType } from "@/server/api";
+import { UserButton } from "@clerk/clerk-react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, useParams } from "@tanstack/react-router";
+import { Link, createFileRoute, useParams } from "@tanstack/react-router";
 import { hc } from "hono/client";
 
 export const Route = createFileRoute("/timesheets/$id")({
@@ -22,5 +32,26 @@ function Timesheet() {
     },
   });
 
-  return <div>Timesheet/{timesheet?.slug}</div>;
+  return (
+    <>
+      <headerBreadcrumbTunnel.In>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <UserButton />
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/timesheets">Timesheets</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbPage>{timesheet?.slug}</BreadcrumbPage>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </headerBreadcrumbTunnel.In>
+      <div>Timesheet/{timesheet?.slug}</div>
+    </>
+  );
 }

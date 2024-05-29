@@ -1,4 +1,11 @@
 import { StatusBadge } from "@/client/components/status-badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/client/components/ui/breadcrumb";
 import { Button } from "@/client/components/ui/button";
 import {
   Card,
@@ -6,13 +13,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/client/components/ui/card";
+import {
+  headerActionTunnel,
+  headerBreadcrumbTunnel,
+} from "@/client/routes/__root.js";
 import type { ApiType } from "@/server/api";
+import { UserButton } from "@clerk/clerk-react";
 import { ClockIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { InferResponseType } from "hono";
 import { hc } from "hono/client";
-import { headerActionTunnel } from "@/client/routes/__root.js";
 
 export const Route = createFileRoute("/timesheets/")({
   component: TimesheetsPage,
@@ -21,6 +32,19 @@ export const Route = createFileRoute("/timesheets/")({
 function TimesheetsPage() {
   return (
     <>
+      <headerBreadcrumbTunnel.In>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <UserButton />
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Timesheets</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </headerBreadcrumbTunnel.In>
       <headerActionTunnel.In>
         <NewTimesheetButton />
       </headerActionTunnel.In>
@@ -67,7 +91,8 @@ function TimesheetGrid() {
     queryKey: ["get-timesheets"],
     queryFn: async () => {
       const res = await api.contractor.timesheets.$get();
-      if (res.ok) return res.json();
+      if (!res.ok) throw new Error("Failed to get timesheets");
+      return res.json();
     },
   });
 
