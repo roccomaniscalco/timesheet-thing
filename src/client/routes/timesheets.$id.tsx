@@ -114,6 +114,7 @@ export function WeekPicker(props: WeekPickerProps) {
       <PopoverTrigger asChild>
         <Button
           variant="outline"
+          size="sm"
           className={cn(
             "justify-start text-left font-normal",
             !week && "text-muted-foreground"
