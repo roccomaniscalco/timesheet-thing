@@ -21,7 +21,7 @@ export const headerBreadcrumbTunnel = tunnel();
 
 function Header() {
   return (
-    <header className="sticky top-0 bg-background/70 backdrop-blur border-border border-b">
+    <header className="sticky top-0 z-10 bg-background/70 backdrop-blur border-border border-b">
       <div className="flex justify-between items-center gap-6 px-6 h-14 max-w-6xl mx-auto">
         <div className="flex-1">
           <headerBreadcrumbTunnel.Out />

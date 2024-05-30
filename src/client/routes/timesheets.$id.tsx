@@ -44,15 +44,21 @@ import {
   headerBreadcrumbTunnel,
 } from "@/client/routes/__root.js";
 import { WEEK_DAY } from "@/constants";
+import { taskFormSchema, type TaskForm } from "@/validation";
 import { UserButton } from "@clerk/clerk-react";
 import { CalendarIcon, CheckIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useMutationState,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Link, createFileRoute, useParams } from "@tanstack/react-router";
 import { startOfWeek } from "date-fns";
 import type { InferResponseType } from "hono";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export const Route = createFileRoute("/timesheets/$id")({
   component: Timesheet,
@@ -173,63 +179,86 @@ type TaskTableProps = {
   tasks: Tasks;
 };
 function TaskTable({ tasks }: TaskTableProps) {
+  const { id } = useParams({ from: "/timesheets/$id" });
+  const optimisticTasks = useMutationState({
+    filters: { mutationKey: ["create-task"], status: "pending" },
+    select: (mutation) => ({
+      ...(mutation.state.variables as TaskForm),
+      timesheetId: Number(id),
+      id: mutation.mutationId,
+    }),
+  });
+
   return (
-    <>
-      <Table>
-        <TableCaption>Tasks logged for the selected timesheet.</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-40">Day</TableHead>
-            <TableHead className="w-full">Task</TableHead>
-            <TableHead className="min-w-40">Hours</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TaskTableRow />
-          {tasks.map((task) => (
-            <TaskTableRow task={task} key={task.id} />
-          ))}
-        </TableBody>
-      </Table>
-    </>
+    <Table>
+      <TableCaption>Tasks logged for the selected timesheet.</TableCaption>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="min-w-40">Day</TableHead>
+          <TableHead className="w-full">Task</TableHead>
+          <TableHead className="min-w-40">Hours</TableHead>
+          <TableHead />
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TaskTableRow />
+        {tasks.map((task) => (
+          <TaskTableRow task={task} key={task.id} />
+        ))}
+        {optimisticTasks.map((task) => (
+          <TaskTableRow task={task} key={task.id} className="animate-in slide-in-from-top" />
+        ))}
+      </TableBody>
+    </Table>
   );
 }
-
-const taskFormSchema = z.object({
-  weekDay: z.enum(WEEK_DAY, { message: "Day is required" }),
-  task: z.string().min(1, { message: "Task is required" }),
-  hours: z
-    .number({ message: "Hours is required" })
-    .positive({ message: "Hours must be positive" })
-    .refine((v) => v % 0.25 === 0, {
-      message: "Hours must be in 0.25 increments",
-    }),
-});
 
 type Task = Tasks[number];
 type TaskTableRowProps = {
   task?: Task;
+  className?: string;
 };
-function TaskTableRow({ task }: TaskTableRowProps) {
-  const form = useForm<z.infer<typeof taskFormSchema>>({
+function TaskTableRow({ task, className }: TaskTableRowProps) {
+  const { id } = useParams({ from: "/timesheets/$id" });
+  const queryClient = useQueryClient();
+  const selectDayTriggerRef = useRef<HTMLButtonElement>(null);
+
+  const form = useForm<TaskForm>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
       weekDay: task?.weekDay,
-      task: task?.name ?? undefined,
+      name: task?.name ?? undefined,
       hours: task?.hours,
     },
   });
 
-  const onSubmit = (values: z.infer<typeof taskFormSchema>) => {
-    console.log(values);
-    form.reset({});
-    console.log(form.getValues());
-  };
+  const createTaskMutation = useMutation({
+    mutationKey: ["create-task"],
+    mutationFn: async (taskForm: TaskForm) => {
+      const res = await api.contractor.timesheets[":id"].tasks.$post({
+        param: { id },
+        json: taskForm,
+      });
+      if (!res.ok) throw new Error("Failed to create task");
+      return await res.json();
+    },
+    onSuccess: () => {
+      return queryClient.invalidateQueries({
+        queryKey: ["get-timesheet", id],
+      });
+    },
+  });
+
+  // Reset row after successful submission
+  useEffect(() => {
+    if (form.formState.isSubmitSuccessful) {
+      form.reset();
+    }
+  }, [form.formState.isSubmitSuccessful]);
 
   return (
     <Form {...form}>
-      <TableRow>
+      <TableRow className={className}>
         <TableCell className="min-w-40">
           <FormField
             control={form.control}
@@ -242,7 +271,10 @@ function TaskTableRow({ task }: TaskTableRowProps) {
                   onValueChange={field.onChange}
                 >
                   <FormControl>
-                    <SelectTrigger className="uppercase data-[placeholder]:normal-case aria-invalid:ring-destructive">
+                    <SelectTrigger
+                      className="uppercase data-[placeholder]:normal-case aria-invalid:ring-destructive"
+                      ref={selectDayTriggerRef}
+                    >
                       <SelectValue placeholder="Select day" />
                     </SelectTrigger>
                   </FormControl>
@@ -262,7 +294,7 @@ function TaskTableRow({ task }: TaskTableRowProps) {
         <TableCell className="w-full">
           <FormField
             control={form.control}
-            name="task"
+            name="name"
             render={({ field }) => (
               <FormItem>
                 <FormControl>
@@ -305,12 +337,22 @@ function TaskTableRow({ task }: TaskTableRowProps) {
         </TableCell>
         <TableCell>
           {!task && (
-            <Button variant="outline" size="icon" onClick={form.handleSubmit(onSubmit)}>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={form.handleSubmit((task) =>
+                createTaskMutation.mutate(task)
+              )}
+            >
               <PlusIcon className="w-4 h-4" />
             </Button>
           )}
           {task && form.formState.isDirty && (
-            <Button variant="outline" size="icon" onClick={form.handleSubmit(onSubmit)}>
+            <Button
+              variant="outline"
+              size="icon"
+              // onClick={form.handleSubmit((task) => createTaskMutation.mutate(task))}
+            >
               <CheckIcon className="w-4 h-4" />
             </Button>
           )}

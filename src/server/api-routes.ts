@@ -1,4 +1,6 @@
+import { WEEK_DAY } from "@/constants";
 import * as schema from "@/server/schema";
+import { taskFormSchema } from "@/validation";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { neon } from "@neondatabase/serverless";
@@ -129,7 +131,32 @@ const contractor = new Hono<Options>()
       })
       .returning();
     return c.json(newTimesheet[0], 201);
-  });
+  })
+  .post(
+    "/timesheets/:id/tasks",
+    zValidator("json", taskFormSchema),
+    async (c) => {
+      const auth = getAuth(c);
+      if (!auth?.userId) return c.json({ message: "Unauthorized" }, 401);
+      const contractor = await c.var.db.query.contractors.findFirst({
+        where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId),
+      });
+      if (!contractor) return c.json({ message: "Forbidden" }, 403);
+
+      const timesheetId = Number(c.req.param("id"));
+      const { weekDay, name, hours } = c.req.valid("json");
+      const newTask = await c.var.db
+        .insert(schema.tasks)
+        .values({
+          timesheetId,
+          weekDay,
+          name,
+          hours,
+        })
+        .returning();
+      return c.json(newTask[0], 201);
+    }
+  );
 
 const apiRoutes = baseApi.route("/contractor", contractor);
 type ApiRoutesType = typeof apiRoutes;

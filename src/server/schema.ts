@@ -51,7 +51,7 @@ export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
   weekDay: weekDay("week_day").notNull(),
   hours: real("hours").notNull(),
-  name: varchar("name"),
+  name: varchar("name").notNull(),
   timesheetId: integer("timesheet_id")
     .references(() => timesheets.id, { onDelete: "cascade" })
     .notNull(),
