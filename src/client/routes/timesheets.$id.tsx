@@ -137,7 +137,7 @@ function Timesheet() {
       <Card>
         <CardHeader>
           <CardTitle>Weekly Timesheet</CardTitle>
-          <CardDescription>Input completed tasks for the week.</CardDescription>
+          <CardDescription>Log completed tasks for the week.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
