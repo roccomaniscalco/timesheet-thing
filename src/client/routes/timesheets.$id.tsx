@@ -268,13 +268,9 @@ function TaskRow({ task, ...props }: TaskRowProps) {
       if (!res.ok) throw new Error("Failed to update task");
       return await res.json();
     },
-    onMutate: (taskForm) => {
-      form.reset(taskForm);
-    },
-    onSuccess: async () => {
-      return await queryClient.invalidateQueries({
-        queryKey: ["get-timesheet", id],
-      });
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({ queryKey: ["get-timesheet", id] });
+      form.reset(data[0]);
     },
   });
 
