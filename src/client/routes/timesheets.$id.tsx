@@ -10,6 +10,13 @@ import {
 import { Button } from "@/client/components/ui/button";
 import { Calendar } from "@/client/components/ui/calendar";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/client/components/ui/card";
+import {
   Form,
   FormControl,
   FormField,
@@ -32,7 +39,6 @@ import {
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -43,7 +49,7 @@ import {
   headerActionTunnel,
   headerBreadcrumbTunnel,
 } from "@/client/routes/__root.js";
-import { WEEK_DAY } from "@/constants";
+import { WEEK_DAY, type WeekDay } from "@/constants";
 import { taskFormSchema, type TaskForm } from "@/validation";
 import { UserButton } from "@clerk/clerk-react";
 import {
@@ -83,14 +89,24 @@ function Timesheet() {
     select: (data) => {
       return {
         ...data,
-        tasks: data.tasks.sort((a, b) => {
-          return (
-            // Sort by weekDay
-            WEEK_DAY.indexOf(a.weekDay) - WEEK_DAY.indexOf(b.weekDay) ||
-            // If weekDay is the same, sort by id
-            a.id - b.id
-          );
-        }),
+        // tasks: data.tasks.sort((a, b) => {
+        //   return (
+        //     // Sort by weekDay
+        //     WEEK_DAY.indexOf(a.weekDay) - WEEK_DAY.indexOf(b.weekDay) ||
+        //     // If weekDay is the same, sort by id
+        //     a.id - b.id
+        //   );
+        // }),
+        tasksByDay: data.tasks.reduce(
+          (acc, curr) => {
+            if (!acc[curr.weekDay]) {
+              acc[curr.weekDay] = [];
+            }
+            acc[curr.weekDay].push(curr);
+            return acc;
+          },
+          {} as Record<WeekDay, Task[]>
+        ),
       };
     },
   });
@@ -118,7 +134,30 @@ function Timesheet() {
         <WeekPicker weekStart={timesheet?.weekStart} />
       </headerActionTunnel.In>
 
-      {timesheet && <TaskTable tasks={timesheet.tasks} />}
+      <Card>
+        <CardHeader>
+          <CardTitle>Weekly Timesheet</CardTitle>
+          <CardDescription>Input completed tasks for the week.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="min-w-40 capitalize">Day</TableHead>
+                <TableHead className="w-full">Task</TableHead>
+                <TableHead className="min-w-40">Hours</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <NewTaskRow />
+            </TableBody>
+          </Table>
+          {WEEK_DAY.map((day) => (
+            <TaskTable day={day} tasks={timesheet?.tasksByDay[day]} />
+          ))}
+        </CardContent>
+      </Card>
     </>
   );
 }
@@ -194,9 +233,10 @@ type Tasks = InferResponseType<
   200
 >["tasks"];
 type TaskTableProps = {
-  tasks: Tasks;
+  day: WeekDay;
+  tasks?: Tasks;
 };
-function TaskTable({ tasks }: TaskTableProps) {
+function TaskTable(props: TaskTableProps) {
   const { id } = useParams({ from: "/timesheets/$id" });
   const optimisticTasks = useMutationState({
     filters: { mutationKey: ["create-task"], status: "pending" },
@@ -209,20 +249,24 @@ function TaskTable({ tasks }: TaskTableProps) {
     },
   });
 
+  if (!props.tasks) {
+    return null;
+  }
+
   return (
     <Table>
-      <TableCaption>Tasks logged for the selected timesheet.</TableCaption>
       <TableHeader>
         <TableRow>
-          <TableHead className="min-w-40">Day</TableHead>
-          <TableHead className="w-full">Task</TableHead>
-          <TableHead className="min-w-40">Hours</TableHead>
+          <TableHead className="min-w-40 capitalize text-foreground">
+            {props.day}
+          </TableHead>
+          <TableHead className="w-full" />
+          <TableHead className="min-w-40" />
           <TableHead />
         </TableRow>
       </TableHeader>
       <TableBody>
-        <NewTaskRow />
-        {tasks.map((task) => (
+        {props.tasks.map((task) => (
           <TaskRow task={task} key={task.id} />
         ))}
         {optimisticTasks.map((task) => (
