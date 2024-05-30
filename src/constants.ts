@@ -1,7 +1,7 @@
-export const STATUS = ["draft", "submitted", "approved", "rejected"] as const;
-export type Status = (typeof STATUS)[number];
+export const STATUSES = ["draft", "submitted", "approved", "rejected"] as const;
+export type Status = (typeof STATUSES)[number];
 
-export const WEEKDAY = [
+export const WEEKDAYS = [
   "sunday",
   "monday",
   "tuesday",
@@ -10,4 +10,4 @@ export const WEEKDAY = [
   "friday",
   "saturday",
 ] as const;
-export type Weekday = (typeof WEEKDAY)[number];
+export type Weekday = (typeof WEEKDAYS)[number];

@@ -1,4 +1,4 @@
-import { STATUS, WEEKDAY } from "@/constants";
+import { STATUSES, WEEKDAYS } from "@/constants";
 import { generateSlug } from "@/server/generate-slug";
 import {
   date,
@@ -35,7 +35,7 @@ export const contractors = pgTable(
   })
 );
 
-export const status = pgEnum("status", STATUS);
+export const status = pgEnum("status", STATUSES);
 
 export const timesheets = pgTable("timesheets", {
   id: serial("id").primaryKey(),
@@ -45,7 +45,7 @@ export const timesheets = pgTable("timesheets", {
   contractorId: integer("contractor_id").references(() => contractors.id),
 });
 
-export const weekday = pgEnum("weekday", WEEKDAY);
+export const weekday = pgEnum("weekday", WEEKDAYS);
 
 export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
