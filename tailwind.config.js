@@ -12,6 +12,9 @@ module.exports = {
       },
     },
     extend: {
+      aria: {
+        invalid: "invalid='true'",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

@@ -45,7 +45,7 @@ import {
 } from "@/client/routes/__root.js";
 import { WEEK_DAY } from "@/constants";
 import { UserButton } from "@clerk/clerk-react";
-import { CalendarIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { CalendarIcon, CheckIcon, PlusIcon } from "@heroicons/react/16/solid";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, useParams } from "@tanstack/react-router";
@@ -179,17 +179,17 @@ function TaskTable({ tasks }: TaskTableProps) {
         <TableCaption>Tasks logged for the selected timesheet.</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="min-w-40">Weekday</TableHead>
+            <TableHead className="min-w-40">Day</TableHead>
             <TableHead className="w-full">Task</TableHead>
             <TableHead className="min-w-40">Hours</TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tasks.map((task) => (
-            <TaskTableRow task={task} />
-          ))}
           <TaskTableRow />
+          {tasks.map((task) => (
+            <TaskTableRow task={task} key={task.id} />
+          ))}
         </TableBody>
       </Table>
     </>
@@ -197,12 +197,14 @@ function TaskTable({ tasks }: TaskTableProps) {
 }
 
 const taskFormSchema = z.object({
-  weekDay: z.enum(WEEK_DAY),
-  task: z.string(),
+  weekDay: z.enum(WEEK_DAY, { message: "Day is required" }),
+  task: z.string().min(1, { message: "Task is required" }),
   hours: z
-    .number()
-    .positive()
-    .refine((v) => v % 0.25 === 0),
+    .number({ message: "Hours is required" })
+    .positive({ message: "Hours must be positive" })
+    .refine((v) => v % 0.25 === 0, {
+      message: "Hours must be in 0.25 increments",
+    }),
 });
 
 type Task = Tasks[number];
@@ -214,13 +216,15 @@ function TaskTableRow({ task }: TaskTableRowProps) {
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
       weekDay: task?.weekDay,
-      task: task?.name ?? "",
-      hours: task?.hours ?? 0,
+      task: task?.name ?? undefined,
+      hours: task?.hours,
     },
   });
 
   const onSubmit = (values: z.infer<typeof taskFormSchema>) => {
     console.log(values);
+    form.reset({});
+    console.log(form.getValues());
   };
 
   return (
@@ -233,11 +237,12 @@ function TaskTableRow({ task }: TaskTableRowProps) {
             render={({ field }) => (
               <FormItem>
                 <Select
+                  key={form.formState.submitCount}
                   defaultValue={field.value}
                   onValueChange={field.onChange}
                 >
                   <FormControl>
-                    <SelectTrigger className="uppercase data-[placeholder]:normal-case">
+                    <SelectTrigger className="uppercase data-[placeholder]:normal-case aria-invalid:ring-destructive">
                       <SelectValue placeholder="Select day" />
                     </SelectTrigger>
                   </FormControl>
@@ -262,6 +267,7 @@ function TaskTableRow({ task }: TaskTableRowProps) {
               <FormItem>
                 <FormControl>
                   <Input
+                    key={form.formState.submitCount}
                     placeholder="Input task"
                     defaultValue={field.value}
                     onChange={field.onChange}
@@ -281,10 +287,14 @@ function TaskTableRow({ task }: TaskTableRowProps) {
               <FormItem>
                 <FormControl>
                   <Input
+                    key={form.formState.submitCount}
                     type="number"
                     placeholder="Input hours"
                     defaultValue={field.value}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    onChange={(e) => {
+                      const hours = parseFloat(e.target.value);
+                      field.onChange(isNaN(hours) ? undefined : hours);
+                    }}
                     autoComplete="off"
                   />
                 </FormControl>
@@ -293,10 +303,17 @@ function TaskTableRow({ task }: TaskTableRowProps) {
             )}
           />
         </TableCell>
-        <TableCell className="flex">
-          <Button size="icon" onClick={form.handleSubmit(onSubmit)}>
-            <PlusIcon className="w-4 h-4" />
-          </Button>
+        <TableCell>
+          {!task && (
+            <Button variant="outline" size="icon" onClick={form.handleSubmit(onSubmit)}>
+              <PlusIcon className="w-4 h-4" />
+            </Button>
+          )}
+          {task && form.formState.isDirty && (
+            <Button variant="outline" size="icon" onClick={form.handleSubmit(onSubmit)}>
+              <CheckIcon className="w-4 h-4" />
+            </Button>
+          )}
         </TableCell>
       </TableRow>
     </Form>
