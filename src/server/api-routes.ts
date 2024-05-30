@@ -1,6 +1,5 @@
-import { WEEK_DAY } from "@/constants";
+import { WEEKDAY } from "@/constants";
 import * as schema from "@/server/schema";
-import { taskFormSchema } from "@/validation";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { neon } from "@neondatabase/serverless";
@@ -140,7 +139,7 @@ const contractor = new Hono<Options>()
       z.object({
         id: z.number().optional(),
         timesheetId: z.number(),
-        weekDay: z.enum(WEEK_DAY, { message: "Day is required" }),
+        weekday: z.enum(WEEKDAY, { message: "Day is required" }),
         name: z.string().min(1, { message: "Task is required" }),
         hours: z
           .number({ message: "Hours is required" })

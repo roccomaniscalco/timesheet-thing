@@ -49,7 +49,7 @@ import {
   headerActionTunnel,
   headerBreadcrumbTunnel,
 } from "@/client/routes/__root.js";
-import { WEEK_DAY, type WeekDay } from "@/constants";
+import { WEEKDAY, type Weekday } from "@/constants";
 import { taskFormSchema, type TaskForm } from "@/validation";
 import { UserButton } from "@clerk/clerk-react";
 import {
@@ -91,21 +91,21 @@ function Timesheet() {
         ...data,
         // tasks: data.tasks.sort((a, b) => {
         //   return (
-        //     // Sort by weekDay
-        //     WEEK_DAY.indexOf(a.weekDay) - WEEK_DAY.indexOf(b.weekDay) ||
-        //     // If weekDay is the same, sort by id
+        //     // Sort by weekday
+        //     WEEK_DAY.indexOf(a.weekday) - WEEK_DAY.indexOf(b.weekday) ||
+        //     // If weekday is the same, sort by id
         //     a.id - b.id
         //   );
         // }),
         tasksByDay: data.tasks.reduce(
           (acc, curr) => {
-            if (!acc[curr.weekDay]) {
-              acc[curr.weekDay] = [];
+            if (!acc[curr.weekday]) {
+              acc[curr.weekday] = [];
             }
-            acc[curr.weekDay].push(curr);
+            acc[curr.weekday].push(curr);
             return acc;
           },
-          {} as Record<WeekDay, Task[]>
+          {} as Record<Weekday, Task[]>
         ),
       };
     },
@@ -153,8 +153,8 @@ function Timesheet() {
               <NewTaskRow />
             </TableBody>
           </Table>
-          {WEEK_DAY.map((day) => (
-            <TaskTable day={day} tasks={timesheet?.tasksByDay[day]} />
+          {WEEKDAY.map((day) => (
+            <TaskTable day={day} tasks={timesheet?.tasksByDay[day]} key={day} />
           ))}
         </CardContent>
       </Card>
@@ -233,7 +233,7 @@ type Tasks = InferResponseType<
   200
 >["tasks"];
 type TaskTableProps = {
-  day: WeekDay;
+  day: Weekday;
   tasks?: Tasks;
 };
 function TaskTable(props: TaskTableProps) {
@@ -257,7 +257,7 @@ function TaskTable(props: TaskTableProps) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="min-w-40 capitalize text-foreground">
+          <TableHead className="min-w-40 capitalize">
             {props.day}
           </TableHead>
           <TableHead className="w-full" />
@@ -293,7 +293,7 @@ function TaskRow({ task, ...props }: TaskRowProps) {
   const form = useForm<TaskForm>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
-      weekDay: task.weekDay,
+      weekday: task.weekday,
       name: task.name,
       hours: task.hours,
     },
@@ -422,7 +422,7 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
         <TableCell className="min-w-40">
           <FormField
             control={form.control}
-            name="weekDay"
+            name="weekday"
             render={({ field }) => (
               <FormItem>
                 <Select
@@ -431,13 +431,13 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
                   onValueChange={field.onChange}
                 >
                   <FormControl>
-                    <SelectTrigger className="uppercase data-[placeholder]:normal-case aria-invalid:ring-destructive">
+                    <SelectTrigger className="capitalize data-[placeholder]:normal-case aria-invalid:ring-destructive">
                       <SelectValue placeholder="Select day" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {WEEK_DAY.map((day) => (
-                      <SelectItem key={day} value={day} className="uppercase">
+                    {WEEKDAY.map((day) => (
+                      <SelectItem key={day} value={day} className="capitalize">
                         {day}
                       </SelectItem>
                     ))}
