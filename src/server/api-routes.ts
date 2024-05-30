@@ -112,7 +112,7 @@ const contractor = new Hono<Options>()
           )
         )
         .returning();
-      return c.json(timeseheets[0], 200);
+      return c.json(timeseheets[0]?.weekStart, 200);
     }
   )
   .post("/timesheets", async (c) => {
@@ -166,7 +166,7 @@ const contractor = new Hono<Options>()
           set: { ...task, id: undefined },
         })
         .returning();
-      return c.json(newTasks, 201);
+      return c.json(newTasks[0], 201);
     }
   )
   .delete("/timesheets/tasks/:id", async (c) => {
@@ -181,8 +181,8 @@ const contractor = new Hono<Options>()
     const deletedTasks = await c.var.db
       .delete(schema.tasks)
       .where(eq(schema.tasks.id, id))
-      .returning();
-    return c.json(deletedTasks[0], 200);
+      .returning({ id: schema.tasks.id });
+    return c.json(deletedTasks[0]?.id, 200);
   });
 
 const apiRoutes = baseApi.route("/contractor", contractor);

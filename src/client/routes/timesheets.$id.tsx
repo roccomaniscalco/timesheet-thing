@@ -1,4 +1,4 @@
-import { api } from "@/client/api-caller";
+import { api, timesheetQueryOptions, type Task } from "@/client/api-caller";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -59,15 +59,9 @@ import {
   TrashIcon,
 } from "@heroicons/react/16/solid";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  useMutation,
-  useMutationState,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, useParams } from "@tanstack/react-router";
 import { startOfWeek } from "date-fns";
-import type { InferResponseType } from "hono";
 import { useEffect } from "react";
 import { useForm, type UseFormReturn } from "react-hook-form";
 
@@ -77,39 +71,7 @@ export const Route = createFileRoute("/timesheets/$id")({
 
 function Timesheet() {
   const { id } = useParams({ from: "/timesheets/$id" });
-  const { data: timesheet } = useQuery({
-    queryKey: ["get-timesheet", id],
-    queryFn: async () => {
-      const res = await api.contractor.timesheets[":id"].$get({
-        param: { id },
-      });
-      if (!res.ok) throw new Error("Failed to get timesheet");
-      return res.json();
-    },
-    select: (data) => {
-      return {
-        ...data,
-        // tasks: data.tasks.sort((a, b) => {
-        //   return (
-        //     // Sort by weekday
-        //     WEEK_DAY.indexOf(a.weekday) - WEEK_DAY.indexOf(b.weekday) ||
-        //     // If weekday is the same, sort by id
-        //     a.id - b.id
-        //   );
-        // }),
-        tasksByDay: data.tasks.reduce(
-          (acc, curr) => {
-            if (!acc[curr.weekday]) {
-              acc[curr.weekday] = [];
-            }
-            acc[curr.weekday].push(curr);
-            return acc;
-          },
-          {} as Record<Weekday, Task[]>
-        ),
-      };
-    },
-  });
+  const { data: timesheet } = useQuery(timesheetQueryOptions(id));
 
   return (
     <>
@@ -175,11 +137,13 @@ export function WeekPicker(props: WeekPickerProps) {
         json: timesheet,
       });
       if (!res.ok) throw new Error("Failed to update timesheet");
-      return res.json();
+      return await res.json();
     },
-    onSettled: async () => {
-      return await queryClient.invalidateQueries({
-        queryKey: ["get-timesheet", id],
+    onSuccess: (updatedWeekStart) => {
+      // Update weekStart in timesheet cache
+      queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
+        if (prev === undefined) return undefined;
+        return { ...prev, weekStart: updatedWeekStart };
       });
     },
   });
@@ -228,27 +192,11 @@ export function WeekPicker(props: WeekPickerProps) {
   );
 }
 
-type Tasks = InferResponseType<
-  (typeof api.contractor.timesheets)[":id"]["$get"],
-  200
->["tasks"];
 type TaskTableProps = {
   day: Weekday;
-  tasks?: Tasks;
+  tasks?: Task[];
 };
 function TaskTable(props: TaskTableProps) {
-  const { id } = useParams({ from: "/timesheets/$id" });
-  const optimisticTasks = useMutationState({
-    filters: { mutationKey: ["create-task"], status: "pending" },
-    select: (mutation) => {
-      return {
-        ...(mutation.state.variables as TaskForm),
-        timesheetId: Number(id),
-        id: mutation.mutationId,
-      };
-    },
-  });
-
   if (!props.tasks) {
     return null;
   }
@@ -257,9 +205,7 @@ function TaskTable(props: TaskTableProps) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="min-w-40 capitalize">
-            {props.day}
-          </TableHead>
+          <TableHead className="min-w-40 capitalize">{props.day}</TableHead>
           <TableHead className="w-full" />
           <TableHead className="min-w-40" />
           <TableHead />
@@ -269,19 +215,10 @@ function TaskTable(props: TaskTableProps) {
         {props.tasks.map((task) => (
           <TaskRow task={task} key={task.id} />
         ))}
-        {optimisticTasks.map((task) => (
-          <TaskRow
-            task={task}
-            key={task.id}
-            className="animate-in slide-in-from-top"
-          />
-        ))}
       </TableBody>
     </Table>
   );
 }
-
-type Task = Tasks[number];
 
 type TaskRowProps = {
   task: Task;
@@ -312,9 +249,15 @@ function TaskRow({ task, ...props }: TaskRowProps) {
       if (!res.ok) throw new Error("Failed to update task");
       return await res.json();
     },
-    onSuccess: async (data) => {
-      await queryClient.invalidateQueries({ queryKey: ["get-timesheet", id] });
-      form.reset(data[0]);
+    onSuccess: async (updatedTask) => {
+      // Update task in timesheet cache
+      queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
+        if (prev === undefined) return undefined;
+        const taskIdx = prev.tasks.findIndex((t) => t.id === updatedTask.id);
+        return { ...prev, tasks: prev.tasks.with(taskIdx, updatedTask) };
+      });
+      // Reset form after successful update
+      form.reset(updatedTask);
     },
   });
 
@@ -327,9 +270,14 @@ function TaskRow({ task, ...props }: TaskRowProps) {
       if (!res.ok) throw new Error("Failed to delete task");
       return await res.json();
     },
-    onSuccess: async () => {
-      return await queryClient.invalidateQueries({
-        queryKey: ["get-timesheet", id],
+    onSuccess: (deletedTaskId) => {
+      // Remove deleted task from timesheet cache
+      queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
+        if (prev === undefined) return undefined;
+        return {
+          ...prev,
+          tasks: prev.tasks.filter((t) => t.id !== deletedTaskId),
+        };
       });
     },
   });
@@ -380,14 +328,16 @@ function NewTaskRow() {
       if (!res.ok) throw new Error("Failed to create task");
       return await res.json();
     },
-    onSuccess: async () => {
-      return await queryClient.invalidateQueries({
-        queryKey: ["get-timesheet", id],
+    onSuccess: (newTask) => {
+      // Add new task to timesheet cache
+      queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
+        if (prev === undefined) return undefined;
+        return { ...prev, tasks: [...prev.tasks, newTask] };
       });
     },
   });
 
-  // Reset row after successful submission
+  // Reset row after successful form submission
   useEffect(() => {
     if (form.formState.isSubmitSuccessful) {
       form.reset();
