@@ -74,7 +74,6 @@ function NewTimesheetButton() {
     <Button
       disabled={isCreatingTimesheet}
       className="flex gap-2"
-      size="sm"
       onClick={() => createTimesheet()}
     >
       New Timesheet

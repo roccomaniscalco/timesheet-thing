@@ -2,7 +2,7 @@ import { STATUS, WEEK_DAY } from "@/constants";
 import { generateSlug } from "@/server/generate-slug";
 import {
   date,
-  decimal,
+  real,
   integer,
   pgEnum,
   pgTable,
@@ -50,7 +50,7 @@ export const weekDay = pgEnum("week_day", WEEK_DAY);
 export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
   weekDay: weekDay("week_day").notNull(),
-  hours: decimal("hours").notNull(),
+  hours: real("hours").notNull(),
   name: varchar("name"),
   timesheetId: integer("timesheet_id")
     .references(() => timesheets.id, { onDelete: "cascade" })

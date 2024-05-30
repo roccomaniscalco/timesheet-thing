@@ -10,10 +10,25 @@ import {
 import { Button } from "@/client/components/ui/button";
 import { Calendar } from "@/client/components/ui/calendar";
 import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/client/components/ui/form";
+import { Input } from "@/client/components/ui/input";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/client/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/client/components/ui/select";
 import {
   Table,
   TableBody,
@@ -28,12 +43,16 @@ import {
   headerActionTunnel,
   headerBreadcrumbTunnel,
 } from "@/client/routes/__root.js";
+import { WEEK_DAY } from "@/constants";
 import { UserButton } from "@clerk/clerk-react";
-import { CalendarIcon } from "@heroicons/react/16/solid";
+import { CalendarIcon, PlusIcon } from "@heroicons/react/16/solid";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, useParams } from "@tanstack/react-router";
 import { startOfWeek } from "date-fns";
 import type { InferResponseType } from "hono";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 export const Route = createFileRoute("/timesheets/$id")({
   component: Timesheet,
@@ -114,7 +133,6 @@ export function WeekPicker(props: WeekPickerProps) {
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          size="sm"
           className={cn(
             "justify-start text-left font-normal",
             !week && "text-muted-foreground"
@@ -151,30 +169,136 @@ type Tasks = InferResponseType<
   (typeof api.contractor.timesheets)[":id"]["$get"],
   200
 >["tasks"];
-
 type TaskTableProps = {
   tasks: Tasks;
 };
-function TaskTable(props: TaskTableProps) {
+function TaskTable({ tasks }: TaskTableProps) {
   return (
-    <Table>
-      <TableCaption>A list of your recent invoices.</TableCaption>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Day</TableHead>
-          <TableHead className="w-[50%]">Task</TableHead>
-          <TableHead className="text-right">Hours</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {props.tasks.map((task) => (
-          <TableRow key={task.id}>
-            <TableCell className="uppercase">{task.weekDay}</TableCell>
-            <TableCell className="w-[50%]">{task.name}</TableCell>
-            <TableCell className="text-right">{task.hours}</TableCell>
+    <>
+      <Table>
+        <TableCaption>Tasks logged for the selected timesheet.</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="min-w-40">Weekday</TableHead>
+            <TableHead className="w-full">Task</TableHead>
+            <TableHead className="min-w-40">Hours</TableHead>
+            <TableHead />
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {tasks.map((task) => (
+            <TaskTableRow task={task} />
+          ))}
+          <TaskTableRow />
+        </TableBody>
+      </Table>
+    </>
+  );
+}
+
+const taskFormSchema = z.object({
+  weekDay: z.enum(WEEK_DAY),
+  task: z.string(),
+  hours: z
+    .number()
+    .positive()
+    .refine((v) => v % 0.25 === 0),
+});
+
+type Task = Tasks[number];
+type TaskTableRowProps = {
+  task?: Task;
+};
+function TaskTableRow({ task }: TaskTableRowProps) {
+  const form = useForm<z.infer<typeof taskFormSchema>>({
+    resolver: zodResolver(taskFormSchema),
+    defaultValues: {
+      weekDay: task?.weekDay,
+      task: task?.name ?? "",
+      hours: task?.hours ?? 0,
+    },
+  });
+
+  const onSubmit = (values: z.infer<typeof taskFormSchema>) => {
+    console.log(values);
+  };
+
+  return (
+    <Form {...form}>
+      <TableRow>
+        <TableCell className="min-w-40">
+          <FormField
+            control={form.control}
+            name="weekDay"
+            render={({ field }) => (
+              <FormItem>
+                <Select
+                  defaultValue={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger className="uppercase data-[placeholder]:normal-case">
+                      <SelectValue placeholder="Select day" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {WEEK_DAY.map((day) => (
+                      <SelectItem key={day} value={day} className="uppercase">
+                        {day}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </TableCell>
+        <TableCell className="w-full">
+          <FormField
+            control={form.control}
+            name="task"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input
+                    placeholder="Input task"
+                    defaultValue={field.value}
+                    onChange={field.onChange}
+                    autoComplete="off"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </TableCell>
+        <TableCell className="min-w-40">
+          <FormField
+            control={form.control}
+            name="hours"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="Input hours"
+                    defaultValue={field.value}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    autoComplete="off"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </TableCell>
+        <TableCell className="flex">
+          <Button size="icon" onClick={form.handleSubmit(onSubmit)}>
+            <PlusIcon className="w-4 h-4" />
+          </Button>
+        </TableCell>
+      </TableRow>
+    </Form>
   );
 }
