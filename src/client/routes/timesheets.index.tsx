@@ -85,11 +85,7 @@ function NewTimesheetButton() {
 function TimesheetGrid() {
   const { data: timesheets } = useQuery({
     queryKey: ["get-timesheets"],
-    queryFn: async () => {
-      const res = await api.contractor.timesheets.$get();
-      if (!res.ok) throw new Error("Failed to get timesheets");
-      return res.json();
-    },
+    queryFn: () => api.contractor.timesheets.$get()
   });
 
   return (

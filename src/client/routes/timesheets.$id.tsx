@@ -131,13 +131,11 @@ export function WeekPicker(props: WeekPickerProps) {
   const { id } = useParams({ from: "/timesheets/$id" });
   const queryClient = useQueryClient();
   const timesheetMutation = useMutation({
-    mutationFn: async (timesheet: { weekStart: string | null }) => {
-      const res = await api.contractor.timesheets[":id"].$put({
+    mutationFn: (timesheet: { weekStart: string | null }) => {
+      return api.contractor.timesheets[":id"].$put({
         param: { id },
         json: timesheet,
       });
-      if (!res.ok) throw new Error("Failed to update timesheet");
-      return await res.json();
     },
     onSuccess: (updatedWeekStart) => {
       // Update weekStart in timesheet cache
