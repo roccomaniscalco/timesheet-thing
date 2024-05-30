@@ -435,6 +435,7 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
                     key={form.formState.isSubmitSuccessful.toString()}
                     type="number"
                     placeholder="Input hours"
+                    step={0.25}
                     defaultValue={field.value}
                     onChange={(e) => {
                       const hours = parseFloat(e.target.value);
