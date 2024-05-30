@@ -46,7 +46,12 @@ import {
 import { WEEK_DAY } from "@/constants";
 import { taskFormSchema, type TaskForm } from "@/validation";
 import { UserButton } from "@clerk/clerk-react";
-import { CalendarIcon, CheckIcon, PlusIcon } from "@heroicons/react/16/solid";
+import {
+  CalendarIcon,
+  CheckIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/16/solid";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
@@ -263,9 +268,29 @@ function TaskRow({ task, ...props }: TaskRowProps) {
       if (!res.ok) throw new Error("Failed to update task");
       return await res.json();
     },
-    onSuccess: async (data) => {
-      await queryClient.invalidateQueries({ queryKey: ["get-timesheet", id] });
-      form.reset(data[0]);
+    onMutate: (taskForm) => {
+      form.reset(taskForm);
+    },
+    onSuccess: async () => {
+      return await queryClient.invalidateQueries({
+        queryKey: ["get-timesheet", id],
+      });
+    },
+  });
+
+  const deleteTaskMutation = useMutation({
+    mutationKey: ["delete-task"],
+    mutationFn: async () => {
+      const res = await api.contractor.timesheets.tasks[":id"].$delete({
+        param: { id: String(task.id) },
+      });
+      if (!res.ok) throw new Error("Failed to delete task");
+      return await res.json();
+    },
+    onSuccess: async () => {
+      return await queryClient.invalidateQueries({
+        queryKey: ["get-timesheet", id],
+      });
     },
   });
 
@@ -274,13 +299,26 @@ function TaskRow({ task, ...props }: TaskRowProps) {
       className={props.className}
       form={form}
       actionItem={
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={form.handleSubmit((data) => updateTaskMutation.mutate(data))}
-        >
-          <CheckIcon className="w-4 h-4" />
-        </Button>
+        form.formState.isDirty ? (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={form.handleSubmit((data) =>
+              updateTaskMutation.mutate(data)
+            )}
+          >
+            <CheckIcon className="w-4 h-4" />
+          </Button>
+        ) : (
+          <Button
+            className="invisible group-hover/row:visible"
+            variant="destructive"
+            size="icon"
+            onClick={() => deleteTaskMutation.mutate()}
+          >
+            <TrashIcon className="w-4 h-4" />
+          </Button>
+        )
       }
     />
   );
@@ -348,7 +386,7 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
             render={({ field }) => (
               <FormItem>
                 <Select
-                  key={form.formState.submitCount}
+                  key={form.formState.isSubmitSuccessful.toString()}
                   defaultValue={field.value}
                   onValueChange={field.onChange}
                 >
@@ -378,7 +416,7 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
               <FormItem>
                 <FormControl>
                   <Input
-                    key={form.formState.submitCount}
+                    key={form.formState.isSubmitSuccessful.toString()}
                     placeholder="Input task"
                     defaultValue={field.value}
                     onChange={field.onChange}
@@ -398,7 +436,7 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
               <FormItem>
                 <FormControl>
                   <Input
-                    key={form.formState.submitCount}
+                    key={form.formState.isSubmitSuccessful.toString()}
                     type="number"
                     placeholder="Input hours"
                     defaultValue={field.value}

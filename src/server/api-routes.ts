@@ -91,6 +91,7 @@ const contractor = new Hono<Options>()
   })
   .put(
     "/timesheets/:id",
+    // TODO: Add validation for weekStart
     zValidator("json", z.object({ weekStart: z.string().nullable() })),
     async (c) => {
       const auth = getAuth(c);
@@ -168,7 +169,22 @@ const contractor = new Hono<Options>()
         .returning();
       return c.json(newTasks, 201);
     }
-  );
+  )
+  .delete("/timesheets/tasks/:id", async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) return c.json({ message: "Unauthorized" }, 401);
+    const contractor = await c.var.db.query.contractors.findFirst({
+      where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId),
+    });
+    if (!contractor) return c.json({ message: "Forbidden" }, 403);
+
+    const id = Number(c.req.param("id"));
+    const deletedTasks = await c.var.db
+      .delete(schema.tasks)
+      .where(eq(schema.tasks.id, id))
+      .returning();
+    return c.json(deletedTasks[0], 200);
+  });
 
 const apiRoutes = baseApi.route("/contractor", contractor);
 type ApiRoutesType = typeof apiRoutes;
