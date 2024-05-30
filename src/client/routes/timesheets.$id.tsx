@@ -75,6 +75,19 @@ function Timesheet() {
       if (!res.ok) throw new Error("Failed to get timesheet");
       return res.json();
     },
+    select: (data) => {
+      return {
+        ...data,
+        tasks: data.tasks.sort((a, b) => {
+          return (
+            // Sort by weekDay
+            WEEK_DAY.indexOf(a.weekDay) - WEEK_DAY.indexOf(b.weekDay) ||
+            // If weekDay is the same, sort by id
+            a.id - b.id
+          );
+        }),
+      };
+    },
   });
 
   return (
@@ -190,7 +203,6 @@ function TaskTable({ tasks }: TaskTableProps) {
       };
     },
   });
-  console.log(optimisticTasks);
 
   return (
     <Table>
@@ -290,8 +302,10 @@ function NewTaskRow() {
       if (!res.ok) throw new Error("Failed to create task");
       return await res.json();
     },
-    onSuccess: () => {
-      return queryClient.invalidateQueries({ queryKey: ["get-timesheet", id] });
+    onSuccess: async () => {
+      return await queryClient.invalidateQueries({
+        queryKey: ["get-timesheet", id],
+      });
     },
   });
 
