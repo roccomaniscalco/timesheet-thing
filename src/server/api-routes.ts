@@ -132,9 +132,23 @@ const contractor = new Hono<Options>()
       .returning();
     return c.json(newTimesheet[0], 201);
   })
-  .post(
-    "/timesheets/:id/tasks",
-    zValidator("json", taskFormSchema),
+  .patch(
+    "/timesheets/tasks",
+    zValidator(
+      "json",
+      z.object({
+        id: z.number().optional(),
+        timesheetId: z.number(),
+        weekDay: z.enum(WEEK_DAY, { message: "Day is required" }),
+        name: z.string().min(1, { message: "Task is required" }),
+        hours: z
+          .number({ message: "Hours is required" })
+          .positive({ message: "Hours must be positive" })
+          .refine((v) => v % 0.25 === 0, {
+            message: "Hours must be in 0.25 increments",
+          }),
+      })
+    ),
     async (c) => {
       const auth = getAuth(c);
       if (!auth?.userId) return c.json({ message: "Unauthorized" }, 401);
@@ -143,18 +157,16 @@ const contractor = new Hono<Options>()
       });
       if (!contractor) return c.json({ message: "Forbidden" }, 403);
 
-      const timesheetId = Number(c.req.param("id"));
-      const { weekDay, name, hours } = c.req.valid("json");
-      const newTask = await c.var.db
+      const task = c.req.valid("json");
+      const newTasks = await c.var.db
         .insert(schema.tasks)
-        .values({
-          timesheetId,
-          weekDay,
-          name,
-          hours,
+        .values(task)
+        .onConflictDoUpdate({
+          target: schema.tasks.id,
+          set: { ...task, id: undefined },
         })
         .returning();
-      return c.json(newTask[0], 201);
+      return c.json(newTasks, 201);
     }
   );
 
