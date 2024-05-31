@@ -1,4 +1,9 @@
-import { api, timesheetQueryOptions, historyQueryOptions, type Task } from "@/client/api-caller";
+import {
+  api,
+  timesheetQueryOptions,
+  historyQueryOptions,
+  type Task,
+} from "@/client/api-caller";
 import { StatusBadge } from "@/client/components/status-badge";
 import {
   Avatar,
@@ -508,7 +513,6 @@ function EditTaskRow({ task, ...props }: TaskRowProps) {
   });
 
   const updateTaskMutation = useMutation({
-    mutationKey: ["update-task"],
     mutationFn: async (taskForm: TaskForm) => {
       const res = await api.contractor.timesheets.tasks.$patch({
         json: {
@@ -533,7 +537,6 @@ function EditTaskRow({ task, ...props }: TaskRowProps) {
   });
 
   const deleteTaskMutation = useMutation({
-    mutationKey: ["delete-task"],
     mutationFn: async () => {
       const res = await api.contractor.timesheets.tasks[":id"].$delete({
         param: { id: String(task.id) },
@@ -591,7 +594,6 @@ function CreateTaskRow() {
   });
 
   const createTaskMutation = useMutation({
-    mutationKey: ["create-task"],
     mutationFn: async (taskForm: TaskForm) => {
       const res = await api.contractor.timesheets.tasks.$patch({
         json: { ...taskForm, timesheetId: Number(id) },
