@@ -9,7 +9,7 @@ function RootLayout() {
   return (
     <>
       <Header />
-      <main className="p-6 flex flex-col gap-6 max-w-7xl mx-auto">
+      <main className="max-w-7xl mx-auto h-screen">
         <Outlet />
       </main>
     </>
@@ -21,8 +21,8 @@ export const headerBreadcrumbTunnel = tunnel();
 
 function Header() {
   return (
-    <header className="sticky top-0 z-10 bg-background/70 backdrop-blur border-border border-b">
-      <div className="flex justify-between items-center gap-6 px-6 h-14 max-w-7xl mx-auto">
+    <header className="absolute inset-x-0 z-10 bg-background/70 backdrop-blur border-border border-b">
+      <div className="flex justify-between items-center gap-6 px-4 h-14 max-w-7xl mx-auto">
         <div className="flex-1">
           <headerBreadcrumbTunnel.Out />
         </div>

@@ -40,7 +40,7 @@ export function StatusBadge({
       className={cn(
         "inline-flex items-center rounded border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 gap-1.5 capitalize",
         variantClass[status],
-        dense && "p-0.5 leading-none",
+        dense && "p-0.5 leading-none font-medium",
         className
       )}
       {...props}

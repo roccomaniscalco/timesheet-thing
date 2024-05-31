@@ -125,8 +125,12 @@ function Timesheet() {
         <StatusSelect />
       </headerActionTunnel.In>
 
-      <ResizablePanelGroup direction="horizontal" className="h-screen">
-        <ResizablePanel className="pr-4 h-screen" defaultSize={70}>
+      <ResizablePanelGroup direction="horizontal">
+        <ResizablePanel
+          className="p-4 mt-14"
+          style={{ overflow: "auto" }}
+          defaultSize={70}
+        >
           <Card className="overflow-hidden">
             <div className="flex justify-between">
               <CardHeader>
@@ -164,7 +168,11 @@ function Timesheet() {
         </ResizablePanel>
 
         <ResizableHandle withHandle />
-        <ResizablePanel className="pl-4" defaultSize={30}>
+        <ResizablePanel
+          className="p-4 mt-14"
+          style={{ overflow: "auto" }}
+          defaultSize={30}
+        >
           <div className="flex flex-col gap-4">
             {/* <ContractorCard /> */}
             <TimesheetOverviewCard />
@@ -237,11 +245,11 @@ function TimesheetOverviewCard() {
 
   return (
     <Card>
-      <CardHeader className="bg-accent border-b">
+      <CardHeader >
         <CardTitle>Timesheet Overview</CardTitle>
         <CardDescription>Calculated from logged tasks.</CardDescription>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent >
         <ul className="grid gap-3 text-sm">
           <li>
             <h4 className="text-sm font-semibold">Payment</h4>
@@ -295,11 +303,11 @@ function HistoryCard() {
 
   return (
     <Card className="@container">
-      <CardHeader className="border-b">
+      <CardHeader>
         <CardTitle>Timesheet History</CardTitle>
         <CardDescription>Status changes and comments.</CardDescription>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent>
         <ul className="gap-8 flex flex-col">
           {history?.map((entry) => (
             <li className="flex gap-4">
