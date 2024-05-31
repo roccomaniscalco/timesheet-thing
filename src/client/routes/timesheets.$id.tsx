@@ -69,13 +69,19 @@ import {
   getWeekRange,
 } from "@/client/components/utils";
 import {
-  headerBreadcrumbTunnel,
   headerActionTunnel,
+  headerBreadcrumbTunnel,
 } from "@/client/routes/__root.js";
-import { CONTRACTOR_STATUS, STATUS, WEEKDAY, type ContractorStatus, type Status, type Weekday } from "@/constants";
+import {
+  CONTRACTOR_STATUS,
+  WEEKDAY,
+  type ContractorStatus,
+  type Weekday,
+} from "@/constants";
 import { taskFormSchema, type TaskForm } from "@/validation";
 import { UserButton } from "@clerk/clerk-react";
 import {
+  ArrowRightIcon,
   BanknotesIcon,
   CalendarIcon,
   CheckIcon,
@@ -85,14 +91,14 @@ import {
 } from "@heroicons/react/16/solid";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
 import {
   Link,
   createFileRoute,
+  useNavigate,
   useParams,
   useSearch,
 } from "@tanstack/react-router";
-import { startOfWeek } from "date-fns";
+import { compareDesc, formatDistanceToNowStrict, startOfWeek } from "date-fns";
 import { useEffect } from "react";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
@@ -187,12 +193,18 @@ function Timesheet() {
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
-            <TabsContent value="overview" className="flex flex-col gap-4 mt-4">
-              <ContractorCard />
-              <TotalHoursCard />
-              <TotalAmountCard />
+            <TabsContent value="overview">
+              <div className="flex flex-col gap-4 mt-4">
+                <ContractorCard />
+                <TotalHoursCard />
+                <TotalAmountCard />
+              </div>
             </TabsContent>
-            <TabsContent value="history">Change your history here.</TabsContent>
+            <TabsContent value="history" forceMount>
+              <div className="mt-4">
+                <HistoryCard />
+              </div>
+            </TabsContent>
           </Tabs>
         </ResizablePanel>
       </ResizablePanelGroup>
@@ -206,19 +218,19 @@ function StatusSelect() {
 
   const queryClient = useQueryClient();
   const statusMutation = useMutation({
-    mutationFn: async (status: ContractorStatus) => {
+    mutationFn: async (toStatus: ContractorStatus) => {
       const res = await api.contractor.timesheets[":id"].status.$put({
         param: { id },
-        json: { status },
+        json: { toStatus },
       });
       if (!res.ok) throw new Error("Failed to update status");
       return await res.json();
     },
-    onSuccess: ({ newStatus }) => {
+    onSuccess: (historyEntry) => {
       // Update status in timesheet cache
       queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
         if (prev === undefined) return undefined;
-        return { ...prev, status: newStatus };
+        return { ...prev, status: historyEntry.toStatus };
       });
     },
   });
@@ -231,7 +243,9 @@ function StatusSelect() {
   return (
     <Select
       value={status}
-      onValueChange={(status) => statusMutation.mutate(status as ContractorStatus)}
+      onValueChange={(status) =>
+        statusMutation.mutate(status as ContractorStatus)
+      }
     >
       <SelectTrigger className="capitalize pl-1 gap-2">
         <SelectValue />
@@ -244,6 +258,56 @@ function StatusSelect() {
         ))}
       </SelectContent>
     </Select>
+  );
+}
+
+function HistoryCard() {
+  const { id } = useParams({ from: "/timesheets/$id" });
+  const { data: history } = useQuery({
+    queryKey: ["timesheet-history", id],
+    queryFn: async () => {
+      const res = await api.contractor.timesheets[":id"].history.$get({
+        param: { id },
+      });
+      if (!res.ok) throw new Error("Failed to fetch history");
+      return await res.json();
+    },
+    select: (history) =>
+      history.sort((a, b) =>
+        compareDesc(new Date(a.createdAt), new Date(b.createdAt))
+      ),
+  });
+
+  return (
+    <Card className="@container">
+      <CardHeader>
+        <Input placeholder="Search history" />
+      </CardHeader>
+      <CardContent className="gap-8 flex flex-col">
+        {history?.map((entry) => (
+          <div className="flex gap-4">
+            <Avatar className="h-9 w-9 hidden @xs:flex">
+              <AvatarImage src="/avatars/01.png" alt="Avatar" />
+              <AvatarFallback>OM</AvatarFallback>
+            </Avatar>
+            <div className="space-y-3">
+              <CardDescription>
+                <span className="text-foreground">{entry.contractorId}</span>{" "}
+                {entry.description}{" "}
+                {formatDistanceToNowStrict(new Date(entry.createdAt), {
+                  addSuffix: true,
+                })}
+              </CardDescription>
+              <div className="flex items-center gap-2">
+                <StatusBadge status={entry.fromStatus} dense />
+                <ArrowRightIcon className="w-3 h-3 text-muted-foreground" />
+                <StatusBadge status={entry.toStatus} dense />
+              </div>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
 

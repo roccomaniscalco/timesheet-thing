@@ -134,16 +134,7 @@ const contractor = new Hono<Options>()
         status: "draft",
       })
       .returning();
-
     if (!newTimesheet[0]) throw new Error("Failed to create timesheet");
-
-    await c.var.db.insert(schema.history).values({
-      contractorId: contractor.id,
-      timesheetId: newTimesheet[0].id,
-      description: "Created a new timesheet",
-      toStatus: "draft",
-    });
-
     return c.json(newTimesheet[0], 201);
   })
   .patch(
@@ -200,7 +191,7 @@ const contractor = new Hono<Options>()
   })
   .put(
     "/timesheets/:id/status",
-    zValidator("json", z.object({ status: z.enum(CONTRACTOR_STATUS) })),
+    zValidator("json", z.object({ toStatus: z.enum(CONTRACTOR_STATUS) })),
     async (c) => {
       const auth = getAuth(c);
       if (!auth?.userId) return c.json({ message: "Unauthorized" }, 401);
@@ -210,33 +201,17 @@ const contractor = new Hono<Options>()
       if (!contractor) return c.json({ message: "Forbidden" }, 403);
 
       const timesheetId = Number(c.req.param("id"));
-
-      const lastHistory = await c.var.db
-        .select({ toStatus: schema.history.toStatus })
-        .from(schema.history)
-        .where(
-          and(
-            or(
-              eq(schema.history.managerId, contractor.managerId),
-              eq(schema.history.contractorId, contractor.id)
-            ),
-            eq(schema.history.timesheetId, timesheetId)
-          )
-        )
-        .orderBy(desc(schema.history.createdAt))
-        .limit(1);
-
-      const status = c.req.valid("json").status;
-      const lastStatus = lastHistory[0]?.toStatus;
-      if (!lastStatus) throw new Error("last status not found");
+      const { toStatus } = c.req.valid("json");
+      const fromStatus = toStatus === "draft" ? "submitted" : "draft";
 
       const updatedStatuses = await c.var.db
         .update(schema.timesheets)
-        .set({ status })
+        .set({ status: toStatus })
         .where(
           and(
             eq(schema.timesheets.id, timesheetId),
-            eq(schema.timesheets.contractorId, contractor.id)
+            eq(schema.timesheets.contractorId, contractor.id),
+            eq(schema.timesheets.status, fromStatus)
           )
         )
         .returning({ status: schema.timesheets.status });
@@ -247,16 +222,39 @@ const contractor = new Hono<Options>()
         .values({
           contractorId: contractor.id,
           timesheetId: timesheetId,
-          description: `Changed timesheet status`,
-          fromStatus: lastStatus,
-          toStatus: status,
+          description: "changed status",
+          fromStatus,
+          toStatus,
         })
         .returning();
       if (!newHistory[0]) throw new Error("Failed to create history");
 
-      return c.json({ history: newHistory[0], newStatus: status }, 200);
+      return c.json(newHistory[0], 200);
     }
-  );
+  )
+  .get("timesheets/:id/history", async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) return c.json({ message: "Unauthorized" }, 401);
+    const contractor = await c.var.db.query.contractors.findFirst({
+      where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId),
+    });
+    if (!contractor) return c.json({ message: "Forbidden" }, 403);
+
+    const timesheetId = Number(c.req.param("id"));
+    const history = await c.var.db
+      .select()
+      .from(schema.history)
+      .where(
+        and(
+          eq(schema.history.timesheetId, timesheetId),
+          or(
+            eq(schema.history.contractorId, contractor.id),
+            eq(schema.history.managerId, contractor.managerId)
+          )
+        )
+      );
+    return c.json(history, 200);
+  });
 
 const apiRoutes = baseApi.route("/contractor", contractor);
 type ApiRoutesType = typeof apiRoutes;
