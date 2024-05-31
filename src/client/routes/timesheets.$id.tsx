@@ -72,7 +72,7 @@ import {
   headerBreadcrumbTunnel,
   headerActionTunnel,
 } from "@/client/routes/__root.js";
-import { STATUS, WEEKDAY, type Status, type Weekday } from "@/constants";
+import { CONTRACTOR_STATUS, STATUS, WEEKDAY, type ContractorStatus, type Status, type Weekday } from "@/constants";
 import { taskFormSchema, type TaskForm } from "@/validation";
 import { UserButton } from "@clerk/clerk-react";
 import {
@@ -206,7 +206,7 @@ function StatusSelect() {
 
   const queryClient = useQueryClient();
   const statusMutation = useMutation({
-    mutationFn: async (status: Status) => {
+    mutationFn: async (status: ContractorStatus) => {
       const res = await api.contractor.timesheets[":id"].status.$put({
         param: { id },
         json: { status },
@@ -231,13 +231,13 @@ function StatusSelect() {
   return (
     <Select
       value={status}
-      onValueChange={(status) => statusMutation.mutate(status as Status)}
+      onValueChange={(status) => statusMutation.mutate(status as ContractorStatus)}
     >
       <SelectTrigger className="capitalize pl-1 gap-2">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {STATUS.map((status) => (
+        {CONTRACTOR_STATUS.map((status) => (
           <SelectItem value={status} key={status} className="capitalize">
             <StatusBadge status={status} />
           </SelectItem>

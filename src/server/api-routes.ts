@@ -1,4 +1,4 @@
-import { STATUS, WEEKDAY } from "@/constants";
+import { CONTRACTOR_STATUS, STATUS, WEEKDAY } from "@/constants";
 import * as schema from "@/server/schema";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
@@ -200,7 +200,7 @@ const contractor = new Hono<Options>()
   })
   .put(
     "/timesheets/:id/status",
-    zValidator("json", z.object({ status: z.enum(STATUS) })),
+    zValidator("json", z.object({ status: z.enum(CONTRACTOR_STATUS) })),
     async (c) => {
       const auth = getAuth(c);
       if (!auth?.userId) return c.json({ message: "Unauthorized" }, 401);
@@ -225,19 +225,10 @@ const contractor = new Hono<Options>()
         )
         .orderBy(desc(schema.history.createdAt))
         .limit(1);
-      if (!lastHistory[0]) throw new Error("lastHistory not found");
 
       const status = c.req.valid("json").status;
-      const lastStatus = lastHistory[0].toStatus;
-
-      console.log({ lastStatus, status });
-
-      if (
-        !(lastStatus === "draft" && status === "submitted") &&
-        !(lastStatus === "submitted" && status === "draft")
-      ) {
-        throw new Error("Invalid status transition");
-      }
+      const lastStatus = lastHistory[0]?.toStatus;
+      if (!lastStatus) throw new Error("last status not found");
 
       const updatedStatuses = await c.var.db
         .update(schema.timesheets)

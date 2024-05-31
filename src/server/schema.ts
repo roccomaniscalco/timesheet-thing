@@ -66,6 +66,7 @@ export const tasks = pgTable("tasks", {
 });
 
 export const history = pgTable("history", {
+  id: serial("id").primaryKey(),
   description: varchar("description").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   fromStatus: status("from_status"),
