@@ -93,7 +93,7 @@ function TimesheetGrid() {
   });
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
       {timesheets?.map((timesheet) => (
         <TimesheetCard key={timesheet.id} {...timesheet} />
       ))}
@@ -108,7 +108,7 @@ interface TimesheetCardProps extends Timesheet {}
 function TimesheetCard(props: TimesheetCardProps) {
   return (
     <Link
-      className="group outline-none"
+      className="group outline-none cursor-pointer"
       to="/timesheets/$id"
       params={{ id: String(props.id) }}
     >

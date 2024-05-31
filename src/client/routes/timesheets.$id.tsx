@@ -127,7 +127,7 @@ function Timesheet() {
 
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel
-          className="p-4 mt-14"
+          className="p-4"
           style={{ overflow: "auto" }}
           defaultSize={70}
         >
@@ -169,7 +169,7 @@ function Timesheet() {
 
         <ResizableHandle withHandle />
         <ResizablePanel
-          className="p-4 mt-14"
+          className="p-4"
           style={{ overflow: "auto" }}
           defaultSize={30}
         >
@@ -245,11 +245,11 @@ function TimesheetOverviewCard() {
 
   return (
     <Card>
-      <CardHeader >
+      <CardHeader>
         <CardTitle>Timesheet Overview</CardTitle>
         <CardDescription>Calculated from logged tasks.</CardDescription>
       </CardHeader>
-      <CardContent >
+      <CardContent>
         <ul className="grid gap-3 text-sm">
           <li>
             <h4 className="text-sm font-semibold">Payment</h4>
