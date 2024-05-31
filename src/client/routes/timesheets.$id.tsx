@@ -198,6 +198,11 @@ function StatusSelect() {
         if (prev === undefined) return undefined;
         return { ...prev, status: historyEntry.toStatus };
       });
+      // Update status in history cache
+      queryClient.setQueryData(historyQueryOptions(id).queryKey, (prev) => {
+        if (prev === undefined) return undefined;
+        return [...prev, historyEntry];
+      });
     },
   });
 
