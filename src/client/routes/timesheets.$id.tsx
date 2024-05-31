@@ -406,7 +406,7 @@ type WeekPickerProps = {
 export function WeekPicker(props: WeekPickerProps) {
   const { id } = useParams({ from: "/timesheets/$id" });
   const queryClient = useQueryClient();
-  const timesheetMutation = useMutation({
+  const weekStartMutation = useMutation({
     mutationFn: async (timesheet: { weekStart: string | null }) => {
       const res = await api.contractor.timesheets[":id"].$put({
         param: { id },
@@ -425,8 +425,8 @@ export function WeekPicker(props: WeekPickerProps) {
   });
 
   // Optimistically update week while mutation is pending
-  const weekStart = timesheetMutation.isPending
-    ? timesheetMutation.variables.weekStart
+  const weekStart = weekStartMutation.isPending
+    ? weekStartMutation.variables.weekStart
     : props.weekStart;
   // Convert weekStart to DateRange
   const week = weekStart ? getWeekRange(weekStart) : null;
@@ -456,10 +456,10 @@ export function WeekPicker(props: WeekPickerProps) {
           }}
           onDayClick={(day, modifiers) => {
             if (modifiers.selected) {
-              timesheetMutation.mutate({ weekStart: null });
+              weekStartMutation.mutate({ weekStart: null });
             } else {
               const weekStart = startOfWeek(day).toDateString();
-              timesheetMutation.mutate({ weekStart });
+              weekStartMutation.mutate({ weekStart });
             }
           }}
         />
