@@ -18,7 +18,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/client/components/ui/card";
@@ -47,6 +46,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/client/components/ui/select";
+import { Skeleton } from "@/client/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -55,19 +55,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/client/components/ui/table";
-import { cn, formatDateRange, getWeekRange } from "@/client/components/utils";
 import {
-  headerActionTunnel,
-  headerBreadcrumbTunnel,
-} from "@/client/routes/__root.js";
+  cn,
+  formatCurrency,
+  formatDateRange,
+  getWeekRange,
+} from "@/client/components/utils";
+import { headerBreadcrumbTunnel } from "@/client/routes/__root.js";
 import { WEEKDAYS, type Weekday } from "@/constants";
 import { taskFormSchema, type TaskForm } from "@/validation";
 import { UserButton } from "@clerk/clerk-react";
 import {
+  BanknotesIcon,
   CalendarIcon,
   CheckIcon,
   ClockIcon,
-  InboxIcon,
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/16/solid";
@@ -107,7 +109,7 @@ function Timesheet() {
       </headerBreadcrumbTunnel.In>
 
       <ResizablePanelGroup direction="horizontal" className="h-screen">
-        <ResizablePanel className="pr-4" defaultSize={70}>
+        <ResizablePanel className="pr-4" defaultSize={75}>
           <Card>
             <CardHeader className="flex-row  gap-5 justify-between">
               <CardHeader className="p-0 min-w-0">
@@ -145,13 +147,11 @@ function Timesheet() {
         </ResizablePanel>
 
         <ResizableHandle withHandle />
-        <ResizablePanel className="pl-4" defaultSize={30}>
+        <ResizablePanel className="pl-4" defaultSize={25}>
           <div className="flex flex-col gap-4">
             <ContractorCard />
-            <div className="grid grid-cols-2 gap-4">
-              <TotalHoursCard />
-              <TotalAmountCard />
-            </div>
+            <TotalHoursCard />
+            <TotalAmountCard />
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
@@ -177,14 +177,22 @@ function ContractorCard() {
           </Avatar>
         </CardHeader>
       </div>
-      <CardContent className="text-sm text-nowrap">
+      <CardContent className="text-sm text-nowrap space-y-1">
         <div className="flex items-center gap-2 justify-between">
           <p className="text-muted-foreground">Hourly rate:</p>
-          <p>${timesheet?.rate}</p>
+          {timesheet?.rate === undefined ? (
+            <Skeleton className="w-8 h-5" />
+          ) : (
+            <p>{formatCurrency(timesheet.rate)}</p>
+          )}
         </div>
         <div className="flex items-center gap-2 justify-between">
           <p className="text-muted-foreground">Billable time:</p>
-          <p>{timesheet?.approvedHours}hr/week</p>
+          {timesheet?.approvedHours === undefined ? (
+            <Skeleton className="w-8 h-5" />
+          ) : (
+            <p>{timesheet.approvedHours}hr/week</p>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -199,10 +207,17 @@ function TotalHoursCard() {
   });
 
   return (
-    <Card>
-      <CardHeader className="pb-5">
-        <CardTitle>{totalHours}hr</CardTitle>
-        <CardDescription>Total hours</CardDescription>
+    <Card className="overflow-hidden">
+      <CardHeader className="py-5">
+        <CardDescription className="flex items-center gap-2 justify-between">
+          Total hours
+          <ClockIcon className="w-4 h-4" />
+        </CardDescription>
+        {totalHours === undefined ? (
+          <Skeleton className="w-24 h-8" />
+        ) : (
+          <CardTitle className="text-2xl">{totalHours}hr</CardTitle>
+        )}
       </CardHeader>
     </Card>
   );
@@ -217,10 +232,19 @@ function TotalAmountCard() {
   });
 
   return (
-    <Card>
-      <CardHeader className="pb-5">
-        <CardTitle>${totalAmount}</CardTitle>
-        <CardDescription>Total amount</CardDescription>
+    <Card className="overflow-hidden">
+      <CardHeader className="py-5">
+        <CardDescription className="flex items-center gap-2 justify-between">
+          Total pay
+          <BanknotesIcon className="w-4 h-4" />
+        </CardDescription>
+        {totalAmount === undefined ? (
+          <Skeleton className="w-24 h-8" />
+        ) : (
+          <CardTitle className="text-2xl">
+            {formatCurrency(totalAmount)}
+          </CardTitle>
+        )}
       </CardHeader>
     </Card>
   );

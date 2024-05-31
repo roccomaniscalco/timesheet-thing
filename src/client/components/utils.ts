@@ -7,17 +7,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const startDateFormatter = Intl.DateTimeFormat("en-US", {
+const RangeStart = Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric",
 });
-const endDateFormatter = Intl.DateTimeFormat("en-US", {
+const RangeEnd = Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "numeric",
   year: "numeric",
 });
 export function formatDateRange(dateRange: DateRange) {
-  return `${startDateFormatter.format(dateRange.from)} - ${endDateFormatter.format(dateRange.to)}`;
+  return `${RangeStart.format(dateRange.from)} - ${RangeEnd.format(dateRange.to)}`;
 }
 
 export function getWeekRange(weekStart: string) {
@@ -25,4 +25,12 @@ export function getWeekRange(weekStart: string) {
   // Fix timezone offset that causes date to be a day behind
   date = new Date(date.getTime() - date.getTimezoneOffset() * -60000);
   return { from: date, to: endOfWeek(date) } satisfies DateRange;
+}
+
+const USDollar = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+export function formatCurrency(amount: number) {
+  return USDollar.format(amount);
 }
