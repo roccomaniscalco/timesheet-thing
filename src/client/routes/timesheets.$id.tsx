@@ -217,7 +217,7 @@ function StatusSelect() {
       }
     >
       <SelectTrigger className="capitalize pl-1 gap-2">
-        <SelectValue />
+        {status ? <SelectValue /> : <Skeleton className="w-24 h-[26px]" />}
       </SelectTrigger>
       <SelectContent align="end">
         {CONTRACTOR_STATUS.map((status) => (
