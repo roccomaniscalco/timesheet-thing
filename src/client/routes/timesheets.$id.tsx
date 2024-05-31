@@ -18,6 +18,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/client/components/ui/card";
@@ -34,6 +35,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/client/components/ui/popover";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/client/components/ui/resizable";
 import {
   Select,
   SelectContent,
@@ -60,6 +66,8 @@ import { UserButton } from "@clerk/clerk-react";
 import {
   CalendarIcon,
   CheckIcon,
+  ClockIcon,
+  InboxIcon,
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/16/solid";
@@ -98,39 +106,107 @@ function Timesheet() {
         </Breadcrumb>
       </headerBreadcrumbTunnel.In>
 
-      <Card>
-        <CardHeader className="flex-row items-center gap-5 justify-between ">
-          {/* <Avatar>
+      <ResizablePanelGroup direction="horizontal" className="h-screen">
+        <ResizablePanel className="pr-4" defaultSize={70}>
+          <Card>
+            <CardHeader className="flex-row  gap-5 justify-between">
+              <CardHeader className="p-0 min-w-0">
+                <CardTitle>Timesheet Details</CardTitle>
+                <CardDescription className="truncate">
+                  Log completed work for the week.
+                </CardDescription>
+              </CardHeader>
+              <WeekPicker weekStart={timesheet?.weekStart} />
+            </CardHeader>
+
+            <CardContent className="px-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-40 capitalize">Day</TableHead>
+                    <TableHead className="w-full">Task</TableHead>
+                    <TableHead className="min-w-40">Hours</TableHead>
+                    <TableHead />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <NewTaskRow />
+                </TableBody>
+              </Table>
+              {WEEKDAYS.map((day) => (
+                <TaskTable
+                  day={day}
+                  tasks={timesheet?.tasksByDay[day]}
+                  key={day}
+                />
+              ))}
+            </CardContent>
+          </Card>
+        </ResizablePanel>
+
+        <ResizableHandle withHandle />
+        <ResizablePanel className="pl-4" defaultSize={30}>
+          <div className="flex flex-col gap-4">
+            <ContractorCard />
+            <div className="grid grid-cols-2 gap-4">
+              <TotalHoursCard />
+              <TotalMoneyCard />
+            </div>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </>
+  );
+}
+
+function ContractorCard() {
+  return (
+    <Card>
+      <div className="flex justify-between gap-4">
+        <CardHeader className="pr-0">
+          <CardTitle>John Doe</CardTitle>
+          <CardDescription>john@example.com</CardDescription>
+        </CardHeader>
+        <CardHeader className="pl-0">
+          <Avatar>
             <AvatarImage src="https://github.com/shadcn.png" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
-          <CardHeader className="p-0 flex-1 min-w-0">
-            <CardTitle>Weekly Timesheet</CardTitle>
-            <CardDescription className="truncate">Log completed tasks for the week.</CardDescription>
-          </CardHeader>
-          <WeekPicker weekStart={timesheet?.weekStart} /> */}
         </CardHeader>
+      </div>
+      <CardContent className="text-sm text-nowrap">
+        <div className="flex items-center gap-2 justify-between">
+          <p className="text-muted-foreground">Hourly rate:</p>
+          <p>$75</p>
+        </div>
+        <div className="flex items-center gap-2 justify-between">
+          <p className="text-muted-foreground">Billable time:</p>
+          <p>40hr/week</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-40 capitalize">Day</TableHead>
-                <TableHead className="w-full">Task</TableHead>
-                <TableHead className="min-w-40">Hours</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <NewTaskRow />
-            </TableBody>
-          </Table>
-          {WEEKDAYS.map((day) => (
-            <TaskTable day={day} tasks={timesheet?.tasksByDay[day]} key={day} />
-          ))}
-        </CardContent>
-      </Card>
-    </>
+function TotalHoursCard() {
+  return (
+    <Card>
+      <CardHeader className="pb-5">
+        <CardTitle>40hr</CardTitle>
+        <CardDescription>Total hours</CardDescription>
+      </CardHeader>
+    </Card>
+  );
+}
+
+function TotalMoneyCard() {
+  return (
+    <Card>
+      <CardHeader className="pb-5">
+        <CardTitle>$1,400</CardTitle>
+        <CardDescription>Total amount</CardDescription>
+      </CardHeader>
+    </Card>
   );
 }
 
@@ -171,7 +247,7 @@ export function WeekPicker(props: WeekPickerProps) {
         <Button
           variant="outline"
           className={cn(
-            "justify-start text-left font-normal",
+            "justify-start text-left font-normal mt-0",
             !week && "text-muted-foreground"
           )}
         >
