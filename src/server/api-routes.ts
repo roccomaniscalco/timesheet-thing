@@ -1,4 +1,4 @@
-import { STATUSES, WEEKDAYS } from "@/constants";
+import { STATUS, WEEKDAY } from "@/constants";
 import * as schema from "@/server/schema";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
@@ -153,7 +153,7 @@ const contractor = new Hono<Options>()
       z.object({
         id: z.number().optional(),
         timesheetId: z.number(),
-        weekday: z.enum(WEEKDAYS, { message: "Day is required" }),
+        weekday: z.enum(WEEKDAY, { message: "Day is required" }),
         name: z.string().min(1, { message: "Task is required" }),
         hours: z
           .number({ message: "Hours is required" })
@@ -200,7 +200,7 @@ const contractor = new Hono<Options>()
   })
   .put(
     "/timesheets/:id/status",
-    zValidator("json", z.object({ status: z.enum(STATUSES) })),
+    zValidator("json", z.object({ status: z.enum(STATUS) })),
     async (c) => {
       const auth = getAuth(c);
       if (!auth?.userId) return c.json({ message: "Unauthorized" }, 401);

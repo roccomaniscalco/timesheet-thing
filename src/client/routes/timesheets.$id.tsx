@@ -72,7 +72,7 @@ import {
   headerBreadcrumbTunnel,
   headerActionTunnel,
 } from "@/client/routes/__root.js";
-import { STATUSES, WEEKDAYS, type Status, type Weekday } from "@/constants";
+import { STATUS, WEEKDAY, type Status, type Weekday } from "@/constants";
 import { taskFormSchema, type TaskForm } from "@/validation";
 import { UserButton } from "@clerk/clerk-react";
 import {
@@ -164,7 +164,7 @@ function Timesheet() {
                   <CreateTaskRow />
                 </TableBody>
               </Table>
-              {WEEKDAYS.map((day) => (
+              {WEEKDAY.map((day) => (
                 <TaskTable
                   day={day}
                   tasks={timesheet?.tasksByDay[day]}
@@ -237,7 +237,7 @@ function StatusSelect() {
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {STATUSES.map((status) => (
+        {STATUS.map((status) => (
           <SelectItem value={status} key={status} className="capitalize">
             <StatusBadge status={status} />
           </SelectItem>
@@ -600,7 +600,7 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {WEEKDAYS.map((day) => (
+                    {WEEKDAY.map((day) => (
                       <SelectItem key={day} value={day} className="capitalize">
                         {day}
                       </SelectItem>

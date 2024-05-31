@@ -1,4 +1,4 @@
-import { STATUSES, WEEKDAYS } from "@/constants";
+import { STATUS, WEEKDAY } from "@/constants";
 import { generateSlug } from "@/server/generate-slug";
 import {
   date,
@@ -12,9 +12,9 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-export const status = pgEnum("status", STATUSES);
+export const status = pgEnum("status", STATUS);
 
-export const weekday = pgEnum("weekday", WEEKDAYS);
+export const weekday = pgEnum("weekday", WEEKDAY);
 
 export const managers = pgTable(
   "managers",

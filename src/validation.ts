@@ -1,8 +1,8 @@
-import { WEEKDAYS } from "@/constants";
+import { WEEKDAY } from "@/constants";
 import { z } from "zod";
 
 export const taskFormSchema = z.object({
-  weekday: z.enum(WEEKDAYS, { message: "Day is required" }),
+  weekday: z.enum(WEEKDAY, { message: "Day is required" }),
   name: z
     .string({ message: "Task is required" })
     .min(1, { message: "Task is required" }),
