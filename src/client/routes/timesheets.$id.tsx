@@ -214,11 +214,11 @@ function StatusSelect() {
       if (!res.ok) throw new Error("Failed to update status");
       return await res.json();
     },
-    onSuccess: (updatedStatus) => {
+    onSuccess: ({ newStatus }) => {
       // Update status in timesheet cache
       queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
         if (prev === undefined) return undefined;
-        return { ...prev, status: updatedStatus };
+        return { ...prev, status: newStatus };
       });
     },
   });

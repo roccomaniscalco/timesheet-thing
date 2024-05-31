@@ -3,7 +3,7 @@ import * as schema from "@/server/schema";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
 import { neon } from "@neondatabase/serverless";
-import { and, desc, eq, sql, sum } from "drizzle-orm";
+import { and, desc, eq, or, sql, sum } from "drizzle-orm";
 import { NeonHttpDatabase, drizzle } from "drizzle-orm/neon-http";
 import { Hono, type Env } from "hono";
 import { createMiddleware } from "hono/factory";
@@ -134,6 +134,16 @@ const contractor = new Hono<Options>()
         status: "draft",
       })
       .returning();
+
+    if (!newTimesheet[0]) throw new Error("Failed to create timesheet");
+
+    await c.var.db.insert(schema.history).values({
+      contractorId: contractor.id,
+      timesheetId: newTimesheet[0].id,
+      description: "Created a new timesheet",
+      toStatus: "draft",
+    });
+
     return c.json(newTimesheet[0], 201);
   })
   .patch(
@@ -199,19 +209,61 @@ const contractor = new Hono<Options>()
       });
       if (!contractor) return c.json({ message: "Forbidden" }, 403);
 
+      const timesheetId = Number(c.req.param("id"));
+
+      const lastHistory = await c.var.db
+        .select({ toStatus: schema.history.toStatus })
+        .from(schema.history)
+        .where(
+          and(
+            or(
+              eq(schema.history.managerId, contractor.managerId),
+              eq(schema.history.contractorId, contractor.id)
+            ),
+            eq(schema.history.timesheetId, timesheetId)
+          )
+        )
+        .orderBy(desc(schema.history.createdAt))
+        .limit(1);
+      if (!lastHistory[0]) throw new Error("lastHistory not found");
+
       const status = c.req.valid("json").status;
-      const id = Number(c.req.param("id"));
+      const lastStatus = lastHistory[0].toStatus;
+
+      console.log({ lastStatus, status });
+
+      if (
+        !(lastStatus === "draft" && status === "submitted") &&
+        !(lastStatus === "submitted" && status === "draft")
+      ) {
+        throw new Error("Invalid status transition");
+      }
+
       const updatedStatuses = await c.var.db
         .update(schema.timesheets)
         .set({ status })
         .where(
           and(
-            eq(schema.timesheets.id, id),
+            eq(schema.timesheets.id, timesheetId),
             eq(schema.timesheets.contractorId, contractor.id)
           )
         )
         .returning({ status: schema.timesheets.status });
-      return c.json(updatedStatuses[0]?.status, 200);
+      if (!updatedStatuses[0]) throw new Error("Failed to update status");
+
+      const newHistory = await c.var.db
+        .insert(schema.history)
+        .values({
+          contractorId: contractor.id,
+          timesheetId: timesheetId,
+          description: `Changed timesheet status`,
+          fromStatus: lastStatus,
+          toStatus: status,
+        })
+        .returning();
+      if (!newHistory[0]) throw new Error("Failed to create history");
+
+      return c.json({ history: newHistory[0], newStatus: status }, 200);
     }
   );
 

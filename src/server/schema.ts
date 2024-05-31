@@ -32,9 +32,11 @@ export const contractors = pgTable(
   {
     id: serial("id").primaryKey(),
     clerkId: varchar("clerk_id").notNull(),
-    managerId: integer("manager_id").references(() => managers.id),
     approvedHours: integer("approved_hours").notNull(),
     rate: real("rate").notNull(),
+    managerId: integer("manager_id")
+      .references(() => managers.id, { onDelete: "no action" })
+      .notNull(),
   },
   (table) => ({
     clerkIdIdx: uniqueIndex("contractors_clerk_id_idx").on(table.clerkId),
@@ -66,8 +68,8 @@ export const tasks = pgTable("tasks", {
 export const history = pgTable("history", {
   description: varchar("description").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  fromStatus: status("from_status").notNull(),
-  toStatus: status("to_status").notNull(),
+  fromStatus: status("from_status"),
+  toStatus: status("to_status"),
   comment: varchar("comment"),
   timesheetId: integer("timesheet_id").references(() => timesheets.id),
   contractorId: integer("contractor_id").references(() => contractors.id),
