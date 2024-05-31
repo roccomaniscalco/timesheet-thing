@@ -52,6 +52,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/client/components/ui/select";
+import { Separator } from "@/client/components/ui/separator";
 import { Skeleton } from "@/client/components/ui/skeleton";
 import {
   Table,
@@ -81,10 +82,8 @@ import { taskFormSchema, type TaskForm } from "@/validation";
 import { UserButton } from "@clerk/clerk-react";
 import {
   ArrowRightIcon,
-  BanknotesIcon,
   CalendarIcon,
   CheckIcon,
-  ClockIcon,
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/16/solid";
@@ -127,9 +126,9 @@ function Timesheet() {
       </headerActionTunnel.In>
 
       <ResizablePanelGroup direction="horizontal" className="h-screen">
-        <ResizablePanel className="pr-4" defaultSize={75}>
+        <ResizablePanel className="pr-4" defaultSize={70}>
           <Card>
-            <CardHeader className="flex-row  gap-5 justify-between">
+            <CardHeader className="flex-row gap-5 justify-between">
               <CardHeader className="p-0 min-w-0">
                 <CardTitle>Task Details</CardTitle>
                 <CardDescription className="truncate">
@@ -165,11 +164,10 @@ function Timesheet() {
         </ResizablePanel>
 
         <ResizableHandle withHandle />
-        <ResizablePanel className="pl-4" defaultSize={25}>
+        <ResizablePanel className="pl-4" defaultSize={30}>
           <div className="flex flex-col gap-4">
-            <ContractorCard />
-            <TotalHoursCard />
-            <TotalAmountCard />
+            {/* <ContractorCard /> */}
+            <TimesheetOverviewCard />
             <HistoryCard />
           </div>
         </ResizablePanel>
@@ -232,6 +230,59 @@ function StatusSelect() {
   );
 }
 
+function TimesheetOverviewCard() {
+  const { id } = useParams({ from: "/timesheets/$id" });
+  const { data: timesheet } = useQuery(timesheetQueryOptions(id));
+  const totalHours = timesheet?.tasks.reduce((acc, t) => acc + t.hours, 0);
+
+  return (
+    <Card>
+      <CardHeader className="bg-accent border-b">
+        <CardTitle>Timesheet Overview</CardTitle>
+        <CardDescription>Calculated from logged tasks.</CardDescription>
+      </CardHeader>
+      <CardContent className="p-6">
+        <ul className="grid gap-3 text-sm">
+          <li>
+            <h4 className="text-sm font-semibold">Payment</h4>
+          </li>
+          <li className="flex items-center justify-between">
+            <span className="text-muted-foreground">Hourly Rate</span>
+            {timesheet?.rate === undefined ? (
+              <Skeleton className="w-12 h-5" />
+            ) : (
+              <span className="tabular-nums">
+                {formatCurrency(timesheet.rate)}
+              </span>
+            )}
+          </li>
+          <li className="flex items-center justify-between">
+            <span className="text-muted-foreground">Total Hours</span>
+            {totalHours === undefined ? (
+              <Skeleton className="w-8 h-5" />
+            ) : (
+              <span className="tabular-nums">× {totalHours}</span>
+            )}
+          </li>
+          <li>
+            <Separator className="my-1" />
+          </li>
+          <li className="flex items-center justify-between">
+            <span className="text-muted-foreground">Total Amount</span>
+            {timesheet === undefined || totalHours === undefined ? (
+              <Skeleton className="w-20 h-5" />
+            ) : (
+              <span className="tabular-nums">
+                {formatCurrency(totalHours * timesheet.rate)}
+              </span>
+            )}
+          </li>
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
 function HistoryCard() {
   const { id } = useParams({ from: "/timesheets/$id" });
   const { data: history } = useQuery({
@@ -244,41 +295,41 @@ function HistoryCard() {
 
   return (
     <Card className="@container">
-      <CardHeader>
-        <Input placeholder="Search history" />
+      <CardHeader className="border-b">
+        <CardTitle>Timesheet History</CardTitle>
+        <CardDescription>Status changes and comments.</CardDescription>
       </CardHeader>
-      <CardContent className="gap-8 flex flex-col">
-        {history?.map((entry) => (
-          <div className="flex gap-4">
-            <Avatar className="h-9 w-9 hidden @xs:flex">
-              <AvatarImage src="/avatars/01.png" alt="Avatar" />
-              <AvatarFallback>OM</AvatarFallback>
-            </Avatar>
-            <div className="space-y-3">
-              <CardDescription>
-                <span className="text-foreground">{entry.contractorId}</span>{" "}
-                {entry.description}{" "}
-                {formatDistanceToNowStrict(new Date(entry.createdAt), {
-                  addSuffix: true,
-                })}
-              </CardDescription>
-              <div className="flex items-center gap-2">
-                <StatusBadge status={entry.fromStatus} dense />
-                <ArrowRightIcon className="w-3 h-3 text-muted-foreground" />
-                <StatusBadge status={entry.toStatus} dense />
+      <CardContent className="p-6">
+        <ul className="gap-8 flex flex-col">
+          {history?.map((entry) => (
+            <li className="flex gap-4">
+              <Avatar className="h-9 w-9 hidden @xs:flex">
+                <AvatarImage src="/avatars/01.png" alt="Avatar" />
+                <AvatarFallback>OM</AvatarFallback>
+              </Avatar>
+              <div className="space-y-2">
+                <CardDescription>
+                  <span className="text-foreground">{entry.contractorId}</span>{" "}
+                  {entry.description}{" "}
+                  {formatDistanceToNowStrict(new Date(entry.createdAt), {
+                    addSuffix: true,
+                  })}
+                </CardDescription>
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={entry.fromStatus} dense />
+                  <ArrowRightIcon className="w-3 h-3 text-muted-foreground" />
+                  <StatusBadge status={entry.toStatus} dense />
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
+            </li>
+          ))}
+        </ul>
       </CardContent>
     </Card>
   );
 }
 
 function ContractorCard() {
-  const { id } = useParams({ from: "/timesheets/$id" });
-  const { data: timesheet } = useQuery(timesheetQueryOptions(id));
-
   return (
     <Card>
       <div className="flex justify-between gap-4">
@@ -293,75 +344,6 @@ function ContractorCard() {
           </Avatar>
         </CardHeader>
       </div>
-      <CardContent className="text-sm text-nowrap space-y-1">
-        <div className="flex items-center gap-2 justify-between">
-          <p className="text-muted-foreground">Hourly rate:</p>
-          {timesheet?.rate === undefined ? (
-            <Skeleton className="w-8 h-5" />
-          ) : (
-            <p>{formatCurrency(timesheet.rate)}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-2 justify-between">
-          <p className="text-muted-foreground">Billable time:</p>
-          {timesheet?.approvedHours === undefined ? (
-            <Skeleton className="w-8 h-5" />
-          ) : (
-            <p>{timesheet.approvedHours}hr/week</p>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function TotalHoursCard() {
-  const { id } = useParams({ from: "/timesheets/$id" });
-  const { data: totalHours } = useQuery({
-    ...timesheetQueryOptions(id),
-    select: (data) => data.tasks.reduce((acc, task) => acc + task.hours, 0),
-  });
-
-  return (
-    <Card className="overflow-hidden">
-      <CardHeader className="py-5">
-        <CardDescription className="flex items-center gap-2 justify-between">
-          Total hours
-          <ClockIcon className="w-4 h-4" />
-        </CardDescription>
-        {totalHours === undefined ? (
-          <Skeleton className="w-24 h-8" />
-        ) : (
-          <CardTitle className="text-2xl">{totalHours}hr</CardTitle>
-        )}
-      </CardHeader>
-    </Card>
-  );
-}
-
-function TotalAmountCard() {
-  const { id } = useParams({ from: "/timesheets/$id" });
-  const { data: totalAmount } = useQuery({
-    ...timesheetQueryOptions(id),
-    select: (data) =>
-      data.tasks.reduce((acc, task) => acc + task.hours * data.rate, 0),
-  });
-
-  return (
-    <Card className="overflow-hidden">
-      <CardHeader className="py-5">
-        <CardDescription className="flex items-center gap-2 justify-between">
-          Total pay
-          <BanknotesIcon className="w-4 h-4" />
-        </CardDescription>
-        {totalAmount === undefined ? (
-          <Skeleton className="w-24 h-8" />
-        ) : (
-          <CardTitle className="text-2xl">
-            {formatCurrency(totalAmount)}
-          </CardTitle>
-        )}
-      </CardHeader>
     </Card>
   );
 }
