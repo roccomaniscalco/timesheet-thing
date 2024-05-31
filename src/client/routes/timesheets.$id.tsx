@@ -1,4 +1,5 @@
 import { api, timesheetQueryOptions, type Task } from "@/client/api-caller";
+import { StatusBadge } from "@/client/components/status-badge";
 import {
   Avatar,
   AvatarFallback,
@@ -67,8 +68,11 @@ import {
   formatDateRange,
   getWeekRange,
 } from "@/client/components/utils";
-import { headerBreadcrumbTunnel } from "@/client/routes/__root.js";
-import { WEEKDAYS, type Weekday } from "@/constants";
+import {
+  headerBreadcrumbTunnel,
+  headerActionTunnel,
+} from "@/client/routes/__root.js";
+import { STATUSES, WEEKDAYS, type Weekday } from "@/constants";
 import { taskFormSchema, type TaskForm } from "@/validation";
 import { UserButton } from "@clerk/clerk-react";
 import {
@@ -129,6 +133,9 @@ function Timesheet() {
           </BreadcrumbList>
         </Breadcrumb>
       </headerBreadcrumbTunnel.In>
+      <headerActionTunnel.In>
+        <StatusSelect />
+      </headerActionTunnel.In>
 
       <ResizablePanelGroup direction="horizontal" className="h-screen">
         <ResizablePanel className="pr-4" defaultSize={75}>
@@ -190,6 +197,23 @@ function Timesheet() {
         </ResizablePanel>
       </ResizablePanelGroup>
     </>
+  );
+}
+
+function StatusSelect() {
+  return (
+    <Select>
+      <SelectTrigger className="capitalize pl-1 gap-2">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {STATUSES.map((status) => (
+          <SelectItem value={status} key={status} className="capitalize">
+            <StatusBadge status={status} />
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 

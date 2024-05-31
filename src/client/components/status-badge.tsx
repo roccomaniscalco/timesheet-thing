@@ -32,7 +32,7 @@ export function StatusBadge({ className, status, ...props }: StatusBadgeProps) {
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-full border pl-3 pr-3 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 gap-1.5 capitalize",
+        "inline-flex items-center rounded border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 gap-1.5 capitalize",
         variantClass[status],
         className
       )}
