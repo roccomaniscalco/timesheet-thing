@@ -126,17 +126,17 @@ function Timesheet() {
       </headerActionTunnel.In>
 
       <ResizablePanelGroup direction="horizontal" className="h-screen">
-        <ResizablePanel className="pr-4" defaultSize={70}>
-          <Card>
-            <CardHeader className="flex-row gap-5 justify-between">
-              <CardHeader className="p-0 min-w-0">
+        <ResizablePanel className="pr-4 h-screen" defaultSize={70}>
+          <Card className="overflow-hidden">
+            <div className="flex justify-between">
+              <CardHeader>
                 <CardTitle>Task Details</CardTitle>
-                <CardDescription className="truncate">
-                  Log your work for the week.
-                </CardDescription>
+                <CardDescription>Log your work for the week.</CardDescription>
               </CardHeader>
-              <WeekPicker weekStart={timesheet?.weekStart} />
-            </CardHeader>
+              <CardHeader className="pl-0">
+                <WeekPicker weekStart={timesheet?.weekStart} />
+              </CardHeader>
+            </div>
 
             <CardContent className="px-4">
               <Table>
