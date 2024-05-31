@@ -150,7 +150,7 @@ function Timesheet() {
             <ContractorCard />
             <div className="grid grid-cols-2 gap-4">
               <TotalHoursCard />
-              <TotalMoneyCard />
+              <TotalAmountCard />
             </div>
           </div>
         </ResizablePanel>
@@ -208,11 +208,18 @@ function TotalHoursCard() {
   );
 }
 
-function TotalMoneyCard() {
+function TotalAmountCard() {
+  const { id } = useParams({ from: "/timesheets/$id" });
+  const { data: totalAmount } = useQuery({
+    ...timesheetQueryOptions(id),
+    select: (data) =>
+      data.tasks.reduce((acc, task) => acc + task.hours * data.rate, 0),
+  });
+
   return (
     <Card>
       <CardHeader className="pb-5">
-        <CardTitle>$1,400</CardTitle>
+        <CardTitle>${totalAmount}</CardTitle>
         <CardDescription>Total amount</CardDescription>
       </CardHeader>
     </Card>
