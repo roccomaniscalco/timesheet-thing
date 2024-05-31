@@ -28,7 +28,8 @@ export const contractors = pgTable(
     id: serial("id").primaryKey(),
     clerkId: varchar("clerk_id").notNull(),
     managerId: integer("manager_id").references(() => managers.id),
-    approvedHours: integer("approved_hours").notNull().default(0),
+    approvedHours: integer("approved_hours").notNull(),
+    rate: real("rate").notNull(),
   },
   (table) => ({
     clerkIdIdx: uniqueIndex("contractors_clerk_id_idx").on(table.clerkId),
@@ -43,6 +44,8 @@ export const timesheets = pgTable("timesheets", {
   status: status("status").notNull(),
   weekStart: date("week_start"),
   contractorId: integer("contractor_id").references(() => contractors.id),
+  approvedHours: integer("approved_hours").notNull(),
+  rate: real("rate").notNull(),
 });
 
 export const weekday = pgEnum("weekday", WEEKDAYS);

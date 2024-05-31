@@ -127,6 +127,10 @@ const contractor = new Hono<Options>()
       .insert(schema.timesheets)
       .values({
         contractorId: contractor.id,
+        // TODO: If a contractor creates a new timesheet from the past
+        // when they had a different rate or approved hours, this will be incorrect
+        rate: contractor.rate,
+        approvedHours: contractor.approvedHours,
         status: "draft",
       })
       .returning();

@@ -160,6 +160,9 @@ function Timesheet() {
 }
 
 function ContractorCard() {
+  const { id } = useParams({ from: "/timesheets/$id" });
+  const { data: timesheet } = useQuery(timesheetQueryOptions(id));
+
   return (
     <Card>
       <div className="flex justify-between gap-4">
@@ -177,11 +180,11 @@ function ContractorCard() {
       <CardContent className="text-sm text-nowrap">
         <div className="flex items-center gap-2 justify-between">
           <p className="text-muted-foreground">Hourly rate:</p>
-          <p>$75</p>
+          <p>${timesheet?.rate}</p>
         </div>
         <div className="flex items-center gap-2 justify-between">
           <p className="text-muted-foreground">Billable time:</p>
-          <p>40hr/week</p>
+          <p>{timesheet?.approvedHours}hr/week</p>
         </div>
       </CardContent>
     </Card>
