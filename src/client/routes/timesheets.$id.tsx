@@ -96,7 +96,7 @@ import { z } from "zod";
 const TABS = ["overview", "history"] as const;
 type Tab = (typeof TABS)[number];
 const timesheetSearchSchema = z.object({
-  tab: z.enum(TABS).catch("overview"),
+  tab: z.enum(TABS).optional().catch("overview"),
 });
 
 export const Route = createFileRoute("/timesheets/$id")({
