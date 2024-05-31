@@ -219,7 +219,7 @@ function StatusSelect() {
       <SelectTrigger className="capitalize pl-1 gap-2">
         <SelectValue />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent align="end">
         {CONTRACTOR_STATUS.map((status) => (
           <SelectItem value={status} key={status} className="capitalize">
             <StatusBadge status={status} />
