@@ -154,7 +154,7 @@ function Timesheet() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <NewTaskRow />
+                  <CreateTaskRow />
                 </TableBody>
               </Table>
               {WEEKDAYS.map((day) => (
@@ -373,7 +373,7 @@ function TaskTable(props: TaskTableProps) {
       </TableHeader>
       <TableBody>
         {props.tasks.map((task) => (
-          <TaskRow task={task} key={task.id} />
+          <EditTaskRow task={task} key={task.id} />
         ))}
       </TableBody>
     </Table>
@@ -384,7 +384,7 @@ type TaskRowProps = {
   task: Task;
   className?: string;
 };
-function TaskRow({ task, ...props }: TaskRowProps) {
+function EditTaskRow({ task, ...props }: TaskRowProps) {
   const { id } = useParams({ from: "/timesheets/$id" });
   const queryClient = useQueryClient();
   const form = useForm<TaskForm>({
@@ -472,7 +472,7 @@ function TaskRow({ task, ...props }: TaskRowProps) {
   );
 }
 
-function NewTaskRow() {
+function CreateTaskRow() {
   const { id } = useParams({ from: "/timesheets/$id" });
   const queryClient = useQueryClient();
   const form = useForm<TaskForm>({
