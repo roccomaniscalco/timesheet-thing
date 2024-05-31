@@ -93,11 +93,10 @@ import { useEffect } from "react";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 
-const TABS = ["overview", "history"] as const;
-type Tab = (typeof TABS)[number];
 const timesheetSearchSchema = z.object({
-  tab: z.enum(TABS).optional().catch("overview"),
+  tab: z.enum(["overview", "history"]).catch("overview"),
 });
+type Tab = z.infer<typeof timesheetSearchSchema>["tab"];
 
 export const Route = createFileRoute("/timesheets/$id")({
   component: Timesheet,
@@ -172,7 +171,7 @@ function Timesheet() {
         <ResizableHandle withHandle />
         <ResizablePanel className="pl-4" defaultSize={25}>
           <Tabs
-            defaultValue={tab}
+            value={tab}
             onValueChange={(newTab) =>
               navigate({ search: { tab: newTab as Tab } })
             }
@@ -181,7 +180,7 @@ function Timesheet() {
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
-            <TabsContent value="overview" className="flex flex-col gap-4 pt-2">
+            <TabsContent value="overview" className="flex flex-col gap-4 mt-4">
               <ContractorCard />
               <TotalHoursCard />
               <TotalAmountCard />

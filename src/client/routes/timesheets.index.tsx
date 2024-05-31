@@ -66,6 +66,7 @@ function NewTimesheetButton() {
         navigate({
           to: "/timesheets/$id",
           params: { id: String(data.id) },
+          search: { tab: "overview" },
         });
       },
     });
@@ -111,6 +112,7 @@ function TimesheetCard(props: TimesheetCardProps) {
       className="group outline-none"
       to="/timesheets/$id"
       params={{ id: String(props.id) }}
+      search={{ tab: "overview"}}
     >
       <Card className="group-focus:ring-1 ring-ring outline-none">
         <CardHeader>
