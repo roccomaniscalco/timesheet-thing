@@ -189,10 +189,16 @@ function ContractorCard() {
 }
 
 function TotalHoursCard() {
+  const { id } = useParams({ from: "/timesheets/$id" });
+  const { data: totalHours } = useQuery({
+    ...timesheetQueryOptions(id),
+    select: (data) => data.tasks.reduce((acc, task) => acc + task.hours, 0),
+  });
+
   return (
     <Card>
       <CardHeader className="pb-5">
-        <CardTitle>40hr</CardTitle>
+        <CardTitle>{totalHours}hr</CardTitle>
         <CardDescription>Total hours</CardDescription>
       </CardHeader>
     </Card>
