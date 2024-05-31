@@ -72,7 +72,7 @@ import {
   headerBreadcrumbTunnel,
   headerActionTunnel,
 } from "@/client/routes/__root.js";
-import { STATUSES, WEEKDAYS, type Weekday } from "@/constants";
+import { STATUSES, WEEKDAYS, type Status, type Weekday } from "@/constants";
 import { taskFormSchema, type TaskForm } from "@/validation";
 import { UserButton } from "@clerk/clerk-react";
 import {
@@ -201,8 +201,38 @@ function Timesheet() {
 }
 
 function StatusSelect() {
+  const { id } = useParams({ from: "/timesheets/$id" });
+  const { data: timesheet } = useQuery(timesheetQueryOptions(id));
+
+  const queryClient = useQueryClient();
+  const statusMutation = useMutation({
+    mutationFn: async (status: Status) => {
+      const res = await api.contractor.timesheets[":id"].status.$put({
+        param: { id },
+        json: { status },
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      return await res.json();
+    },
+    onSuccess: (updatedStatus) => {
+      // Update status in timesheet cache
+      queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
+        if (prev === undefined) return undefined;
+        return { ...prev, status: updatedStatus };
+      });
+    },
+  });
+
+  // Optimistically update status while mutation is pending
+  const status = statusMutation.isPending
+    ? statusMutation.variables
+    : timesheet?.status;
+
   return (
-    <Select>
+    <Select
+      value={status}
+      onValueChange={(status) => statusMutation.mutate(status as Status)}
+    >
       <SelectTrigger className="capitalize pl-1 gap-2">
         <SelectValue />
       </SelectTrigger>

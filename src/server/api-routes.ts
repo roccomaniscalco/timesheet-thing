@@ -1,4 +1,4 @@
-import { WEEKDAYS } from "@/constants";
+import { STATUSES, WEEKDAYS } from "@/constants";
 import * as schema from "@/server/schema";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { zValidator } from "@hono/zod-validator";
@@ -187,7 +187,33 @@ const contractor = new Hono<Options>()
       .where(eq(schema.tasks.id, id))
       .returning({ id: schema.tasks.id });
     return c.json(deletedTasks[0]?.id, 200);
-  });
+  })
+  .put(
+    "/timesheets/:id/status",
+    zValidator("json", z.object({ status: z.enum(STATUSES) })),
+    async (c) => {
+      const auth = getAuth(c);
+      if (!auth?.userId) return c.json({ message: "Unauthorized" }, 401);
+      const contractor = await c.var.db.query.contractors.findFirst({
+        where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId),
+      });
+      if (!contractor) return c.json({ message: "Forbidden" }, 403);
+
+      const status = c.req.valid("json").status;
+      const id = Number(c.req.param("id"));
+      const updatedStatuses = await c.var.db
+        .update(schema.timesheets)
+        .set({ status })
+        .where(
+          and(
+            eq(schema.timesheets.id, id),
+            eq(schema.timesheets.contractorId, contractor.id)
+          )
+        )
+        .returning({ status: schema.timesheets.status });
+      return c.json(updatedStatuses[0]?.status, 200);
+    }
+  );
 
 const apiRoutes = baseApi.route("/contractor", contractor);
 type ApiRoutesType = typeof apiRoutes;
