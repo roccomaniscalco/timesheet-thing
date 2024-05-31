@@ -1,7 +1,7 @@
 import {
   api,
-  timesheetQueryOptions,
   historyQueryOptions,
+  timesheetQueryOptions,
   type Task,
 } from "@/client/api-caller";
 import { StatusBadge } from "@/client/components/status-badge";
@@ -62,12 +62,6 @@ import {
   TableRow,
 } from "@/client/components/ui/table";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/client/components/ui/tabs";
-import {
   cn,
   formatCurrency,
   formatDateRange,
@@ -96,33 +90,17 @@ import {
 } from "@heroicons/react/16/solid";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Link,
-  createFileRoute,
-  useNavigate,
-  useParams,
-  useSearch,
-} from "@tanstack/react-router";
+import { Link, createFileRoute, useParams } from "@tanstack/react-router";
 import { compareDesc, formatDistanceToNowStrict, startOfWeek } from "date-fns";
 import { useEffect } from "react";
 import { useForm, type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
-
-const timesheetSearchSchema = z.object({
-  tab: z.enum(["overview", "history"]).catch("overview"),
-});
-type Tab = z.infer<typeof timesheetSearchSchema>["tab"];
 
 export const Route = createFileRoute("/timesheets/$id")({
   component: Timesheet,
-  validateSearch: (search) => timesheetSearchSchema.parse(search),
 });
 
 function Timesheet() {
   const { id } = useParams({ from: "/timesheets/$id" });
-  const { tab } = useSearch({ from: "/timesheets/$id" });
-  const navigate = useNavigate({ from: "/timesheets/$id" });
-
   const { data: timesheet } = useQuery(timesheetQueryOptions(id));
 
   return (
@@ -153,9 +131,9 @@ function Timesheet() {
           <Card>
             <CardHeader className="flex-row  gap-5 justify-between">
               <CardHeader className="p-0 min-w-0">
-                <CardTitle>Timesheet Details</CardTitle>
+                <CardTitle>Task Details</CardTitle>
                 <CardDescription className="truncate">
-                  Log completed work for the week.
+                  Log your work for the week.
                 </CardDescription>
               </CardHeader>
               <WeekPicker weekStart={timesheet?.weekStart} />
@@ -188,29 +166,12 @@ function Timesheet() {
 
         <ResizableHandle withHandle />
         <ResizablePanel className="pl-4" defaultSize={25}>
-          <Tabs
-            value={tab}
-            onValueChange={(newTab) =>
-              navigate({ search: { tab: newTab as Tab } })
-            }
-          >
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
-            </TabsList>
-            <TabsContent value="overview">
-              <div className="flex flex-col gap-4 mt-4">
-                <ContractorCard />
-                <TotalHoursCard />
-                <TotalAmountCard />
-              </div>
-            </TabsContent>
-            <TabsContent value="history" forceMount>
-              <div className="mt-4">
-                <HistoryCard />
-              </div>
-            </TabsContent>
-          </Tabs>
+          <div className="flex flex-col gap-4">
+            <ContractorCard />
+            <TotalHoursCard />
+            <TotalAmountCard />
+            <HistoryCard />
+          </div>
         </ResizablePanel>
       </ResizablePanelGroup>
     </>
