@@ -1,5 +1,10 @@
 import { api, timesheetQueryOptions, type Task } from "@/client/api-caller";
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/client/components/ui/avatar";
+import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -92,15 +97,20 @@ function Timesheet() {
           </BreadcrumbList>
         </Breadcrumb>
       </headerBreadcrumbTunnel.In>
-      <headerActionTunnel.In>
-        <WeekPicker weekStart={timesheet?.weekStart} />
-      </headerActionTunnel.In>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Weekly Timesheet</CardTitle>
-          <CardDescription>Log completed tasks for the week.</CardDescription>
+        <CardHeader className="flex-row items-center gap-5 justify-between ">
+          {/* <Avatar>
+            <AvatarImage src="https://github.com/shadcn.png" />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+          <CardHeader className="p-0 flex-1 min-w-0">
+            <CardTitle>Weekly Timesheet</CardTitle>
+            <CardDescription className="truncate">Log completed tasks for the week.</CardDescription>
+          </CardHeader>
+          <WeekPicker weekStart={timesheet?.weekStart} /> */}
         </CardHeader>
+
         <CardContent>
           <Table>
             <TableHeader>

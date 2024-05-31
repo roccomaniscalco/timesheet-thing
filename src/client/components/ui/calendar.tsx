@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/client/components/utils";
