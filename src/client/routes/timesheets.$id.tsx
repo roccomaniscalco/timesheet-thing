@@ -1,4 +1,4 @@
-import { api, timesheetQueryOptions, type Task } from "@/client/api-caller";
+import { api, timesheetQueryOptions, historyQueryOptions, type Task } from "@/client/api-caller";
 import { StatusBadge } from "@/client/components/status-badge";
 import {
   Avatar,
@@ -264,14 +264,7 @@ function StatusSelect() {
 function HistoryCard() {
   const { id } = useParams({ from: "/timesheets/$id" });
   const { data: history } = useQuery({
-    queryKey: ["timesheet-history", id],
-    queryFn: async () => {
-      const res = await api.contractor.timesheets[":id"].history.$get({
-        param: { id },
-      });
-      if (!res.ok) throw new Error("Failed to fetch history");
-      return await res.json();
-    },
+    ...historyQueryOptions(id),
     select: (history) =>
       history.sort((a, b) =>
         compareDesc(new Date(a.createdAt), new Date(b.createdAt))

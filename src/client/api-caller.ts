@@ -39,3 +39,16 @@ export const timesheetQueryOptions = (id: string) => {
     },
   });
 };
+
+export const historyQueryOptions = (id: string) => {
+  return queryOptions({
+    queryKey: ["get-history", id],
+    queryFn: async () => {
+      const res = await api.contractor.timesheets[":id"].history.$get({
+        param: { id },
+      });
+      if (!res.ok) throw new Error("Failed to fetch history");
+      return await res.json();
+    },
+  });
+};
