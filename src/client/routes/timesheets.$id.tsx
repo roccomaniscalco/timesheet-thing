@@ -56,6 +56,12 @@ import {
   TableRow,
 } from "@/client/components/ui/table";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/client/components/ui/tabs";
+import {
   cn,
   formatCurrency,
   formatDateRange,
@@ -75,17 +81,34 @@ import {
 } from "@heroicons/react/16/solid";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, createFileRoute, useParams } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  Link,
+  createFileRoute,
+  useParams,
+  useSearch,
+} from "@tanstack/react-router";
 import { startOfWeek } from "date-fns";
 import { useEffect } from "react";
 import { useForm, type UseFormReturn } from "react-hook-form";
+import { z } from "zod";
+
+const TABS = ["overview", "history"] as const;
+type Tab = (typeof TABS)[number];
+const timesheetSearchSchema = z.object({
+  tab: z.enum(TABS).catch("overview"),
+});
 
 export const Route = createFileRoute("/timesheets/$id")({
   component: Timesheet,
+  validateSearch: (search) => timesheetSearchSchema.parse(search),
 });
 
 function Timesheet() {
   const { id } = useParams({ from: "/timesheets/$id" });
+  const { tab } = useSearch({ from: "/timesheets/$id" });
+  const navigate = useNavigate({ from: "/timesheets/$id" });
+
   const { data: timesheet } = useQuery(timesheetQueryOptions(id));
 
   return (
@@ -148,11 +171,23 @@ function Timesheet() {
 
         <ResizableHandle withHandle />
         <ResizablePanel className="pl-4" defaultSize={25}>
-          <div className="flex flex-col gap-4">
-            <ContractorCard />
-            <TotalHoursCard />
-            <TotalAmountCard />
-          </div>
+          <Tabs
+            defaultValue={tab}
+            onValueChange={(newTab) =>
+              navigate({ search: { tab: newTab as Tab } })
+            }
+          >
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="history">History</TabsTrigger>
+            </TabsList>
+            <TabsContent value="overview" className="flex flex-col gap-4 pt-2">
+              <ContractorCard />
+              <TotalHoursCard />
+              <TotalAmountCard />
+            </TabsContent>
+            <TabsContent value="history">Change your history here.</TabsContent>
+          </Tabs>
         </ResizablePanel>
       </ResizablePanelGroup>
     </>
