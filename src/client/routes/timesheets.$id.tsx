@@ -96,10 +96,10 @@ import { useForm, type UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 
 export const Route = createFileRoute("/timesheets/$id")({
-  component: Timesheet,
+  component: TimesheetPage,
 });
 
-function Timesheet() {
+function TimesheetPage() {
   return (
     <>
       <HeaderContent />
@@ -117,8 +117,10 @@ function Timesheet() {
   );
 }
 
+// Header contents
+
 function HeaderContent() {
-  const id = useParams({ from: "/timesheets/$id" });
+  const { id } = useParams({ from: "/timesheets/$id" });
   const { data: timesheet } = useQuery(timesheetQueryOptions(id));
 
   return (
@@ -269,6 +271,8 @@ function WeekPicker() {
   );
 }
 
+// Resizable layout
+
 type ResizableLayoutProps = {
   left: React.ReactNode;
   right: React.ReactNode;
@@ -294,6 +298,8 @@ function ResizableLayout(props: ResizableLayoutProps) {
     </ResizablePanelGroup>
   );
 }
+
+// Right contents
 
 function OverviewCard() {
   const { id } = useParams({ from: "/timesheets/$id" });
@@ -428,6 +434,8 @@ function DistanceAgo(props: DistanceAgoProps) {
 
   return <span className="tabular-nums">{distanceAgo}</span>;
 }
+
+// Left contents
 
 function TaskDetailsCard() {
   const { id } = useParams({ from: "/timesheets/$id" });
