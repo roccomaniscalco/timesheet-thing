@@ -174,7 +174,6 @@ function Timesheet() {
           defaultSize={30}
         >
           <div className="flex flex-col gap-4">
-            {/* <ContractorCard /> */}
             <TimesheetOverviewCard />
             <HistoryCard />
           </div>
@@ -245,14 +244,11 @@ function TimesheetOverviewCard() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Timesheet Overview</CardTitle>
-        <CardDescription>Calculated from logged tasks.</CardDescription>
-      </CardHeader>
+      <ContractorCard />
       <CardContent>
         <ul className="grid gap-3 text-sm">
           <li>
-            <h4 className="text-sm font-semibold">Payment</h4>
+            <h4 className="text-sm font-semibold">Payment Summary</h4>
           </li>
           <li className="flex items-center justify-between">
             <span className="text-muted-foreground">Hourly Rate</span>
@@ -269,14 +265,16 @@ function TimesheetOverviewCard() {
             {totalHours === undefined ? (
               <Skeleton className="w-8 h-5" />
             ) : (
-              <span className="tabular-nums">× {totalHours}</span>
+              <span className="tabular-nums">
+                <span className="text-muted-foreground">×</span> {totalHours}
+              </span>
             )}
           </li>
           <li>
             <Separator className="my-1" />
           </li>
           <li className="flex items-center justify-between">
-            <span className="text-muted-foreground">Total Amount</span>
+            <span className="text-muted-foreground">Total Pay</span>
             {timesheet === undefined || totalHours === undefined ? (
               <Skeleton className="w-20 h-5" />
             ) : (
@@ -339,17 +337,17 @@ function HistoryCard() {
 
 function ContractorCard() {
   return (
-    <Card>
-      <div className="flex justify-between gap-4">
-        <CardHeader className="pr-0">
-          <CardTitle>John Doe</CardTitle>
-          <CardDescription>john@example.com</CardDescription>
-        </CardHeader>
-        <CardHeader className="pl-0">
+    <Card className="m-3 mb-6 bg-accent/50 rounded-md">
+      <div className="flex gap-4 p-4">
+        <CardHeader className="p-0">
           <Avatar>
             <AvatarImage src="https://github.com/shadcn.png" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
+        </CardHeader>
+        <CardHeader className="p-0">
+          <CardTitle>John Doe</CardTitle>
+          <CardDescription>johnmaniscalco@example.com</CardDescription>
         </CardHeader>
       </div>
     </Card>
