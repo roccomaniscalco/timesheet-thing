@@ -26,7 +26,7 @@ function Header() {
         <div className="flex-1">
           <headerBreadcrumbTunnel.Out />
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3">
           <headerActionTunnel.Out />
         </div>
       </div>

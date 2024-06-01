@@ -122,6 +122,7 @@ function Timesheet() {
         </Breadcrumb>
       </headerBreadcrumbTunnel.In>
       <headerActionTunnel.In>
+        <WeekPicker weekStart={timesheet?.weekStart} />
         <StatusSelect />
       </headerActionTunnel.In>
 
@@ -136,9 +137,6 @@ function Timesheet() {
               <CardHeader>
                 <CardTitle>Task Details</CardTitle>
                 <CardDescription>Log your work for the week.</CardDescription>
-              </CardHeader>
-              <CardHeader className="pl-0">
-                <WeekPicker weekStart={timesheet?.weekStart} />
               </CardHeader>
             </div>
 
