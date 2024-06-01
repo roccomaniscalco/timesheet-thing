@@ -66,6 +66,7 @@ import {
   cn,
   formatCurrency,
   formatDateRange,
+  formatDistanceAgo,
   getWeekRange,
 } from "@/client/components/utils";
 import {
@@ -91,7 +92,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, useParams } from "@tanstack/react-router";
 import { compareDesc, formatDistanceToNowStrict, startOfWeek } from "date-fns";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, type UseFormReturn } from "react-hook-form";
 
 export const Route = createFileRoute("/timesheets/$id")({
@@ -306,7 +307,7 @@ function HistoryCard() {
       <CardContent>
         <ul className="gap-8 flex flex-col">
           {history?.map((entry) => (
-            <li className="flex gap-4">
+            <li className="flex gap-4" key={entry.id}>
               <Avatar className="h-9 w-9 hidden @xs:flex">
                 <AvatarImage src="/avatars/01.png" alt="Avatar" />
                 <AvatarFallback>OM</AvatarFallback>
@@ -315,9 +316,7 @@ function HistoryCard() {
                 <CardDescription>
                   <span className="text-foreground">{entry.contractorId}</span>{" "}
                   {entry.description}{" "}
-                  {formatDistanceToNowStrict(new Date(entry.createdAt), {
-                    addSuffix: true,
-                  })}
+                  <DistanceAgo createdAt={new Date(entry.createdAt)} />
                 </CardDescription>
                 <div className="flex items-center gap-2">
                   <StatusBadge status={entry.fromStatus} dense />
@@ -331,6 +330,25 @@ function HistoryCard() {
       </CardContent>
     </Card>
   );
+}
+
+type DistanceAgoProps = {
+  createdAt: Date;
+};
+function DistanceAgo(props: DistanceAgoProps) {
+  const [distanceAgo, setDistanceAgo] = useState(
+    formatDistanceAgo(props.createdAt)
+  );
+
+  // Update distanceAgo every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDistanceAgo(formatDistanceAgo(props.createdAt));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [props.createdAt]);
+
+  return <span className="tabular-nums">{distanceAgo}</span>;
 }
 
 function ContractorCard() {

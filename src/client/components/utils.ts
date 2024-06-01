@@ -1,5 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
-import { endOfWeek } from "date-fns";
+import { endOfWeek, formatDistanceToNowStrict } from "date-fns";
 import type { DateRange } from "react-day-picker";
 import { twMerge } from "tailwind-merge";
 
@@ -27,10 +27,18 @@ export function getWeekRange(weekStart: string) {
   return { from: date, to: endOfWeek(date) } satisfies DateRange;
 }
 
-const USDollar = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
+const USDollar = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
 });
 export function formatCurrency(amount: number) {
   return USDollar.format(amount);
+}
+
+export function formatDistanceAgo(date: Date) {
+  const distanceToNow = formatDistanceToNowStrict(date, { addSuffix: true });
+  if (distanceToNow.includes(" 0 seconds")) {
+    return "just now";
+  }
+  return distanceToNow;
 }
