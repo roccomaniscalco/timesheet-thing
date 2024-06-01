@@ -16,6 +16,6 @@ Minimal React + Hono demo for Cloudflare Pages
 The app uses a Neon postgres database with Drizzle ORM.
 
 1. Push schema changes:
-`pnpm db:push`
+   `pnpm db:push`
 2. Run a local DB client:
-`pnpm db:studio`
+   `pnpm db:studio`

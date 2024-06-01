@@ -1,33 +1,33 @@
-import { api } from "@/client/api-caller";
-import { StatusBadge } from "@/client/components/status-badge";
+import { api } from '@/client/api-caller'
+import { StatusBadge } from '@/client/components/status-badge'
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/client/components/ui/breadcrumb";
-import { Button } from "@/client/components/ui/button";
+  BreadcrumbSeparator
+} from '@/client/components/ui/breadcrumb'
+import { Button } from '@/client/components/ui/button'
 import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-} from "@/client/components/ui/card";
-import { formatDateRange, getWeekRange } from "@/client/components/utils";
+  CardTitle
+} from '@/client/components/ui/card'
+import { formatDateRange, getWeekRange } from '@/client/components/utils'
 import {
   headerActionTunnel,
-  headerBreadcrumbTunnel,
-} from "@/client/routes/__root.js";
-import { UserButton } from "@clerk/clerk-react";
-import { ClockIcon, PlusIcon } from "@heroicons/react/16/solid";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import type { InferResponseType } from "hono";
+  headerBreadcrumbTunnel
+} from '@/client/routes/__root.js'
+import { UserButton } from '@clerk/clerk-react'
+import { ClockIcon, PlusIcon } from '@heroicons/react/16/solid'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
+import type { InferResponseType } from 'hono'
 
-export const Route = createFileRoute("/timesheets/")({
-  component: TimesheetsPage,
-});
+export const Route = createFileRoute('/timesheets/')({
+  component: TimesheetsPage
+})
 
 function TimesheetsPage() {
   return (
@@ -50,25 +50,25 @@ function TimesheetsPage() {
       </headerActionTunnel.In>
       <TimesheetGrid />
     </>
-  );
+  )
 }
 
 function NewTimesheetButton() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const { mutate: createTimesheet, isPending: isCreatingTimesheet } =
     useMutation({
       mutationFn: async () => {
-        const res = await api.contractor.timesheets.$post();
-        if (!res.ok) throw new Error("Failed to create timesheet");
-        return res.json();
+        const res = await api.contractor.timesheets.$post()
+        if (!res.ok) throw new Error('Failed to create timesheet')
+        return res.json()
       },
       onSuccess: (data) => {
         navigate({
-          to: "/timesheets/$id",
-          params: { id: String(data.id) },
-        });
-      },
-    });
+          to: '/timesheets/$id',
+          params: { id: String(data.id) }
+        })
+      }
+    })
 
   return (
     <Button
@@ -79,18 +79,18 @@ function NewTimesheetButton() {
       New Timesheet
       <PlusIcon className="w-4 h-4" />
     </Button>
-  );
+  )
 }
 
 function TimesheetGrid() {
   const { data: timesheets } = useQuery({
-    queryKey: ["get-timesheets"],
+    queryKey: ['get-timesheets'],
     queryFn: async () => {
-      const res = await api.contractor.timesheets.$get();
-      if (!res.ok) throw new Error("Failed to get timesheets");
-      return res.json();
-    },
-  });
+      const res = await api.contractor.timesheets.$get()
+      if (!res.ok) throw new Error('Failed to get timesheets')
+      return res.json()
+    }
+  })
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
@@ -98,11 +98,11 @@ function TimesheetGrid() {
         <TimesheetCard key={timesheet.id} {...timesheet} />
       ))}
     </div>
-  );
+  )
 }
 
-type Timesheets = InferResponseType<typeof api.contractor.timesheets.$get, 200>;
-type Timesheet = Timesheets[number];
+type Timesheets = InferResponseType<typeof api.contractor.timesheets.$get, 200>
+type Timesheet = Timesheets[number]
 
 interface TimesheetCardProps extends Timesheet {}
 function TimesheetCard(props: TimesheetCardProps) {
@@ -117,7 +117,7 @@ function TimesheetCard(props: TimesheetCardProps) {
           <CardTitle className="truncate">
             {props.weekStart
               ? formatDateRange(getWeekRange(props.weekStart))
-              : "Undated"}
+              : 'Undated'}
           </CardTitle>
           <div className="text-sm text-muted-foreground">{props.slug}</div>
         </CardHeader>
@@ -132,5 +132,5 @@ function TimesheetCard(props: TimesheetCardProps) {
         </CardContent>
       </Card>
     </Link>
-  );
+  )
 }

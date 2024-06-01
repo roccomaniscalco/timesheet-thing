@@ -2,102 +2,102 @@ import {
   api,
   historyQueryOptions,
   timesheetQueryOptions,
-  type Task,
-} from "@/client/api-caller";
-import { StatusBadge } from "@/client/components/status-badge";
+  type Task
+} from '@/client/api-caller'
+import { StatusBadge } from '@/client/components/status-badge'
 import {
   Avatar,
   AvatarFallback,
-  AvatarImage,
-} from "@/client/components/ui/avatar";
+  AvatarImage
+} from '@/client/components/ui/avatar'
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/client/components/ui/breadcrumb";
-import { Button } from "@/client/components/ui/button";
-import { Calendar } from "@/client/components/ui/calendar";
+  BreadcrumbSeparator
+} from '@/client/components/ui/breadcrumb'
+import { Button } from '@/client/components/ui/button'
+import { Calendar } from '@/client/components/ui/calendar'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-} from "@/client/components/ui/card";
+  CardTitle
+} from '@/client/components/ui/card'
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormMessage,
-} from "@/client/components/ui/form";
-import { Input } from "@/client/components/ui/input";
+  FormMessage
+} from '@/client/components/ui/form'
+import { Input } from '@/client/components/ui/input'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
-} from "@/client/components/ui/popover";
+  PopoverTrigger
+} from '@/client/components/ui/popover'
 import {
   ResizableHandle,
   ResizablePanel,
-  ResizablePanelGroup,
-} from "@/client/components/ui/resizable";
+  ResizablePanelGroup
+} from '@/client/components/ui/resizable'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/client/components/ui/select";
-import { Separator } from "@/client/components/ui/separator";
-import { Skeleton } from "@/client/components/ui/skeleton";
+  SelectValue
+} from '@/client/components/ui/select'
+import { Separator } from '@/client/components/ui/separator'
+import { Skeleton } from '@/client/components/ui/skeleton'
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/client/components/ui/table";
+  TableRow
+} from '@/client/components/ui/table'
 import {
   cn,
   formatCurrency,
   formatDateRange,
   formatDistanceAgo,
-  getWeekRange,
-} from "@/client/components/utils";
+  getWeekRange
+} from '@/client/components/utils'
 import {
   headerActionTunnel,
-  headerBreadcrumbTunnel,
-} from "@/client/routes/__root.js";
+  headerBreadcrumbTunnel
+} from '@/client/routes/__root.js'
 import {
   CONTRACTOR_STATUS,
   WEEKDAY,
   type ContractorStatus,
-  type Weekday,
-} from "@/constants";
-import { UserButton } from "@clerk/clerk-react";
+  type Weekday
+} from '@/constants'
+import { UserButton } from '@clerk/clerk-react'
 import {
   ArrowRightIcon,
   CalendarIcon,
   CheckIcon,
   PlusIcon,
-  TrashIcon,
-} from "@heroicons/react/16/solid";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, createFileRoute, useParams } from "@tanstack/react-router";
-import { compareDesc, startOfWeek } from "date-fns";
-import { useEffect, useState } from "react";
-import { useForm, type UseFormReturn } from "react-hook-form";
-import { z } from "zod";
+  TrashIcon
+} from '@heroicons/react/16/solid'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link, createFileRoute, useParams } from '@tanstack/react-router'
+import { compareDesc, startOfWeek } from 'date-fns'
+import { useEffect, useState } from 'react'
+import { useForm, type UseFormReturn } from 'react-hook-form'
+import { z } from 'zod'
 
-export const Route = createFileRoute("/timesheets/$id")({
-  component: TimesheetPage,
-});
+export const Route = createFileRoute('/timesheets/$id')({
+  component: TimesheetPage
+})
 
 function TimesheetPage() {
   return (
@@ -114,14 +114,14 @@ function TimesheetPage() {
         }
       />
     </>
-  );
+  )
 }
 
 // Header contents
 
 function HeaderContent() {
-  const { id } = useParams({ from: "/timesheets/$id" });
-  const { data: timesheet } = useQuery(timesheetQueryOptions(id));
+  const { id } = useParams({ from: '/timesheets/$id' })
+  const { data: timesheet } = useQuery(timesheetQueryOptions(id))
 
   return (
     <>
@@ -147,41 +147,41 @@ function HeaderContent() {
         <StatusSelect />
       </headerActionTunnel.In>
     </>
-  );
+  )
 }
 
 function StatusSelect() {
-  const { id } = useParams({ from: "/timesheets/$id" });
-  const { data: timesheet } = useQuery(timesheetQueryOptions(id));
+  const { id } = useParams({ from: '/timesheets/$id' })
+  const { data: timesheet } = useQuery(timesheetQueryOptions(id))
 
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   const statusMutation = useMutation({
     mutationFn: async (toStatus: ContractorStatus) => {
-      const res = await api.contractor.timesheets[":id"].status.$put({
+      const res = await api.contractor.timesheets[':id'].status.$put({
         param: { id },
-        json: { toStatus },
-      });
-      if (!res.ok) throw new Error("Failed to update status");
-      return await res.json();
+        json: { toStatus }
+      })
+      if (!res.ok) throw new Error('Failed to update status')
+      return await res.json()
     },
     onSuccess: (historyEntry) => {
       // Update status in timesheet cache
       queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
-        if (prev === undefined) return undefined;
-        return { ...prev, status: historyEntry.toStatus };
-      });
+        if (prev === undefined) return undefined
+        return { ...prev, status: historyEntry.toStatus }
+      })
       // Update status in history cache
       queryClient.setQueryData(historyQueryOptions(id).queryKey, (prev) => {
-        if (prev === undefined) return undefined;
-        return [...prev, historyEntry];
-      });
-    },
-  });
+        if (prev === undefined) return undefined
+        return [...prev, historyEntry]
+      })
+    }
+  })
 
   // Optimistically update status while mutation is pending
   const status = statusMutation.isPending
     ? statusMutation.variables
-    : timesheet?.status;
+    : timesheet?.status
 
   return (
     <Select
@@ -201,38 +201,38 @@ function StatusSelect() {
         ))}
       </SelectContent>
     </Select>
-  );
+  )
 }
 
 function WeekPicker() {
-  const { id } = useParams({ from: "/timesheets/$id" });
-  const { data: timesheet } = useQuery(timesheetQueryOptions(id));
+  const { id } = useParams({ from: '/timesheets/$id' })
+  const { data: timesheet } = useQuery(timesheetQueryOptions(id))
 
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   const weekStartMutation = useMutation({
     mutationFn: async (timesheet: { weekStart: string | null }) => {
-      const res = await api.contractor.timesheets[":id"].$put({
+      const res = await api.contractor.timesheets[':id'].$put({
         param: { id },
-        json: timesheet,
-      });
-      if (!res.ok) throw new Error("Failed to update timesheet");
-      return await res.json();
+        json: timesheet
+      })
+      if (!res.ok) throw new Error('Failed to update timesheet')
+      return await res.json()
     },
     onSuccess: (updatedWeekStart) => {
       // Update weekStart in timesheet cache
       queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
-        if (prev === undefined) return undefined;
-        return { ...prev, weekStart: updatedWeekStart };
-      });
-    },
-  });
+        if (prev === undefined) return undefined
+        return { ...prev, weekStart: updatedWeekStart }
+      })
+    }
+  })
 
   // Optimistically update week while mutation is pending
   const weekStart = weekStartMutation.isPending
     ? weekStartMutation.variables.weekStart
-    : timesheet?.weekStart;
+    : timesheet?.weekStart
   // Convert weekStart to DateRange
-  const week = weekStart ? getWeekRange(weekStart) : null;
+  const week = weekStart ? getWeekRange(weekStart) : null
 
   return (
     <Popover>
@@ -240,8 +240,8 @@ function WeekPicker() {
         <Button
           variant="outline"
           className={cn(
-            "justify-start text-left font-normal mt-0",
-            !week && "text-muted-foreground"
+            'justify-start text-left font-normal mt-0',
+            !week && 'text-muted-foreground'
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -255,34 +255,34 @@ function WeekPicker() {
         <Calendar
           modifiers={{
             // @ts-expect-error
-            selected: week,
+            selected: week
           }}
           onDayClick={(day, modifiers) => {
             if (modifiers.selected) {
-              weekStartMutation.mutate({ weekStart: null });
+              weekStartMutation.mutate({ weekStart: null })
             } else {
-              const weekStart = startOfWeek(day).toDateString();
-              weekStartMutation.mutate({ weekStart });
+              const weekStart = startOfWeek(day).toDateString()
+              weekStartMutation.mutate({ weekStart })
             }
           }}
         />
       </PopoverContent>
     </Popover>
-  );
+  )
 }
 
 // Resizable layout
 
 type ResizableLayoutProps = {
-  left: React.ReactNode;
-  right: React.ReactNode;
-};
+  left: React.ReactNode
+  right: React.ReactNode
+}
 function ResizableLayout(props: ResizableLayoutProps) {
   return (
     <ResizablePanelGroup direction="horizontal">
       <ResizablePanel
         className="p-4"
-        style={{ overflow: "auto" }}
+        style={{ overflow: 'auto' }}
         defaultSize={70}
       >
         {props.left}
@@ -290,21 +290,21 @@ function ResizableLayout(props: ResizableLayoutProps) {
       <ResizableHandle withHandle />
       <ResizablePanel
         className="p-4"
-        style={{ overflow: "auto" }}
+        style={{ overflow: 'auto' }}
         defaultSize={30}
       >
         {props.right}
       </ResizablePanel>
     </ResizablePanelGroup>
-  );
+  )
 }
 
 // Right contents
 
 function OverviewCard() {
-  const { id } = useParams({ from: "/timesheets/$id" });
-  const { data: timesheet } = useQuery(timesheetQueryOptions(id));
-  const totalHours = timesheet?.tasks.reduce((acc, t) => acc + t.hours, 0);
+  const { id } = useParams({ from: '/timesheets/$id' })
+  const { data: timesheet } = useQuery(timesheetQueryOptions(id))
+  const totalHours = timesheet?.tasks.reduce((acc, t) => acc + t.hours, 0)
 
   return (
     <Card>
@@ -350,7 +350,7 @@ function OverviewCard() {
         </ul>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 function ContractorCard() {
@@ -369,18 +369,18 @@ function ContractorCard() {
         </CardHeader>
       </div>
     </Card>
-  );
+  )
 }
 
 function HistoryCard() {
-  const { id } = useParams({ from: "/timesheets/$id" });
+  const { id } = useParams({ from: '/timesheets/$id' })
   const { data: history } = useQuery({
     ...historyQueryOptions(id),
     select: (history) =>
       history.sort((a, b) =>
         compareDesc(new Date(a.createdAt), new Date(b.createdAt))
-      ),
-  });
+      )
+  })
 
   return (
     <Card className="@container">
@@ -398,8 +398,8 @@ function HistoryCard() {
               </Avatar>
               <div className="space-y-2">
                 <CardDescription>
-                  <span className="text-foreground">{entry.contractorId}</span>{" "}
-                  {entry.description}{" "}
+                  <span className="text-foreground">{entry.contractorId}</span>{' '}
+                  {entry.description}{' '}
                   <DistanceAgo createdAt={new Date(entry.createdAt)} />
                 </CardDescription>
                 <div className="flex items-center gap-2">
@@ -413,33 +413,33 @@ function HistoryCard() {
         </ul>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 type DistanceAgoProps = {
-  createdAt: Date;
-};
+  createdAt: Date
+}
 function DistanceAgo(props: DistanceAgoProps) {
   const [distanceAgo, setDistanceAgo] = useState(
     formatDistanceAgo(props.createdAt)
-  );
+  )
 
   // Update distanceAgo every second
   useEffect(() => {
     const interval = setInterval(() => {
-      setDistanceAgo(formatDistanceAgo(props.createdAt));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [props.createdAt]);
+      setDistanceAgo(formatDistanceAgo(props.createdAt))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [props.createdAt])
 
-  return <span className="tabular-nums">{distanceAgo}</span>;
+  return <span className="tabular-nums">{distanceAgo}</span>
 }
 
 // Left contents
 
 function TaskDetailsCard() {
-  const { id } = useParams({ from: "/timesheets/$id" });
-  const { data: timesheet } = useQuery(timesheetQueryOptions(id));
+  const { id } = useParams({ from: '/timesheets/$id' })
+  const { data: timesheet } = useQuery(timesheetQueryOptions(id))
 
   return (
     <Card>
@@ -469,16 +469,16 @@ function TaskDetailsCard() {
         ))}
       </CardContent>
     </Card>
-  );
+  )
 }
 
 type TaskTableProps = {
-  day: Weekday;
-  tasks?: Task[];
-};
+  day: Weekday
+  tasks?: Task[]
+}
 function TaskTable(props: TaskTableProps) {
   if (!props.tasks) {
-    return null;
+    return null
   }
 
   return (
@@ -497,53 +497,53 @@ function TaskTable(props: TaskTableProps) {
         ))}
       </TableBody>
     </Table>
-  );
+  )
 }
 
 const taskFormSchema = z.object({
-  weekday: z.enum(WEEKDAY, { message: "Day is required" }),
+  weekday: z.enum(WEEKDAY, { message: 'Day is required' }),
   name: z
-    .string({ message: "Task is required" })
-    .min(1, { message: "Task is required" }),
+    .string({ message: 'Task is required' })
+    .min(1, { message: 'Task is required' }),
   hours: z
-    .number({ message: "Hours is required" })
-    .positive({ message: "Hours must be positive" })
+    .number({ message: 'Hours is required' })
+    .positive({ message: 'Hours must be positive' })
     .refine((v) => v % 0.25 === 0, {
-      message: "Hours must be in 0.25 increments",
-    }),
-});
-type TaskForm = z.infer<typeof taskFormSchema>;
+      message: 'Hours must be in 0.25 increments'
+    })
+})
+type TaskForm = z.infer<typeof taskFormSchema>
 
 function CreateTaskRow() {
-  const { id } = useParams({ from: "/timesheets/$id" });
-  const queryClient = useQueryClient();
+  const { id } = useParams({ from: '/timesheets/$id' })
+  const queryClient = useQueryClient()
   const form = useForm<TaskForm>({
-    resolver: zodResolver(taskFormSchema),
-  });
+    resolver: zodResolver(taskFormSchema)
+  })
 
   const createTaskMutation = useMutation({
     mutationFn: async (taskForm: TaskForm) => {
       const res = await api.contractor.timesheets.tasks.$patch({
-        json: { ...taskForm, timesheetId: Number(id) },
-      });
-      if (!res.ok) throw new Error("Failed to create task");
-      return await res.json();
+        json: { ...taskForm, timesheetId: Number(id) }
+      })
+      if (!res.ok) throw new Error('Failed to create task')
+      return await res.json()
     },
     onSuccess: (newTask) => {
       // Add new task to timesheet cache
       queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
-        if (prev === undefined) return undefined;
-        return { ...prev, tasks: [...prev.tasks, newTask] };
-      });
-    },
-  });
+        if (prev === undefined) return undefined
+        return { ...prev, tasks: [...prev.tasks, newTask] }
+      })
+    }
+  })
 
   // Reset row after successful form submission
   useEffect(() => {
     if (form.formState.isSubmitSuccessful) {
-      form.reset();
+      form.reset()
     }
-  }, [form.formState.isSubmitSuccessful]);
+  }, [form.formState.isSubmitSuccessful])
 
   return (
     <BaseTaskRow
@@ -558,24 +558,24 @@ function CreateTaskRow() {
         </Button>
       }
     />
-  );
+  )
 }
 
 type EditTaskRowProps = {
-  task: Task;
-  className?: string;
-};
+  task: Task
+  className?: string
+}
 function EditTaskRow({ task, ...props }: EditTaskRowProps) {
-  const { id } = useParams({ from: "/timesheets/$id" });
-  const queryClient = useQueryClient();
+  const { id } = useParams({ from: '/timesheets/$id' })
+  const queryClient = useQueryClient()
   const form = useForm<TaskForm>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
       weekday: task.weekday,
       name: task.name,
-      hours: task.hours,
-    },
-  });
+      hours: task.hours
+    }
+  })
 
   const updateTaskMutation = useMutation({
     mutationFn: async (taskForm: TaskForm) => {
@@ -583,43 +583,43 @@ function EditTaskRow({ task, ...props }: EditTaskRowProps) {
         json: {
           ...taskForm,
           timesheetId: task.timesheetId,
-          id: task.id,
-        },
-      });
-      if (!res.ok) throw new Error("Failed to update task");
-      return await res.json();
+          id: task.id
+        }
+      })
+      if (!res.ok) throw new Error('Failed to update task')
+      return await res.json()
     },
     onSuccess: async (updatedTask) => {
       // Update task in timesheet cache
       queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
-        if (prev === undefined) return undefined;
-        const taskIdx = prev.tasks.findIndex((t) => t.id === updatedTask.id);
-        return { ...prev, tasks: prev.tasks.with(taskIdx, updatedTask) };
-      });
+        if (prev === undefined) return undefined
+        const taskIdx = prev.tasks.findIndex((t) => t.id === updatedTask.id)
+        return { ...prev, tasks: prev.tasks.with(taskIdx, updatedTask) }
+      })
       // Reset form after successful update
-      form.reset(updatedTask);
-    },
-  });
+      form.reset(updatedTask)
+    }
+  })
 
   const deleteTaskMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.contractor.timesheets.tasks[":id"].$delete({
-        param: { id: String(task.id) },
-      });
-      if (!res.ok) throw new Error("Failed to delete task");
-      return await res.json();
+      const res = await api.contractor.timesheets.tasks[':id'].$delete({
+        param: { id: String(task.id) }
+      })
+      if (!res.ok) throw new Error('Failed to delete task')
+      return await res.json()
     },
     onSuccess: (deletedTaskId) => {
       // Remove deleted task from timesheet cache
       queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
-        if (prev === undefined) return undefined;
+        if (prev === undefined) return undefined
         return {
           ...prev,
-          tasks: prev.tasks.filter((t) => t.id !== deletedTaskId),
-        };
-      });
-    },
-  });
+          tasks: prev.tasks.filter((t) => t.id !== deletedTaskId)
+        }
+      })
+    }
+  })
 
   return (
     <BaseTaskRow
@@ -648,14 +648,14 @@ function EditTaskRow({ task, ...props }: EditTaskRowProps) {
         )
       }
     />
-  );
+  )
 }
 
 type BaseTaskTableRowProps = {
-  form: UseFormReturn<TaskForm>;
-  className?: string;
-  actionItem?: React.ReactNode;
-};
+  form: UseFormReturn<TaskForm>
+  className?: string
+  actionItem?: React.ReactNode
+}
 function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
   return (
     <Form {...form}>
@@ -723,8 +723,8 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
                     step={0.25}
                     defaultValue={field.value}
                     onChange={(e) => {
-                      const hours = parseFloat(e.target.value);
-                      field.onChange(isNaN(hours) ? undefined : hours);
+                      const hours = parseFloat(e.target.value)
+                      field.onChange(isNaN(hours) ? undefined : hours)
                     }}
                     autoComplete="off"
                   />
@@ -737,5 +737,5 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
         <TableCell>{props.actionItem}</TableCell>
       </TableRow>
     </Form>
-  );
+  )
 }

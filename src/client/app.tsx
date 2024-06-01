@@ -1,21 +1,21 @@
-import { routeTree } from "@/client/routeTree.gen.js";
-import { ClerkProvider } from "@clerk/clerk-react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { routeTree } from '@/client/routeTree.gen.js'
+import { ClerkProvider } from '@clerk/clerk-react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { RouterProvider, createRouter } from '@tanstack/react-router'
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      retry: false,
-    },
-  },
-});
+      retry: false
+    }
+  }
+})
 
-const router = createRouter({ routeTree });
-declare module "@tanstack/react-router" {
+const router = createRouter({ routeTree })
+declare module '@tanstack/react-router' {
   interface Register {
-    router: typeof router;
+    router: typeof router
   }
 }
 
@@ -26,5 +26,5 @@ export default function App() {
         <RouterProvider router={router} />
       </QueryClientProvider>
     </ClerkProvider>
-  );
+  )
 }

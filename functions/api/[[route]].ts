@@ -1,4 +1,4 @@
-import { apiRoutes } from "@/server/api-routes";
-import { handle } from "hono/cloudflare-pages";
+import { apiRoutes } from '@/server/api-routes'
+import { handle } from 'hono/cloudflare-pages'
 
-export const onRequest = handle(apiRoutes);
+export const onRequest = handle(apiRoutes)

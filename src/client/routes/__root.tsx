@@ -1,9 +1,9 @@
-import { Outlet, createRootRoute } from "@tanstack/react-router";
-import tunnel from "tunnel-rat";
+import { Outlet, createRootRoute } from '@tanstack/react-router'
+import tunnel from 'tunnel-rat'
 
 export const Route = createRootRoute({
-  component: () => <RootLayout />,
-});
+  component: () => <RootLayout />
+})
 
 function RootLayout() {
   return (
@@ -13,11 +13,11 @@ function RootLayout() {
         <Outlet />
       </main>
     </>
-  );
+  )
 }
 
-export const headerActionTunnel = tunnel();
-export const headerBreadcrumbTunnel = tunnel();
+export const headerActionTunnel = tunnel()
+export const headerBreadcrumbTunnel = tunnel()
 
 function Header() {
   return (
@@ -31,5 +31,5 @@ function Header() {
         </div>
       </div>
     </header>
-  );
+  )
 }
