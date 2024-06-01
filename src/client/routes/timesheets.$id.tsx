@@ -79,7 +79,6 @@ import {
   type ContractorStatus,
   type Weekday,
 } from "@/constants";
-import { taskFormSchema, type TaskForm } from "@/validation";
 import { UserButton } from "@clerk/clerk-react";
 import {
   ArrowRightIcon,
@@ -91,16 +90,35 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, useParams } from "@tanstack/react-router";
-import { compareDesc, formatDistanceToNowStrict, startOfWeek } from "date-fns";
+import { compareDesc, startOfWeek } from "date-fns";
 import { useEffect, useState } from "react";
 import { useForm, type UseFormReturn } from "react-hook-form";
+import { z } from "zod";
 
 export const Route = createFileRoute("/timesheets/$id")({
   component: Timesheet,
 });
 
 function Timesheet() {
-  const { id } = useParams({ from: "/timesheets/$id" });
+  return (
+    <>
+      <HeaderContent />
+
+      <ResizableLayout
+        left={<TaskDetailsCard />}
+        right={
+          <div className="flex flex-col gap-4">
+            <OverviewCard />
+            <HistoryCard />
+          </div>
+        }
+      />
+    </>
+  );
+}
+
+function HeaderContent() {
+  const id = useParams({ from: "/timesheets/$id" });
   const { data: timesheet } = useQuery(timesheetQueryOptions(id));
 
   return (
@@ -123,61 +141,9 @@ function Timesheet() {
         </Breadcrumb>
       </headerBreadcrumbTunnel.In>
       <headerActionTunnel.In>
-        <WeekPicker weekStart={timesheet?.weekStart} />
+        <WeekPicker />
         <StatusSelect />
       </headerActionTunnel.In>
-
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel
-          className="p-4"
-          style={{ overflow: "auto" }}
-          defaultSize={70}
-        >
-          <Card className="overflow-hidden">
-            <div className="flex justify-between">
-              <CardHeader>
-                <CardTitle>Task Details</CardTitle>
-                <CardDescription>Log your work for the week.</CardDescription>
-              </CardHeader>
-            </div>
-
-            <CardContent className="px-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="min-w-40 capitalize">Day</TableHead>
-                    <TableHead className="w-full">Task</TableHead>
-                    <TableHead className="min-w-40">Hours</TableHead>
-                    <TableHead />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <CreateTaskRow />
-                </TableBody>
-              </Table>
-              {WEEKDAY.map((day) => (
-                <TaskTable
-                  day={day}
-                  tasks={timesheet?.tasksByDay[day]}
-                  key={day}
-                />
-              ))}
-            </CardContent>
-          </Card>
-        </ResizablePanel>
-
-        <ResizableHandle withHandle />
-        <ResizablePanel
-          className="p-4"
-          style={{ overflow: "auto" }}
-          defaultSize={30}
-        >
-          <div className="flex flex-col gap-4">
-            <TimesheetOverviewCard />
-            <HistoryCard />
-          </div>
-        </ResizablePanel>
-      </ResizablePanelGroup>
     </>
   );
 }
@@ -236,7 +202,100 @@ function StatusSelect() {
   );
 }
 
-function TimesheetOverviewCard() {
+function WeekPicker() {
+  const { id } = useParams({ from: "/timesheets/$id" });
+  const { data: timesheet } = useQuery(timesheetQueryOptions(id));
+
+  const queryClient = useQueryClient();
+  const weekStartMutation = useMutation({
+    mutationFn: async (timesheet: { weekStart: string | null }) => {
+      const res = await api.contractor.timesheets[":id"].$put({
+        param: { id },
+        json: timesheet,
+      });
+      if (!res.ok) throw new Error("Failed to update timesheet");
+      return await res.json();
+    },
+    onSuccess: (updatedWeekStart) => {
+      // Update weekStart in timesheet cache
+      queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
+        if (prev === undefined) return undefined;
+        return { ...prev, weekStart: updatedWeekStart };
+      });
+    },
+  });
+
+  // Optimistically update week while mutation is pending
+  const weekStart = weekStartMutation.isPending
+    ? weekStartMutation.variables.weekStart
+    : timesheet?.weekStart;
+  // Convert weekStart to DateRange
+  const week = weekStart ? getWeekRange(weekStart) : null;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            "justify-start text-left font-normal mt-0",
+            !week && "text-muted-foreground"
+          )}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {week ? formatDateRange(week) : <span>Pick week</span>}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="flex w-auto flex-col space-y-2 p-2"
+        align="end"
+      >
+        <Calendar
+          modifiers={{
+            // @ts-expect-error
+            selected: week,
+          }}
+          onDayClick={(day, modifiers) => {
+            if (modifiers.selected) {
+              weekStartMutation.mutate({ weekStart: null });
+            } else {
+              const weekStart = startOfWeek(day).toDateString();
+              weekStartMutation.mutate({ weekStart });
+            }
+          }}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+type ResizableLayoutProps = {
+  left: React.ReactNode;
+  right: React.ReactNode;
+};
+function ResizableLayout(props: ResizableLayoutProps) {
+  return (
+    <ResizablePanelGroup direction="horizontal">
+      <ResizablePanel
+        className="p-4"
+        style={{ overflow: "auto" }}
+        defaultSize={70}
+      >
+        {props.left}
+      </ResizablePanel>
+      <ResizableHandle withHandle />
+      <ResizablePanel
+        className="p-4"
+        style={{ overflow: "auto" }}
+        defaultSize={30}
+      >
+        {props.right}
+      </ResizablePanel>
+    </ResizablePanelGroup>
+  );
+}
+
+function OverviewCard() {
   const { id } = useParams({ from: "/timesheets/$id" });
   const { data: timesheet } = useQuery(timesheetQueryOptions(id));
   const totalHours = timesheet?.tasks.reduce((acc, t) => acc + t.hours, 0);
@@ -284,6 +343,25 @@ function TimesheetOverviewCard() {
           </li>
         </ul>
       </CardContent>
+    </Card>
+  );
+}
+
+function ContractorCard() {
+  return (
+    <Card className="m-3 mb-6 bg-accent/50 rounded-md">
+      <div className="flex gap-4 p-4">
+        <CardHeader className="p-0">
+          <Avatar>
+            <AvatarImage src="https://github.com/shadcn.png" />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+        </CardHeader>
+        <CardHeader className="p-0">
+          <CardTitle>John Doe</CardTitle>
+          <CardDescription>johnmaniscalco@example.com</CardDescription>
+        </CardHeader>
+      </div>
     </Card>
   );
 }
@@ -351,90 +429,38 @@ function DistanceAgo(props: DistanceAgoProps) {
   return <span className="tabular-nums">{distanceAgo}</span>;
 }
 
-function ContractorCard() {
+function TaskDetailsCard() {
+  const { id } = useParams({ from: "/timesheets/$id" });
+  const { data: timesheet } = useQuery(timesheetQueryOptions(id));
+
   return (
-    <Card className="m-3 mb-6 bg-accent/50 rounded-md">
-      <div className="flex gap-4 p-4">
-        <CardHeader className="p-0">
-          <Avatar>
-            <AvatarImage src="https://github.com/shadcn.png" />
-            <AvatarFallback>CN</AvatarFallback>
-          </Avatar>
-        </CardHeader>
-        <CardHeader className="p-0">
-          <CardTitle>John Doe</CardTitle>
-          <CardDescription>johnmaniscalco@example.com</CardDescription>
+    <Card>
+      <div className="flex justify-between">
+        <CardHeader>
+          <CardTitle>Task Details</CardTitle>
+          <CardDescription>Log your work for the week.</CardDescription>
         </CardHeader>
       </div>
+
+      <CardContent className="px-4">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="min-w-40 capitalize">Day</TableHead>
+              <TableHead className="w-full">Task</TableHead>
+              <TableHead className="min-w-40">Hours</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <CreateTaskRow />
+          </TableBody>
+        </Table>
+        {WEEKDAY.map((day) => (
+          <TaskTable day={day} tasks={timesheet?.tasksByDay[day]} key={day} />
+        ))}
+      </CardContent>
     </Card>
-  );
-}
-
-type WeekPickerProps = {
-  weekStart?: string | null;
-};
-export function WeekPicker(props: WeekPickerProps) {
-  const { id } = useParams({ from: "/timesheets/$id" });
-  const queryClient = useQueryClient();
-  const weekStartMutation = useMutation({
-    mutationFn: async (timesheet: { weekStart: string | null }) => {
-      const res = await api.contractor.timesheets[":id"].$put({
-        param: { id },
-        json: timesheet,
-      });
-      if (!res.ok) throw new Error("Failed to update timesheet");
-      return await res.json();
-    },
-    onSuccess: (updatedWeekStart) => {
-      // Update weekStart in timesheet cache
-      queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
-        if (prev === undefined) return undefined;
-        return { ...prev, weekStart: updatedWeekStart };
-      });
-    },
-  });
-
-  // Optimistically update week while mutation is pending
-  const weekStart = weekStartMutation.isPending
-    ? weekStartMutation.variables.weekStart
-    : props.weekStart;
-  // Convert weekStart to DateRange
-  const week = weekStart ? getWeekRange(weekStart) : null;
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            "justify-start text-left font-normal mt-0",
-            !week && "text-muted-foreground"
-          )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {week ? formatDateRange(week) : <span>Pick week</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className="flex w-auto flex-col space-y-2 p-2"
-        align="end"
-      >
-        <Calendar
-          modifiers={{
-            // @ts-expect-error
-            selected: week,
-          }}
-          onDayClick={(day, modifiers) => {
-            if (modifiers.selected) {
-              weekStartMutation.mutate({ weekStart: null });
-            } else {
-              const weekStart = startOfWeek(day).toDateString();
-              weekStartMutation.mutate({ weekStart });
-            }
-          }}
-        />
-      </PopoverContent>
-    </Popover>
   );
 }
 
@@ -466,11 +492,72 @@ function TaskTable(props: TaskTableProps) {
   );
 }
 
-type TaskRowProps = {
+const taskFormSchema = z.object({
+  weekday: z.enum(WEEKDAY, { message: "Day is required" }),
+  name: z
+    .string({ message: "Task is required" })
+    .min(1, { message: "Task is required" }),
+  hours: z
+    .number({ message: "Hours is required" })
+    .positive({ message: "Hours must be positive" })
+    .refine((v) => v % 0.25 === 0, {
+      message: "Hours must be in 0.25 increments",
+    }),
+});
+type TaskForm = z.infer<typeof taskFormSchema>;
+
+function CreateTaskRow() {
+  const { id } = useParams({ from: "/timesheets/$id" });
+  const queryClient = useQueryClient();
+  const form = useForm<TaskForm>({
+    resolver: zodResolver(taskFormSchema),
+  });
+
+  const createTaskMutation = useMutation({
+    mutationFn: async (taskForm: TaskForm) => {
+      const res = await api.contractor.timesheets.tasks.$patch({
+        json: { ...taskForm, timesheetId: Number(id) },
+      });
+      if (!res.ok) throw new Error("Failed to create task");
+      return await res.json();
+    },
+    onSuccess: (newTask) => {
+      // Add new task to timesheet cache
+      queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
+        if (prev === undefined) return undefined;
+        return { ...prev, tasks: [...prev.tasks, newTask] };
+      });
+    },
+  });
+
+  // Reset row after successful form submission
+  useEffect(() => {
+    if (form.formState.isSubmitSuccessful) {
+      form.reset();
+    }
+  }, [form.formState.isSubmitSuccessful]);
+
+  return (
+    <BaseTaskRow
+      form={form}
+      actionItem={
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={form.handleSubmit((task) => createTaskMutation.mutate(task))}
+        >
+          <PlusIcon className="w-4 h-4" />
+        </Button>
+      }
+    />
+  );
+}
+
+type EditTaskRowProps = {
   task: Task;
   className?: string;
 };
-function EditTaskRow({ task, ...props }: TaskRowProps) {
+function EditTaskRow({ task, ...props }: EditTaskRowProps) {
   const { id } = useParams({ from: "/timesheets/$id" });
   const queryClient = useQueryClient();
   const form = useForm<TaskForm>({
@@ -551,53 +638,6 @@ function EditTaskRow({ task, ...props }: TaskRowProps) {
             <TrashIcon className="w-4 h-4" />
           </Button>
         )
-      }
-    />
-  );
-}
-
-function CreateTaskRow() {
-  const { id } = useParams({ from: "/timesheets/$id" });
-  const queryClient = useQueryClient();
-  const form = useForm<TaskForm>({
-    resolver: zodResolver(taskFormSchema),
-  });
-
-  const createTaskMutation = useMutation({
-    mutationFn: async (taskForm: TaskForm) => {
-      const res = await api.contractor.timesheets.tasks.$patch({
-        json: { ...taskForm, timesheetId: Number(id) },
-      });
-      if (!res.ok) throw new Error("Failed to create task");
-      return await res.json();
-    },
-    onSuccess: (newTask) => {
-      // Add new task to timesheet cache
-      queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
-        if (prev === undefined) return undefined;
-        return { ...prev, tasks: [...prev.tasks, newTask] };
-      });
-    },
-  });
-
-  // Reset row after successful form submission
-  useEffect(() => {
-    if (form.formState.isSubmitSuccessful) {
-      form.reset();
-    }
-  }, [form.formState.isSubmitSuccessful]);
-
-  return (
-    <BaseTaskRow
-      form={form}
-      actionItem={
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={form.handleSubmit((task) => createTaskMutation.mutate(task))}
-        >
-          <PlusIcon className="w-4 h-4" />
-        </Button>
       }
     />
   );
