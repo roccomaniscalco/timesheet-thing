@@ -105,7 +105,7 @@ function TimesheetPage() {
     <>
       <HeaderContent />
 
-      <ResizableLayout
+      <ResizablePanels
         left={<TaskDetailsCard />}
         right={
           <>
@@ -274,13 +274,16 @@ function WeekPicker() {
 
 // Resizable layout
 
-type ResizableLayoutProps = {
+type ResizablePanelsProps = {
   left: React.ReactNode
   right: React.ReactNode
 }
-function ResizableLayout(props: ResizableLayoutProps) {
+function ResizablePanels(props: ResizablePanelsProps) {
   return (
-    <ResizablePanelGroup direction="horizontal">
+    <ResizablePanelGroup
+      direction="horizontal"
+      autoSaveId="timesheet-resizable-panels"
+    >
       <ResizablePanel
         className="p-6 pr-4"
         style={{ overflow: 'auto' }}
