@@ -108,10 +108,10 @@ function TimesheetPage() {
       <ResizableLayout
         left={<TaskDetailsCard />}
         right={
-          <div className="flex flex-col gap-4">
+          <>
             <OverviewCard />
             <HistoryCard />
-          </div>
+          </>
         }
       />
     </>
@@ -282,19 +282,22 @@ function ResizableLayout(props: ResizableLayoutProps) {
   return (
     <ResizablePanelGroup direction="horizontal">
       <ResizablePanel
-        className="p-4"
+        className="p-6 pr-4"
         style={{ overflow: 'auto' }}
+        minSize={60}
         defaultSize={70}
       >
         {props.left}
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel
-        className="p-4"
+        className="p-6 pl-4"
         style={{ overflow: 'auto' }}
+        collapsible
+        minSize={20}
         defaultSize={30}
       >
-        {props.right}
+        <div className="flex flex-col gap-6 overflow-hidden">{props.right}</div>
       </ResizablePanel>
     </ResizablePanelGroup>
   )
@@ -363,7 +366,7 @@ function ContractorCard() {
   const profile = useQuery(profileQueryOptions(timesheet?.contractorId))
 
   return (
-    <Card className="m-3 mb-6 bg-accent/50 rounded-md">
+    <Card className="m-2 mb-6 bg-accent/50 rounded-sm">
       <div className="flex gap-4 p-4">
         <CardHeader className="p-0">
           <ContractorAvatar id={timesheet?.contractorId} />
@@ -423,7 +426,7 @@ function HistoryListItem({ historyItem }: HistoryItemProps) {
     <li className="flex gap-4">
       <ContractorAvatar
         id={historyItem.contractorId}
-        className="h-9 w-9 hidden @xs:flex"
+        className="h-8 w-8 hidden @xs:flex"
       />
       <div className="space-y-2">
         <CardDescription>
