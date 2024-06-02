@@ -1,9 +1,9 @@
-import { CONTRACTOR_STATUS, STATUS, WEEKDAY } from '@/constants'
+import { CONTRACTOR_STATUS, WEEKDAY } from '@/constants'
 import * as schema from '@/server/schema'
 import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
 import { zValidator } from '@hono/zod-validator'
 import { neon } from '@neondatabase/serverless'
-import { and, desc, eq, or, sql, sum } from 'drizzle-orm'
+import { and, desc, eq, not, or, sql, sum } from 'drizzle-orm'
 import { NeonHttpDatabase, drizzle } from 'drizzle-orm/neon-http'
 import { Hono, type Env } from 'hono'
 import { createMiddleware } from 'hono/factory'
@@ -24,21 +24,82 @@ interface Options extends Env {
   Variables: Variables
 }
 
-const dbMiddleware = () =>
-  createMiddleware<Options>((c, next) => {
-    const sql = neon(c.env.DATABASE_URL)
-    const db = drizzle(sql, { schema })
-    c.set('db', db)
-    return next()
-  })
+const dbMiddleware = createMiddleware<Options>((c, next) => {
+  const sql = neon(c.env.DATABASE_URL)
+  const db = drizzle(sql, { schema })
+  c.set('db', db)
+  return next()
+})
 
 const baseApi = new Hono<Options>()
   .basePath('/api')
   .use(clerkMiddleware())
-  .use(dbMiddleware())
+  .use(dbMiddleware)
   .onError((e, c) => {
     console.error(e)
     return c.json({ message: 'Internal Server Error' }, 500)
+  })
+  .get('timesheets/:id', async (c) => {
+    const id = Number(c.req.param('id'))
+
+    const auth = getAuth(c)
+    if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
+
+    const timesheet = await c.var.db
+      .select()
+      .from(schema.timesheets)
+      .leftJoin(
+        schema.tasks,
+        eq(schema.tasks.timesheetId, schema.timesheets.id)
+      )
+      .leftJoin(
+        schema.history,
+        eq(schema.history.timesheetId, schema.timesheets.id)
+      )
+      .leftJoin(
+        schema.contractors,
+        eq(schema.timesheets.contractorId, schema.contractors.id)
+      )
+      .leftJoin(
+        schema.managers,
+        eq(schema.contractors.managerId, schema.managers.id)
+      )
+      .where(
+        and(
+          eq(schema.timesheets.id, id),
+          or(
+            eq(schema.contractors.clerkId, auth.userId),
+            and(
+              eq(schema.managers.clerkId, auth.userId),
+              not(eq(schema.timesheets.status, 'draft'))
+            )
+          )
+        )
+      )
+    if (!timesheet[0]) return c.json({ message: 'Not found' }, 404)
+
+    const formattedTimesheet = {
+      ...timesheet[0].timesheets,
+      contractor: timesheet[0].contractors,
+      tasks: Object.values(
+        timesheet.reduce<Record<number, schema.TaskModel>>((acc, curr) => {
+          if (curr.tasks && !acc[curr.tasks.id]) {
+            acc[curr.tasks.id] = curr.tasks
+          }
+          return acc
+        }, {})
+      ),
+      history: Object.values(
+        timesheet.reduce<Record<number, schema.HistoryModel>>((acc, curr) => {
+          if (curr.history && !acc[curr.history.id]) {
+            acc[curr.history.id] = curr.history
+          }
+          return acc
+        }, {})
+      )
+    }
+
+    return c.json(formattedTimesheet, 200)
   })
 
 const contractor = new Hono<Options>()
@@ -117,7 +178,7 @@ const contractor = new Hono<Options>()
       .orderBy(desc(schema.timesheets.id))
     return c.json(timesheets, 200)
   })
-  .get('/timesheets/:id', async (c) => {
+  .post('/timesheets', async (c) => {
     const auth = getAuth(c)
     if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
     const contractor = await c.var.db.query.contractors.findFirst({
@@ -125,16 +186,19 @@ const contractor = new Hono<Options>()
     })
     if (!contractor) return c.json({ message: 'Forbidden' }, 403)
 
-    const id = Number(c.req.param('id'))
-    const timesheet = await c.var.db.query.timesheets.findFirst({
-      where: (timesheets, { and, eq }) =>
-        and(eq(timesheets.id, id), eq(timesheets.contractorId, contractor.id))
-    })
-    if (!timesheet) return c.json({ message: 'Not Found' }, 404)
-    const tasks = await c.var.db.query.tasks.findMany({
-      where: (tasks, { eq }) => eq(tasks.timesheetId, timesheet.id)
-    })
-    return c.json({ ...timesheet, tasks }, 200)
+    const newTimesheet = await c.var.db
+      .insert(schema.timesheets)
+      .values({
+        contractorId: contractor.id,
+        // TODO: If a contractor creates a new timesheet from the past
+        // when they had a different rate or approved hours, this will be incorrect
+        rate: contractor.rate,
+        approvedHours: contractor.approvedHours,
+        status: 'draft'
+      })
+      .returning()
+    if (!newTimesheet[0]) throw new Error('Failed to create timesheet')
+    return c.json(newTimesheet[0], 201)
   })
   .put(
     '/timesheets/:id',
@@ -163,28 +227,49 @@ const contractor = new Hono<Options>()
       return c.json(timeseheets[0]?.weekStart, 200)
     }
   )
-  .post('/timesheets', async (c) => {
-    const auth = getAuth(c)
-    if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
-    const contractor = await c.var.db.query.contractors.findFirst({
-      where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId)
-    })
-    if (!contractor) return c.json({ message: 'Forbidden' }, 403)
-
-    const newTimesheet = await c.var.db
-      .insert(schema.timesheets)
-      .values({
-        contractorId: contractor.id,
-        // TODO: If a contractor creates a new timesheet from the past
-        // when they had a different rate or approved hours, this will be incorrect
-        rate: contractor.rate,
-        approvedHours: contractor.approvedHours,
-        status: 'draft'
+  .put(
+    '/timesheets/:id/status',
+    zValidator('json', z.object({ toStatus: z.enum(CONTRACTOR_STATUS) })),
+    async (c) => {
+      const auth = getAuth(c)
+      if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
+      const contractor = await c.var.db.query.contractors.findFirst({
+        where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId)
       })
-      .returning()
-    if (!newTimesheet[0]) throw new Error('Failed to create timesheet')
-    return c.json(newTimesheet[0], 201)
-  })
+      if (!contractor) return c.json({ message: 'Forbidden' }, 403)
+
+      const timesheetId = Number(c.req.param('id'))
+      const { toStatus } = c.req.valid('json')
+      const fromStatus = toStatus === 'draft' ? 'submitted' : 'draft'
+
+      const updatedStatuses = await c.var.db
+        .update(schema.timesheets)
+        .set({ status: toStatus })
+        .where(
+          and(
+            eq(schema.timesheets.id, timesheetId),
+            eq(schema.timesheets.contractorId, contractor.id),
+            eq(schema.timesheets.status, fromStatus)
+          )
+        )
+        .returning({ status: schema.timesheets.status })
+      if (!updatedStatuses[0]) throw new Error('Failed to update status')
+
+      const newHistory = await c.var.db
+        .insert(schema.history)
+        .values({
+          contractorId: contractor.id,
+          timesheetId: timesheetId,
+          description: 'changed status',
+          fromStatus,
+          toStatus
+        })
+        .returning()
+      if (!newHistory[0]) throw new Error('Failed to create history')
+
+      return c.json(newHistory[0], 200)
+    }
+  )
   .patch(
     '/timesheets/tasks',
     zValidator(
@@ -236,72 +321,6 @@ const contractor = new Hono<Options>()
       .where(eq(schema.tasks.id, id))
       .returning({ id: schema.tasks.id })
     return c.json(deletedTasks[0]?.id, 200)
-  })
-  .put(
-    '/timesheets/:id/status',
-    zValidator('json', z.object({ toStatus: z.enum(CONTRACTOR_STATUS) })),
-    async (c) => {
-      const auth = getAuth(c)
-      if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
-      const contractor = await c.var.db.query.contractors.findFirst({
-        where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId)
-      })
-      if (!contractor) return c.json({ message: 'Forbidden' }, 403)
-
-      const timesheetId = Number(c.req.param('id'))
-      const { toStatus } = c.req.valid('json')
-      const fromStatus = toStatus === 'draft' ? 'submitted' : 'draft'
-
-      const updatedStatuses = await c.var.db
-        .update(schema.timesheets)
-        .set({ status: toStatus })
-        .where(
-          and(
-            eq(schema.timesheets.id, timesheetId),
-            eq(schema.timesheets.contractorId, contractor.id),
-            eq(schema.timesheets.status, fromStatus)
-          )
-        )
-        .returning({ status: schema.timesheets.status })
-      if (!updatedStatuses[0]) throw new Error('Failed to update status')
-
-      const newHistory = await c.var.db
-        .insert(schema.history)
-        .values({
-          contractorId: contractor.id,
-          timesheetId: timesheetId,
-          description: 'changed status',
-          fromStatus,
-          toStatus
-        })
-        .returning()
-      if (!newHistory[0]) throw new Error('Failed to create history')
-
-      return c.json(newHistory[0], 200)
-    }
-  )
-  .get('timesheets/:id/history', async (c) => {
-    const auth = getAuth(c)
-    if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
-    const contractor = await c.var.db.query.contractors.findFirst({
-      where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId)
-    })
-    if (!contractor) return c.json({ message: 'Forbidden' }, 403)
-
-    const timesheetId = Number(c.req.param('id'))
-    const history = await c.var.db
-      .select()
-      .from(schema.history)
-      .where(
-        and(
-          eq(schema.history.timesheetId, timesheetId),
-          or(
-            eq(schema.history.contractorId, contractor.id),
-            eq(schema.history.managerId, contractor.managerId)
-          )
-        )
-      )
-    return c.json(history, 200)
   })
 
 const apiRoutes = baseApi.route('/contractor', contractor)

@@ -1,9 +1,8 @@
 import {
   api,
-  historyQueryOptions,
   profileQueryOptions,
   timesheetQueryOptions,
-  type HistoryItem,
+  type HistoryEntry,
   type Task
 } from '@/client/api-caller'
 import { ContractorAvatar } from '@/client/components/contractor-avatar'
@@ -104,7 +103,6 @@ function TimesheetPage() {
   return (
     <>
       <HeaderContent />
-
       <ResizablePanels
         left={<TaskDetailsCard />}
         right={
@@ -167,14 +165,14 @@ function StatusSelect() {
     },
     onSuccess: (historyEntry) => {
       // Update status in timesheet cache
+      // And add history entry to timesheet cache
       queryClient.setQueryData(timesheetQueryOptions(id).queryKey, (prev) => {
         if (prev === undefined) return undefined
-        return { ...prev, status: historyEntry.toStatus }
-      })
-      // Update status in history cache
-      queryClient.setQueryData(historyQueryOptions(id).queryKey, (prev) => {
-        if (prev === undefined) return undefined
-        return [...prev, historyEntry]
+        return {
+          ...prev,
+          status: historyEntry.toStatus,
+          history: [historyEntry, ...prev.history]
+        }
       })
     }
   })
@@ -395,9 +393,9 @@ function ContractorCard() {
 function HistoryCard() {
   const { id } = useParams({ from: '/timesheets/$id' })
   const history = useQuery({
-    ...historyQueryOptions(id),
-    select: (history) =>
-      history.sort((a, b) =>
+    ...timesheetQueryOptions(id),
+    select: (timesheet) =>
+      timesheet.history.sort((a, b) =>
         compareDesc(new Date(a.createdAt), new Date(b.createdAt))
       )
   })
@@ -406,9 +404,7 @@ function HistoryCard() {
     <Card className="@container">
       <CardHeader>
         <CardTitle>Timesheet History</CardTitle>
-        <CardDescription>
-          View status changes and comments.
-        </CardDescription>
+        <CardDescription>View status changes and comments.</CardDescription>
       </CardHeader>
       <CardContent>
         <ul className="gap-8 flex flex-col">
@@ -422,7 +418,7 @@ function HistoryCard() {
 }
 
 type HistoryItemProps = {
-  historyItem: HistoryItem
+  historyItem: HistoryEntry
 }
 function HistoryListItem({ historyItem }: HistoryItemProps) {
   const profile = useQuery(profileQueryOptions(historyItem.contractorId))

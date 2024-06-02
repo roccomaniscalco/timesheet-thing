@@ -1,5 +1,6 @@
 import { STATUS, WEEKDAY } from '@/constants'
 import { generateSlug } from '@/server/generate-slug'
+import type { InferSelectModel } from 'drizzle-orm'
 import {
   date,
   real,
@@ -64,6 +65,7 @@ export const tasks = pgTable('tasks', {
     .references(() => timesheets.id, { onDelete: 'cascade' })
     .notNull()
 })
+export type TaskModel = InferSelectModel<typeof tasks>
 
 export const history = pgTable('history', {
   id: serial('id').primaryKey(),
@@ -76,3 +78,4 @@ export const history = pgTable('history', {
   contractorId: integer('contractor_id').references(() => contractors.id),
   managerId: integer('manager_id').references(() => managers.id)
 })
+export type HistoryModel = InferSelectModel<typeof history>
