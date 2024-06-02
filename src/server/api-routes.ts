@@ -67,7 +67,7 @@ const contractor = new Hono<Options>()
         id: z.string(),
         first_name: z.string(),
         last_name: z.string(),
-        image_url: z.string().nullable(),
+        image_url: z.string(),
         primary_email_address_id: z.string(),
         email_addresses: z.array(
           z.object({

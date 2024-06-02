@@ -3,14 +3,12 @@ import {
   historyQueryOptions,
   timesheetQueryOptions,
   profileQueryOptions,
-  type Task
+  type Task,
+  type HistoryItem
 } from '@/client/api-caller'
+import { ContractorAvatar } from '@/client/components/contractor-avatar'
 import { StatusBadge } from '@/client/components/status-badge'
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from '@/client/components/ui/avatar'
+import { Avatar } from '@/client/components/ui/avatar'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -357,50 +355,27 @@ function OverviewCard() {
 function ContractorCard() {
   const { id } = useParams({ from: '/timesheets/$id' })
   const { data: timesheet } = useQuery(timesheetQueryOptions(id))
-  const { data: profile, isLoading: isLoadingProfile } = useQuery(
-    profileQueryOptions(timesheet?.contractorId)
-  )
-
-  if (!profile || isLoadingProfile) {
-    return <ContractorCardSkeleton />
-  }
+  const profile = useQuery(profileQueryOptions(timesheet?.contractorId))
 
   return (
     <Card className="m-3 mb-6 bg-accent/50 rounded-md">
       <div className="flex gap-4 p-4">
         <CardHeader className="p-0">
-          <Avatar>
-            <AvatarFallback>
-              {profile.first_name[0]}
-              {profile.last_name[0]}
-            </AvatarFallback>
-            <AvatarImage src={profile?.image_url ?? undefined} />
-          </Avatar>
+          <ContractorAvatar id={timesheet?.contractorId} />
         </CardHeader>
-        <CardHeader className="p-0">
-          <CardTitle>
-            {profile.first_name} {profile.last_name}
-          </CardTitle>
-          <CardDescription>{profile.email}</CardDescription>
-        </CardHeader>
-      </div>
-    </Card>
-  )
-}
-
-function ContractorCardSkeleton() {
-  return (
-    <Card className="m-3 mb-6 bg-accent/50 rounded-md">
-      <div className="flex gap-4 p-4">
-        <CardHeader className="p-0">
-          <Avatar>
-            <Skeleton className="rounded-full h-full w-full aspect-square" />
-          </Avatar>
-        </CardHeader>
-        <CardHeader className="p-0">
-          <Skeleton className="h-5 w-24" />
-          <Skeleton className="h-4 w-48 pt-2" />
-        </CardHeader>
+        {profile.data ? (
+          <CardHeader className="p-0">
+            <CardTitle>
+              {profile.data.first_name} {profile.data.last_name}
+            </CardTitle>
+            <CardDescription>{profile.data.email}</CardDescription>
+          </CardHeader>
+        ) : (
+          <CardHeader className="p-0">
+            <Skeleton className="h-5 w-24" />
+            <Skeleton className="h-4 w-48 pt-2" />
+          </CardHeader>
+        )}
       </div>
     </Card>
   )
@@ -424,29 +399,38 @@ function HistoryCard() {
       </CardHeader>
       <CardContent>
         <ul className="gap-8 flex flex-col">
-          {history?.map((entry) => (
-            <li className="flex gap-4" key={entry.id}>
-              <Avatar className="h-9 w-9 hidden @xs:flex">
-                <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                <AvatarFallback>OM</AvatarFallback>
-              </Avatar>
-              <div className="space-y-2">
-                <CardDescription>
-                  <span className="text-foreground">{entry.contractorId}</span>{' '}
-                  {entry.description}{' '}
-                  <DistanceAgo createdAt={new Date(entry.createdAt)} />
-                </CardDescription>
-                <div className="flex items-center gap-2">
-                  <StatusBadge status={entry.fromStatus} dense />
-                  <ArrowRightIcon className="w-3 h-3 text-muted-foreground" />
-                  <StatusBadge status={entry.toStatus} dense />
-                </div>
-              </div>
-            </li>
+          {history?.map((item) => (
+            <HistoryItem key={item.id} historyItem={item} />
           ))}
         </ul>
       </CardContent>
     </Card>
+  )
+}
+
+type HistoryItemProps = {
+  historyItem: HistoryItem
+}
+function HistoryItem({ historyItem }: HistoryItemProps) {
+  return (
+    <li className="flex gap-4">
+      <ContractorAvatar
+        id={historyItem.contractorId}
+        className="h-9 w-9 hidden @xs:flex"
+      />
+      <div className="space-y-2">
+        <CardDescription>
+          <span className="text-foreground">{historyItem.contractorId}</span>{' '}
+          {historyItem.description}{' '}
+          <DistanceAgo createdAt={new Date(historyItem.createdAt)} />
+        </CardDescription>
+        <div className="flex items-center gap-2">
+          <StatusBadge status={historyItem.fromStatus} dense />
+          <ArrowRightIcon className="w-3 h-3 text-muted-foreground" />
+          <StatusBadge status={historyItem.toStatus} dense />
+        </div>
+      </div>
+    </li>
   )
 }
 

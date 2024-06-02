@@ -1,6 +1,6 @@
 import type { Weekday } from '@/constants'
 import type { ApiRoutesType } from '@/server/api-routes'
-import { queryOptions } from '@tanstack/react-query'
+import { queryOptions, useQuery } from '@tanstack/react-query'
 import { hc, type InferResponseType } from 'hono/client'
 
 export const { api } = hc<ApiRoutesType>('/')
@@ -40,6 +40,12 @@ export const timesheetQueryOptions = (id: string) => {
   })
 }
 
+export type History = InferResponseType<
+  (typeof api.contractor.timesheets)[':id']['history']['$get'],
+  200
+>
+export type HistoryItem = History[number]
+
 export const historyQueryOptions = (id: string) => {
   return queryOptions({
     queryKey: ['get-history', id],
@@ -63,6 +69,7 @@ export const profileQueryOptions = (id?: number | null) => {
       if (!res.ok) throw new Error('Failed to get contractor')
       return await res.json()
     },
-    enabled: !!id
+    enabled: !!id,
+    staleTime: 1000 * 60 * 60,
   })
 }
