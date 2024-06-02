@@ -285,7 +285,7 @@ function ResizablePanels(props: ResizablePanelsProps) {
       autoSaveId="timesheet-resizable-panels"
     >
       <ResizablePanel
-        className="p-6 pr-4"
+        className="p-6"
         style={{ overflow: 'auto' }}
         minSize={60}
         defaultSize={70}
@@ -294,13 +294,13 @@ function ResizablePanels(props: ResizablePanelsProps) {
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel
-        className="p-6 pl-4"
+        className="p-6"
         style={{ overflow: 'auto' }}
         collapsible
         minSize={20}
         defaultSize={30}
       >
-        <div className="flex flex-col gap-5 overflow-hidden">{props.right}</div>
+        <div className="flex flex-col gap-6 overflow-hidden">{props.right}</div>
       </ResizablePanel>
     </ResizablePanelGroup>
   )
