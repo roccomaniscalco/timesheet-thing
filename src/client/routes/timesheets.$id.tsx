@@ -297,7 +297,7 @@ function ResizableLayout(props: ResizableLayoutProps) {
         minSize={20}
         defaultSize={30}
       >
-        <div className="flex flex-col gap-6 overflow-hidden">{props.right}</div>
+        <div className="flex flex-col gap-5 overflow-hidden">{props.right}</div>
       </ResizablePanel>
     </ResizablePanelGroup>
   )
