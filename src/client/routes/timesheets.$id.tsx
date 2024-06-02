@@ -408,9 +408,19 @@ function HistoryCard() {
       </CardHeader>
       <CardContent>
         <ul className="gap-8 flex flex-col">
-          {history.data?.map((item) => (
-            <HistoryListItem key={item.id} historyItem={item} />
-          ))}
+          {history.data
+            ? history.data.map((item) => (
+                <HistoryListItem key={item.id} historyItem={item} />
+              ))
+            : [...Array(3).keys()].map((i) => (
+                <li key={i} className="flex gap-4">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <div className="space-y-3">
+                    <Skeleton className="h-3 w-56" />
+                    <Skeleton className="h-5 w-32" />
+                  </div>
+                </li>
+              ))}
         </ul>
       </CardContent>
     </Card>
