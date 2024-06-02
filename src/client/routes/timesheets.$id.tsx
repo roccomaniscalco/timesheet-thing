@@ -81,8 +81,11 @@ import {
 import { UserButton } from '@clerk/clerk-react'
 import {
   ArrowRightIcon,
+  BanknotesIcon,
   CalendarIcon,
   CheckIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
   PlusIcon,
   TrashIcon
 } from '@heroicons/react/16/solid'
@@ -313,8 +316,9 @@ function OverviewCard() {
           <li>
             <h4 className="text-sm font-semibold">Payment Summary</h4>
           </li>
-          <li className="flex items-center justify-between">
-            <span className="text-muted-foreground">Hourly Rate</span>
+          <li className="flex items-center justify-between gap-2">
+            <CurrencyDollarIcon className="w-4 h-4 text-muted-foreground" />
+            <span className="text-muted-foreground flex-1">Hourly Rate</span>
             {timesheet?.rate === undefined ? (
               <Skeleton className="w-12 h-5" />
             ) : (
@@ -323,8 +327,9 @@ function OverviewCard() {
               </span>
             )}
           </li>
-          <li className="flex items-center justify-between">
-            <span className="text-muted-foreground">Total Hours</span>
+          <li className="flex items-center justify-between gap-2">
+            <ClockIcon className="w-4 h-4 text-muted-foreground" />
+            <span className="text-muted-foreground flex-1">Total Hours</span>
             {totalHours === undefined ? (
               <Skeleton className="w-8 h-5" />
             ) : (
@@ -336,8 +341,9 @@ function OverviewCard() {
           <li>
             <Separator className="my-1" />
           </li>
-          <li className="flex items-center justify-between">
-            <span className="text-muted-foreground">Total Pay</span>
+          <li className="flex items-center justify-between gap-2">
+            <BanknotesIcon className="w-4 h-4 text-muted-foreground" />
+            <span className="text-muted-foreground flex-1">Total Pay</span>
             {timesheet === undefined || totalHours === undefined ? (
               <Skeleton className="w-20 h-5" />
             ) : (
