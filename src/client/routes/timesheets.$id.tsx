@@ -2,6 +2,7 @@ import {
   api,
   historyQueryOptions,
   timesheetQueryOptions,
+  profileQueryOptions,
   type Task
 } from '@/client/api-caller'
 import { StatusBadge } from '@/client/components/status-badge'
@@ -354,18 +355,27 @@ function OverviewCard() {
 }
 
 function ContractorCard() {
+  const { id } = useParams({ from: '/timesheets/$id' })
+  const { data: timesheet } = useQuery(timesheetQueryOptions(id))
+  const { data: profile } = useQuery(profileQueryOptions(timesheet?.contractorId))
+
   return (
     <Card className="m-3 mb-6 bg-accent/50 rounded-md">
       <div className="flex gap-4 p-4">
         <CardHeader className="p-0">
           <Avatar>
-            <AvatarImage src="https://github.com/shadcn.png" />
-            <AvatarFallback>CN</AvatarFallback>
+            {profile?.image_url && <AvatarImage src={profile.image_url} />}
+            <AvatarFallback>
+              {profile?.first_name[0]}
+              {profile?.last_name[0]}
+            </AvatarFallback>
           </Avatar>
         </CardHeader>
         <CardHeader className="p-0">
-          <CardTitle>John Doe</CardTitle>
-          <CardDescription>johnmaniscalco@example.com</CardDescription>
+          <CardTitle>
+            {profile?.first_name} {profile?.last_name}
+          </CardTitle>
+          <CardDescription>{profile?.email}</CardDescription>
         </CardHeader>
       </div>
     </Card>

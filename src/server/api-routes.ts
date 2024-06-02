@@ -42,6 +42,54 @@ const baseApi = new Hono<Options>()
   })
 
 const contractor = new Hono<Options>()
+  .get(
+    '/profile/:id',
+    zValidator('param', z.object({ id: z.string() })),
+    async (c) => {
+      const auth = getAuth(c)
+      if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
+
+      const id = Number(c.req.valid('param').id)
+      const contractor = await c.var.db.query.contractors.findFirst({
+        where: (contractors, { eq }) => eq(contractors.id, id)
+      })
+      if (!contractor) return c.json({ message: 'Not Found' }, 404)
+
+      const res = await fetch(
+        `https://api.clerk.com/v1/users/${contractor.clerkId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${c.env.CLERK_SECRET_KEY}`
+          }
+        }
+      )
+      const clerkUserSchema = z.object({
+        id: z.string(),
+        first_name: z.string(),
+        last_name: z.string(),
+        image_url: z.string().nullable(),
+        primary_email_address_id: z.string(),
+        email_addresses: z.array(
+          z.object({
+            id: z.string(),
+            email_address: z.string()
+          })
+        )
+      })
+      const data = await res.json()
+      const parsedData = clerkUserSchema.parse(data)
+      const clerkUser = {
+        id: parsedData.id,
+        first_name: parsedData.first_name,
+        last_name: parsedData.last_name,
+        image_url: parsedData.image_url,
+        email: parsedData.email_addresses.find(
+          (e) => e.id === parsedData.primary_email_address_id
+        )?.email_address
+      }
+      return c.json(clerkUser, 200)
+    }
+  )
   .get('/timesheets', async (c) => {
     const auth = getAuth(c)
     if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
