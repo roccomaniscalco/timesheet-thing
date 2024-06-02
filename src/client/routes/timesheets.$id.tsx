@@ -1,14 +1,13 @@
 import {
   api,
   historyQueryOptions,
-  timesheetQueryOptions,
   profileQueryOptions,
-  type Task,
-  type HistoryItem
+  timesheetQueryOptions,
+  type HistoryItem,
+  type Task
 } from '@/client/api-caller'
 import { ContractorAvatar } from '@/client/components/contractor-avatar'
 import { StatusBadge } from '@/client/components/status-badge'
-import { Avatar } from '@/client/components/ui/avatar'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -406,7 +405,7 @@ function HistoryCard() {
       <CardContent>
         <ul className="gap-8 flex flex-col">
           {history?.map((item) => (
-            <HistoryItem key={item.id} historyItem={item} />
+            <HistoryListItem key={item.id} historyItem={item} />
           ))}
         </ul>
       </CardContent>
@@ -417,7 +416,9 @@ function HistoryCard() {
 type HistoryItemProps = {
   historyItem: HistoryItem
 }
-function HistoryItem({ historyItem }: HistoryItemProps) {
+function HistoryListItem({ historyItem }: HistoryItemProps) {
+  const profile = useQuery(profileQueryOptions(historyItem.contractorId))
+
   return (
     <li className="flex gap-4">
       <ContractorAvatar
@@ -426,7 +427,7 @@ function HistoryItem({ historyItem }: HistoryItemProps) {
       />
       <div className="space-y-2">
         <CardDescription>
-          <span className="text-foreground">{historyItem.contractorId}</span>{' '}
+          <span className="text-foreground">{profile.data?.first_name}</span>{' '}
           {historyItem.description}{' '}
           <DistanceAgo createdAt={new Date(historyItem.createdAt)} />
         </CardDescription>
