@@ -394,7 +394,7 @@ function ContractorCard() {
 
 function HistoryCard() {
   const { id } = useParams({ from: '/timesheets/$id' })
-  const { data: history } = useQuery({
+  const history = useQuery({
     ...historyQueryOptions(id),
     select: (history) =>
       history.sort((a, b) =>
@@ -406,11 +406,13 @@ function HistoryCard() {
     <Card className="@container">
       <CardHeader>
         <CardTitle>Timesheet History</CardTitle>
-        <CardDescription>Status changes and comments.</CardDescription>
+        <CardDescription>
+          View status changes and comments.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ul className="gap-8 flex flex-col">
-          {history?.map((item) => (
+          {history.data?.map((item) => (
             <HistoryListItem key={item.id} historyItem={item} />
           ))}
         </ul>
@@ -435,7 +437,7 @@ function HistoryListItem({ historyItem }: HistoryItemProps) {
         <CardDescription>
           <span className="text-foreground">{profile.data?.first_name}</span>{' '}
           {historyItem.description}{' '}
-          <DistanceAgo createdAt={new Date(historyItem.createdAt)} />
+          <DistanceAgo date={new Date(historyItem.createdAt)} />
         </CardDescription>
         <div className="flex items-center gap-2">
           <StatusBadge status={historyItem.fromStatus} dense />
@@ -448,20 +450,18 @@ function HistoryListItem({ historyItem }: HistoryItemProps) {
 }
 
 type DistanceAgoProps = {
-  createdAt: Date
+  date: Date
 }
 function DistanceAgo(props: DistanceAgoProps) {
-  const [distanceAgo, setDistanceAgo] = useState(
-    formatDistanceAgo(props.createdAt)
-  )
+  const [distanceAgo, setDistanceAgo] = useState(formatDistanceAgo(props.date))
 
   // Update distanceAgo every second
   useEffect(() => {
     const interval = setInterval(() => {
-      setDistanceAgo(formatDistanceAgo(props.createdAt))
+      setDistanceAgo(formatDistanceAgo(props.date))
     }, 1000)
     return () => clearInterval(interval)
-  }, [props.createdAt])
+  }, [props.date])
 
   return <span className="tabular-nums">{distanceAgo}</span>
 }
