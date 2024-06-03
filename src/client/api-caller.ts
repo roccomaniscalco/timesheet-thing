@@ -52,6 +52,6 @@ export const profileQueryOptions = (id?: number | null) => {
       return await res.json()
     },
     enabled: !!id,
-    staleTime: 1000 * 60 * 60,
+    staleTime: 1000 * 60 * 60
   })
 }

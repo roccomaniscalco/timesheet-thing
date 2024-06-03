@@ -189,8 +189,8 @@ function StatusSelect() {
         statusMutation.mutate(status as ContractorStatus)
       }
     >
-      <SelectTrigger className="capitalize pl-1 gap-2">
-        {status ? <SelectValue /> : <Skeleton className="w-24 h-[26px]" />}
+      <SelectTrigger className="gap-2 pl-1 capitalize">
+        {status ? <SelectValue /> : <Skeleton className="h-[26px] w-24" />}
       </SelectTrigger>
       <SelectContent align="end">
         {CONTRACTOR_STATUS.map((status) => (
@@ -242,7 +242,7 @@ function WeekPicker() {
         <Button
           variant="outline"
           className={cn(
-            'justify-start text-left font-normal mt-0',
+            'mt-0 justify-start text-left font-normal',
             !week && 'text-muted-foreground'
           )}
         >
@@ -324,10 +324,10 @@ function OverviewCard() {
             <h4 className="text-sm font-semibold">Payment Summary</h4>
           </li>
           <li className="flex items-center justify-between gap-2">
-            <CurrencyDollarIcon className="w-4 h-4 text-muted-foreground" />
-            <span className="text-muted-foreground flex-1">Hourly Rate</span>
+            <CurrencyDollarIcon className="h-4 w-4 text-muted-foreground" />
+            <span className="flex-1 text-muted-foreground">Hourly Rate</span>
             {timesheet?.rate === undefined ? (
-              <Skeleton className="w-12 h-5" />
+              <Skeleton className="h-5 w-12" />
             ) : (
               <span className="tabular-nums">
                 {formatCurrency(timesheet.rate)}
@@ -335,10 +335,10 @@ function OverviewCard() {
             )}
           </li>
           <li className="flex items-center justify-between gap-2">
-            <ClockIcon className="w-4 h-4 text-muted-foreground" />
-            <span className="text-muted-foreground flex-1">Total Hours</span>
+            <ClockIcon className="h-4 w-4 text-muted-foreground" />
+            <span className="flex-1 text-muted-foreground">Total Hours</span>
             {totalHours === undefined ? (
-              <Skeleton className="w-8 h-5" />
+              <Skeleton className="h-5 w-8" />
             ) : (
               <span className="tabular-nums">
                 <span className="text-muted-foreground">×</span> {totalHours}
@@ -349,10 +349,10 @@ function OverviewCard() {
             <Separator className="my-1" />
           </li>
           <li className="flex items-center justify-between gap-2">
-            <BanknotesIcon className="w-4 h-4 text-muted-foreground" />
-            <span className="text-muted-foreground flex-1">Total Pay</span>
+            <BanknotesIcon className="h-4 w-4 text-muted-foreground" />
+            <span className="flex-1 text-muted-foreground">Total Pay</span>
             {timesheet === undefined || totalHours === undefined ? (
-              <Skeleton className="w-20 h-5" />
+              <Skeleton className="h-5 w-20" />
             ) : (
               <span className="tabular-nums">
                 {formatCurrency(totalHours * timesheet.rate)}
@@ -371,7 +371,7 @@ function ContractorCard() {
   const profile = useQuery(profileQueryOptions(timesheet?.contractorId))
 
   return (
-    <Card className="m-2 mb-6 bg-accent/50 rounded-sm">
+    <Card className="m-2 mb-6 rounded-sm bg-accent/50">
       <div className="flex gap-4 p-4">
         <CardHeader className="p-0">
           <ContractorAvatar id={timesheet?.contractorId} />
@@ -411,7 +411,7 @@ function HistoryCard() {
         <CardDescription>Status changes and comments.</CardDescription>
       </CardHeader>
       <CardContent>
-        <ul className="gap-8 flex flex-col">
+        <ul className="flex flex-col gap-8">
           {history.data
             ? history.data.map((item) => (
                 <HistoryListItem key={item.id} historyItem={item} />
@@ -441,7 +441,7 @@ function HistoryListItem({ historyItem }: HistoryItemProps) {
     <li className="flex gap-4">
       <ContractorAvatar
         id={historyItem.contractorId}
-        className="h-8 w-8 hidden @xs:flex"
+        className="hidden h-8 w-8 @xs:flex"
       />
       <div className="space-y-2">
         <CardDescription>
@@ -451,7 +451,7 @@ function HistoryListItem({ historyItem }: HistoryItemProps) {
         </CardDescription>
         <div className="flex items-center gap-2">
           <StatusBadge status={historyItem.fromStatus} dense />
-          <ArrowRightIcon className="w-3 h-3 text-muted-foreground" />
+          <ArrowRightIcon className="h-3 w-3 text-muted-foreground" />
           <StatusBadge status={historyItem.toStatus} dense />
         </div>
       </div>
@@ -494,7 +494,7 @@ function TaskDetailsCard() {
         </CardHeader>
       </div>
 
-      <CardContent className='px-0'>
+      <CardContent className="px-0">
         <Table>
           <TableBody>{!isManager && <CreateTaskRow />}</TableBody>
         </Table>
@@ -519,7 +519,9 @@ function TaskTable(props: TaskTableProps) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="min-w-40 capitalize pl-6">{props.day}</TableHead>
+          <TableHead className="min-w-40 pl-6 capitalize">
+            {props.day}
+          </TableHead>
           <TableHead className="w-full">Task ({props.tasks.length})</TableHead>
           <TableHead className="min-w-40">
             Hours ({props.tasks.reduce((acc, curr) => (acc += curr.hours), 0)})
@@ -590,7 +592,7 @@ function CreateTaskRow() {
           size="icon"
           onClick={form.handleSubmit((task) => createTaskMutation.mutate(task))}
         >
-          <PlusIcon className="w-4 h-4" />
+          <PlusIcon className="h-4 w-4" />
         </Button>
       }
     />
@@ -668,7 +670,7 @@ function EditTaskRow({ task }: EditTaskRowProps) {
               updateTaskMutation.mutate(data)
             )}
           >
-            <CheckIcon className="w-4 h-4" />
+            <CheckIcon className="h-4 w-4" />
           </Button>
         ) : (
           <Button
@@ -677,7 +679,7 @@ function EditTaskRow({ task }: EditTaskRowProps) {
             size="icon"
             onClick={() => deleteTaskMutation.mutate()}
           >
-            <TrashIcon className="w-4 h-4" />
+            <TrashIcon className="h-4 w-4" />
           </Button>
         )
       }
@@ -708,7 +710,7 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
                   onValueChange={field.onChange}
                 >
                   <FormControl>
-                    <SelectTrigger className="capitalize data-[placeholder]:normal-case aria-invalid:ring-destructive">
+                    <SelectTrigger className="capitalize aria-invalid:ring-destructive data-[placeholder]:normal-case">
                       <SelectValue placeholder="Select day" />
                     </SelectTrigger>
                   </FormControl>
@@ -777,7 +779,7 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
             )}
           />
         </TableCell>
-        <TableCell className='pr-6'>{!isManager && props.actionItem}</TableCell>
+        <TableCell className="pr-6">{!isManager && props.actionItem}</TableCell>
       </TableRow>
     </Form>
   )

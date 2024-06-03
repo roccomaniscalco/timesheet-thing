@@ -9,7 +9,7 @@ import { ExclamationTriangleIcon } from '@heroicons/react/16/solid'
 import { useQuery } from '@tanstack/react-query'
 
 type ContractorAvatarProps = {
-  id?: number | null,
+  id?: number | null
   className?: string
 }
 export function ContractorAvatar(props: ContractorAvatarProps) {
@@ -18,7 +18,7 @@ export function ContractorAvatar(props: ContractorAvatarProps) {
   if (profileQuery.isPending) {
     return (
       <Avatar className={props.className}>
-        <Skeleton className={"h-full w-full"} />
+        <Skeleton className={'h-full w-full'} />
       </Avatar>
     )
   }
@@ -27,7 +27,7 @@ export function ContractorAvatar(props: ContractorAvatarProps) {
     return (
       <Avatar className={props.className}>
         <AvatarFallback className="bg-destructive">
-          <ExclamationTriangleIcon className="w-4 h-4 text-destructive-foreground" />
+          <ExclamationTriangleIcon className="h-4 w-4 text-destructive-foreground" />
         </AvatarFallback>
       </Avatar>
     )

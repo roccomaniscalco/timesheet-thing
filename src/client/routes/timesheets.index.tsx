@@ -77,7 +77,7 @@ function NewTimesheetButton() {
       onClick={() => createTimesheet()}
     >
       New Timesheet
-      <PlusIcon className="w-4 h-4" />
+      <PlusIcon className="h-4 w-4" />
     </Button>
   )
 }
@@ -93,7 +93,7 @@ function TimesheetGrid() {
   })
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6">
+    <div className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
       {timesheets?.map((timesheet) => (
         <TimesheetCard key={timesheet.id} {...timesheet} />
       ))}
@@ -108,11 +108,11 @@ interface TimesheetCardProps extends Timesheet {}
 function TimesheetCard(props: TimesheetCardProps) {
   return (
     <Link
-      className="group outline-none cursor-pointer"
+      className="group cursor-pointer outline-none"
       to="/timesheets/$id"
       params={{ id: String(props.id) }}
     >
-      <Card className="group-focus:ring-1 ring-ring outline-none">
+      <Card className="outline-none ring-ring group-focus:ring-1">
         <CardHeader>
           <CardTitle className="truncate">
             {props.weekStart
@@ -125,7 +125,7 @@ function TimesheetCard(props: TimesheetCardProps) {
           <div className="flex items-center justify-between">
             <StatusBadge status={props.status} />
             <div className="flex items-center gap-2 border-none p-0">
-              <ClockIcon className="w-4 h-4 text-muted-foreground" />
+              <ClockIcon className="h-4 w-4 text-muted-foreground" />
               {props.totalHours}h
             </div>
           </div>

@@ -19,10 +19,10 @@ const variantClass = {
 }
 
 const icon = {
-  draft: <PencilIcon className="w-4 h-4" />,
-  submitted: <PaperAirplaneIcon className="w-4 h-4" />,
-  approved: <CheckCircleIcon className="w-4 h-4" />,
-  rejected: <ExclamationTriangleIcon className="w-4 h-4" />
+  draft: <PencilIcon className="h-4 w-4" />,
+  submitted: <PaperAirplaneIcon className="h-4 w-4" />,
+  approved: <CheckCircleIcon className="h-4 w-4" />,
+  rejected: <ExclamationTriangleIcon className="h-4 w-4" />
 }
 
 interface StatusBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -38,9 +38,9 @@ export function StatusBadge({
   return (
     <div
       className={cn(
-        'inline-flex items-center rounded border px-2 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 gap-1.5 capitalize',
+        'inline-flex items-center gap-1.5 rounded border px-2 py-1 text-xs font-semibold capitalize transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
         variantClass[status],
-        dense && 'p-0.5 leading-none font-medium',
+        dense && 'p-0.5 font-medium leading-none',
         className
       )}
       {...props}
