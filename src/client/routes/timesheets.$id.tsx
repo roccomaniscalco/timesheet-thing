@@ -76,7 +76,7 @@ import {
   type ContractorStatus,
   type Weekday
 } from '@/constants'
-import { UserButton } from '@clerk/clerk-react'
+import { UserButton, useUser } from '@clerk/clerk-react'
 import {
   ArrowRightIcon,
   BanknotesIcon,
@@ -207,6 +207,9 @@ function WeekPicker() {
   const { id } = useParams({ from: '/timesheets/$id' })
   const { data: timesheet } = useQuery(timesheetQueryOptions(id))
 
+  const { user } = useUser()
+  const isManager = user?.publicMetadata.role === 'manager'
+
   const queryClient = useQueryClient()
   const weekStartMutation = useMutation({
     mutationFn: async (timesheet: { weekStart: string | null }) => {
@@ -257,6 +260,7 @@ function WeekPicker() {
             selected: week
           }}
           onDayClick={(day, modifiers) => {
+            if (isManager) return
             if (modifiers.selected) {
               weekStartMutation.mutate({ weekStart: null })
             } else {
@@ -404,7 +408,7 @@ function HistoryCard() {
     <Card className="@container">
       <CardHeader>
         <CardTitle>Timesheet History</CardTitle>
-        <CardDescription>View status changes and comments.</CardDescription>
+        <CardDescription>Status changes and comments.</CardDescription>
       </CardHeader>
       <CardContent>
         <ul className="gap-8 flex flex-col">
@@ -478,28 +482,21 @@ function TaskDetailsCard() {
   const { id } = useParams({ from: '/timesheets/$id' })
   const { data: timesheet } = useQuery(timesheetQueryOptions(id))
 
+  const { user } = useUser()
+  const isManager = user?.publicMetadata.role === 'manager'
+
   return (
     <Card>
       <div className="flex justify-between">
         <CardHeader>
           <CardTitle>Task Details</CardTitle>
-          <CardDescription>Log your work for the week.</CardDescription>
+          <CardDescription>Logged work for the week.</CardDescription>
         </CardHeader>
       </div>
 
-      <CardContent className="px-4">
+      <CardContent>
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="min-w-40 capitalize">Day</TableHead>
-              <TableHead className="w-full">Task</TableHead>
-              <TableHead className="min-w-40">Hours</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <CreateTaskRow />
-          </TableBody>
+          <TableBody>{!isManager && <CreateTaskRow />}</TableBody>
         </Table>
         {WEEKDAY.map((day) => (
           <TaskTable day={day} tasks={timesheet?.tasksByDay[day]} key={day} />
@@ -521,10 +518,12 @@ function TaskTable(props: TaskTableProps) {
   return (
     <Table>
       <TableHeader>
-        <TableRow>
+        <TableRow className="bg-accent/50">
           <TableHead className="min-w-40 capitalize">{props.day}</TableHead>
-          <TableHead className="w-full" />
-          <TableHead className="min-w-40" />
+          <TableHead className="w-full">Task ({props.tasks.length})</TableHead>
+          <TableHead className="min-w-40">
+            Hours ({props.tasks.reduce((acc, curr) => (acc += curr.hours), 0)})
+          </TableHead>
           <TableHead />
         </TableRow>
       </TableHeader>
@@ -600,7 +599,6 @@ function CreateTaskRow() {
 
 type EditTaskRowProps = {
   task: Task
-  className?: string
 }
 function EditTaskRow({ task, ...props }: EditTaskRowProps) {
   const { id } = useParams({ from: '/timesheets/$id' })
@@ -660,7 +658,6 @@ function EditTaskRow({ task, ...props }: EditTaskRowProps) {
 
   return (
     <BaseTaskRow
-      className={props.className}
       form={form}
       actionItem={
         form.formState.isDirty ? (
@@ -690,13 +687,15 @@ function EditTaskRow({ task, ...props }: EditTaskRowProps) {
 
 type BaseTaskTableRowProps = {
   form: UseFormReturn<TaskForm>
-  className?: string
   actionItem?: React.ReactNode
 }
 function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
+  const { user } = useUser()
+  const isManager = user?.publicMetadata.role === 'manager'
+
   return (
     <Form {...form}>
-      <TableRow className={props.className}>
+      <TableRow className="hover:bg-background">
         <TableCell className="min-w-40">
           <FormField
             control={form.control}
@@ -715,7 +714,12 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
                   </FormControl>
                   <SelectContent>
                     {WEEKDAY.map((day) => (
-                      <SelectItem key={day} value={day} className="capitalize">
+                      <SelectItem
+                        disabled={isManager}
+                        key={day}
+                        value={day}
+                        className="capitalize"
+                      >
                         {day}
                       </SelectItem>
                     ))}
@@ -734,6 +738,7 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
               <FormItem>
                 <FormControl>
                   <Input
+                    readOnly={isManager}
                     key={form.formState.isSubmitSuccessful.toString()}
                     placeholder="Input task"
                     defaultValue={field.value}
@@ -754,6 +759,7 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
               <FormItem>
                 <FormControl>
                   <Input
+                    readOnly={isManager}
                     key={form.formState.isSubmitSuccessful.toString()}
                     type="number"
                     placeholder="Input hours"
@@ -771,7 +777,7 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
             )}
           />
         </TableCell>
-        <TableCell>{props.actionItem}</TableCell>
+        <TableCell>{!isManager && props.actionItem}</TableCell>
       </TableRow>
     </Form>
   )
