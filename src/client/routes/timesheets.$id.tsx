@@ -317,7 +317,7 @@ function OverviewCard() {
 
   return (
     <Card>
-      <ContractorCard />
+      <ContractorCardHeader />
       <CardContent>
         <ul className="grid gap-3 text-sm">
           <li>
@@ -365,32 +365,30 @@ function OverviewCard() {
   )
 }
 
-function ContractorCard() {
+function ContractorCardHeader() {
   const { id } = useParams({ from: '/timesheets/$id' })
   const { data: timesheet } = useQuery(timesheetQueryOptions(id))
   const profile = useQuery(profileQueryOptions(timesheet?.contractorId))
 
   return (
-    <Card className="m-2 mb-6 rounded-sm bg-accent/50">
-      <div className="flex gap-4 p-4">
+    <div className="flex gap-4 p-6">
+      <CardHeader className="p-0">
+        <ContractorAvatar id={timesheet?.contractorId} />
+      </CardHeader>
+      {profile.data ? (
         <CardHeader className="p-0">
-          <ContractorAvatar id={timesheet?.contractorId} />
+          <CardTitle>
+            {profile.data.first_name} {profile.data.last_name}
+          </CardTitle>
+          <CardDescription>{profile.data.email}</CardDescription>
         </CardHeader>
-        {profile.data ? (
-          <CardHeader className="p-0">
-            <CardTitle>
-              {profile.data.first_name} {profile.data.last_name}
-            </CardTitle>
-            <CardDescription>{profile.data.email}</CardDescription>
-          </CardHeader>
-        ) : (
-          <CardHeader className="p-0">
-            <Skeleton className="h-5 w-24" />
-            <Skeleton className="h-4 w-48 pt-2" />
-          </CardHeader>
-        )}
-      </div>
-    </Card>
+      ) : (
+        <CardHeader className="p-0">
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-4 w-48 pt-2" />
+        </CardHeader>
+      )}
+    </div>
   )
 }
 
