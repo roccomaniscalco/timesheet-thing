@@ -494,7 +494,7 @@ function TaskDetailsCard() {
         </CardHeader>
       </div>
 
-      <CardContent>
+      <CardContent className='px-0'>
         <Table>
           <TableBody>{!isManager && <CreateTaskRow />}</TableBody>
         </Table>
@@ -518,8 +518,8 @@ function TaskTable(props: TaskTableProps) {
   return (
     <Table>
       <TableHeader>
-        <TableRow className="bg-accent/50">
-          <TableHead className="min-w-40 capitalize">{props.day}</TableHead>
+        <TableRow>
+          <TableHead className="min-w-40 capitalize pl-6">{props.day}</TableHead>
           <TableHead className="w-full">Task ({props.tasks.length})</TableHead>
           <TableHead className="min-w-40">
             Hours ({props.tasks.reduce((acc, curr) => (acc += curr.hours), 0)})
@@ -600,7 +600,7 @@ function CreateTaskRow() {
 type EditTaskRowProps = {
   task: Task
 }
-function EditTaskRow({ task, ...props }: EditTaskRowProps) {
+function EditTaskRow({ task }: EditTaskRowProps) {
   const { id } = useParams({ from: '/timesheets/$id' })
   const queryClient = useQueryClient()
   const form = useForm<TaskForm>({
@@ -695,8 +695,8 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
 
   return (
     <Form {...form}>
-      <TableRow className="hover:bg-background">
-        <TableCell className="min-w-40">
+      <TableRow>
+        <TableCell className="min-w-40 pl-6">
           <FormField
             control={form.control}
             name="weekday"
@@ -777,7 +777,7 @@ function BaseTaskRow({ form, ...props }: BaseTaskTableRowProps) {
             )}
           />
         </TableCell>
-        <TableCell>{!isManager && props.actionItem}</TableCell>
+        <TableCell className='pr-6'>{!isManager && props.actionItem}</TableCell>
       </TableRow>
     </Form>
   )
