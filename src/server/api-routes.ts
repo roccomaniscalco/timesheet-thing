@@ -6,6 +6,7 @@ import { neon } from '@neondatabase/serverless'
 import { and, desc, eq, not, or, sql, sum } from 'drizzle-orm'
 import { NeonHttpDatabase, drizzle } from 'drizzle-orm/neon-http'
 import { Hono, type Env } from 'hono'
+import { HTTPException } from 'hono/http-exception'
 import { createMiddleware } from 'hono/factory'
 import { z } from 'zod'
 
@@ -17,12 +18,26 @@ type Bindings = {
 
 type Variables = {
   db: NeonHttpDatabase<typeof schema>
+  user: User
 }
 
 interface Options extends Env {
   Bindings: Bindings
   Variables: Variables
 }
+
+const publicMetadataSchema = z.discriminatedUnion('role', [
+  z.object({ role: z.literal('contractor'), contractorId: z.number().int() }),
+  z.object({ role: z.literal('manager'), managerId: z.number().int() })
+])
+
+const userSchema = z
+  .object({
+    publicMetadata: publicMetadataSchema
+  })
+  .passthrough()
+
+type User = z.infer<typeof userSchema>
 
 const dbMiddleware = createMiddleware<Options>((c, next) => {
   const sql = neon(c.env.DATABASE_URL)
@@ -31,126 +46,104 @@ const dbMiddleware = createMiddleware<Options>((c, next) => {
   return next()
 })
 
+const userMiddleware = createMiddleware<Options>(async (c, next) => {
+  const clerkClient = c.get('clerk')
+  const auth = getAuth(c)
+  if (!auth?.userId) throw new HTTPException(401, { message: 'Unauthorized' })
+
+  const user = userSchema.parse(await clerkClient.users.getUser(auth.userId))
+  c.set('user', user)
+  return next()
+})
+
+const whereTimesheetRead = (user: User) =>
+  user.publicMetadata.role === 'manager'
+    ? and(
+        eq(schema.timesheets.managerId, user.publicMetadata.managerId),
+        not(eq(schema.timesheets.status, 'draft'))
+      )
+    : eq(schema.timesheets.contractorId, user.publicMetadata.contractorId)
+
 const baseApi = new Hono<Options>()
   .basePath('/api')
   .use(clerkMiddleware())
+  .use(userMiddleware)
   .use(dbMiddleware)
   .onError((e, c) => {
     console.error(e)
     return c.json({ message: 'Internal Server Error' }, 500)
   })
-  .get('timesheets/:id', async (c) => {
-    const id = Number(c.req.param('id'))
-
-    const auth = getAuth(c)
-    if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
-
-    const timesheet = await c.var.db
-      .select()
-      .from(schema.timesheets)
-      .leftJoin(
-        schema.tasks,
-        eq(schema.tasks.timesheetId, schema.timesheets.id)
-      )
-      .leftJoin(
-        schema.history,
-        eq(schema.history.timesheetId, schema.timesheets.id)
-      )
-      .leftJoin(
-        schema.contractors,
-        eq(schema.timesheets.contractorId, schema.contractors.id)
-      )
-      .leftJoin(
-        schema.managers,
-        eq(schema.contractors.managerId, schema.managers.id)
-      )
-      .where(
-        and(
-          eq(schema.timesheets.id, id),
-          or(
-            eq(schema.contractors.clerkId, auth.userId),
-            and(
-              eq(schema.managers.clerkId, auth.userId),
-              not(eq(schema.timesheets.status, 'draft'))
-            )
-          )
-        )
-      )
-    if (!timesheet[0]) return c.json({ message: 'Not found' }, 404)
-
-    const formattedTimesheet = {
-      ...timesheet[0].timesheets,
-      contractor: timesheet[0].contractors,
-      tasks: Object.values(
-        timesheet.reduce<Record<number, schema.TaskModel>>((acc, curr) => {
-          if (curr.tasks && !acc[curr.tasks.id]) {
-            acc[curr.tasks.id] = curr.tasks
-          }
-          return acc
-        }, {})
+  .get('/timesheets', async (c) => {
+    const timeseheets = await c.var.db.query.timesheets.findMany({
+      where: whereTimesheetRead(c.var.user),
+      with: {
+        tasks: true,
+        history: true,
+        contractor: true
+      }
+    })
+    return c.json(timeseheets, 200)
+  })
+  .get('/timesheets/:id{[0-9]+}', async (c) => {
+    const id = Number.parseInt(c.req.param('id'))
+    const timesheet = await c.var.db.query.timesheets.findFirst({
+      where: and(
+        eq(schema.timesheets.id, id),
+        whereTimesheetRead(c.var.user)
       ),
-      history: Object.values(
-        timesheet.reduce<Record<number, schema.HistoryModel>>((acc, curr) => {
-          if (curr.history && !acc[curr.history.id]) {
-            acc[curr.history.id] = curr.history
-          }
-          return acc
-        }, {})
-      )
-    }
-
-    return c.json(formattedTimesheet, 200)
+      with: {
+        tasks: true,
+        history: true,
+        contractor: true
+      }
+    })
+    if (!timesheet) return c.json({ message: 'Not found' }, 404)
+    return c.json(timesheet, 200)
   })
 
 const contractor = new Hono<Options>()
-  .get(
-    '/profile/:id',
-    zValidator('param', z.object({ id: z.string() })),
-    async (c) => {
-      const auth = getAuth(c)
-      if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
+  .get('/profile/:id', async (c) => {
+    const id = Number.parseInt(c.req.param('id'))
 
-      const id = Number(c.req.valid('param').id)
-      const contractor = await c.var.db.query.contractors.findFirst({
-        where: (contractors, { eq }) => eq(contractors.id, id)
-      })
-      if (!contractor) return c.json({ message: 'Not Found' }, 404)
+    const contractor = await c.var.db.query.contractors.findFirst({
+      where: (contractors, { eq }) => eq(contractors.id, id)
+    })
+    if (!contractor) return c.json({ message: 'Not Found' }, 404)
 
-      const res = await fetch(
-        `https://api.clerk.com/v1/users/${contractor.clerkId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${c.env.CLERK_SECRET_KEY}`
-          }
+    const res = await fetch(
+      `https://api.clerk.com/v1/users/${contractor.clerkId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${c.env.CLERK_SECRET_KEY}`
         }
-      )
-      const clerkUserSchema = z.object({
-        id: z.string(),
-        first_name: z.string(),
-        last_name: z.string(),
-        image_url: z.string(),
-        primary_email_address_id: z.string(),
-        email_addresses: z.array(
-          z.object({
-            id: z.string(),
-            email_address: z.string()
-          })
-        )
-      })
-      const data = await res.json()
-      const parsedData = clerkUserSchema.parse(data)
-      const clerkUser = {
-        id: parsedData.id,
-        first_name: parsedData.first_name,
-        last_name: parsedData.last_name,
-        image_url: parsedData.image_url,
-        email: parsedData.email_addresses.find(
-          (e) => e.id === parsedData.primary_email_address_id
-        )?.email_address
       }
-      return c.json(clerkUser, 200)
+    )
+    const clerkUserSchema = z.object({
+      id: z.string(),
+      first_name: z.string(),
+      last_name: z.string(),
+      image_url: z.string(),
+      primary_email_address_id: z.string(),
+      email_addresses: z.array(
+        z.object({
+          id: z.string(),
+          email_address: z.string()
+        })
+      )
+    })
+    const data = await res.json()
+    const parsedData = clerkUserSchema.parse(data)
+    const clerkUser = {
+      id: parsedData.id,
+      first_name: parsedData.first_name,
+      last_name: parsedData.last_name,
+      image_url: parsedData.image_url,
+      email: parsedData.email_addresses.find(
+        (e) => e.id === parsedData.primary_email_address_id
+      )?.email_address
     }
-  )
+    return c.json(clerkUser, 200)
+  })
   .get('/timesheets', async (c) => {
     const auth = getAuth(c)
     if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
@@ -190,8 +183,7 @@ const contractor = new Hono<Options>()
       .insert(schema.timesheets)
       .values({
         contractorId: contractor.id,
-        // TODO: If a contractor creates a new timesheet from the past
-        // when they had a different rate or approved hours, this will be incorrect
+        managerId: contractor.managerId,
         rate: contractor.rate,
         approvedHours: contractor.approvedHours,
         status: 'draft'
