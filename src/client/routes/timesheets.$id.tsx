@@ -156,7 +156,7 @@ function StatusSelect() {
   const queryClient = useQueryClient()
   const statusMutation = useMutation({
     mutationFn: async (toStatus: ContractorStatus) => {
-      const res = await api.contractor.timesheets[':id'].status.$put({
+      const res = await api.timesheets[':id'].status.$put({
         param: { id },
         json: { toStatus }
       })
@@ -213,7 +213,7 @@ function WeekPicker() {
   const queryClient = useQueryClient()
   const weekStartMutation = useMutation({
     mutationFn: async (timesheet: { weekStart: string | null }) => {
-      const res = await api.contractor.timesheets[':id'].$put({
+      const res = await api.timesheets[':id'].$put({
         param: { id },
         json: timesheet
       })
@@ -559,7 +559,7 @@ function CreateTaskRow() {
 
   const createTaskMutation = useMutation({
     mutationFn: async (taskForm: TaskForm) => {
-      const res = await api.contractor.timesheets.tasks.$patch({
+      const res = await api.timesheets.tasks.$patch({
         json: { ...taskForm, timesheetId: Number(id) }
       })
       if (!res.ok) throw new Error('Failed to create task')
@@ -614,7 +614,7 @@ function EditTaskRow({ task }: EditTaskRowProps) {
 
   const updateTaskMutation = useMutation({
     mutationFn: async (taskForm: TaskForm) => {
-      const res = await api.contractor.timesheets.tasks.$patch({
+      const res = await api.timesheets.tasks.$patch({
         json: {
           ...taskForm,
           timesheetId: task.timesheetId,
@@ -638,7 +638,7 @@ function EditTaskRow({ task }: EditTaskRowProps) {
 
   const deleteTaskMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.contractor.timesheets.tasks[':id'].$delete({
+      const res = await api.timesheets.tasks[':id'].$delete({
         param: { id: String(task.id) }
       })
       if (!res.ok) throw new Error('Failed to delete task')

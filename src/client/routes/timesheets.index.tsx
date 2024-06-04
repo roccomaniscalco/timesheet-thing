@@ -58,7 +58,7 @@ function NewTimesheetButton() {
   const { mutate: createTimesheet, isPending: isCreatingTimesheet } =
     useMutation({
       mutationFn: async () => {
-        const res = await api.contractor.timesheets.$post()
+        const res = await api.timesheets.$post()
         if (!res.ok) throw new Error('Failed to create timesheet')
         return res.json()
       },
@@ -86,7 +86,7 @@ function TimesheetGrid() {
   const { data: timesheets } = useQuery({
     queryKey: ['get-timesheets'],
     queryFn: async () => {
-      const res = await api.contractor.timesheets.$get()
+      const res = await api.timesheets.$get()
       if (!res.ok) throw new Error('Failed to get timesheets')
       return res.json()
     }
@@ -101,7 +101,7 @@ function TimesheetGrid() {
   )
 }
 
-type Timesheets = InferResponseType<typeof api.contractor.timesheets.$get, 200>
+type Timesheets = InferResponseType<typeof api.timesheets.$get, 200>
 type Timesheet = Timesheets[number]
 
 interface TimesheetCardProps extends Timesheet {}

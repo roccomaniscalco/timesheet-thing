@@ -45,7 +45,7 @@ export const profileQueryOptions = (id?: number | null) => {
   return queryOptions({
     queryKey: ['contractor', id],
     queryFn: async () => {
-      const res = await api.contractor.profile[':id'].$get({
+      const res = await api.users[':id'].$get({
         param: { id: String(id) }
       })
       if (!res.ok) throw new Error('Failed to get contractor')
