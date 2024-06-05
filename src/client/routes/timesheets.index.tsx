@@ -119,7 +119,7 @@ function TimesheetCard(props: TimesheetCardProps) {
               ? formatDateRange(getWeekRange(props.weekStart))
               : 'Undated'}
           </CardTitle>
-          <div className="text-sm text-muted-foreground">{props.slug}</div>
+          <div className="text-sm text-muted-foreground">{props.id}</div>
         </CardHeader>
         <CardContent className="grid gap-2">
           <div className="flex items-center justify-between">

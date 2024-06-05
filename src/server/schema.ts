@@ -1,6 +1,6 @@
 import { STATUS, WEEKDAY } from '@/constants'
 import { generateSlug } from '@/server/generate-slug'
-import type { InferSelectModel } from 'drizzle-orm'
+import { relations } from 'drizzle-orm'
 import {
   date,
   real,
@@ -20,41 +20,71 @@ export const weekday = pgEnum('weekday', WEEKDAY)
 export const managers = pgTable(
   'managers',
   {
-    id: serial('id').primaryKey(),
-    clerkId: varchar('clerk_id').notNull()
+    internal_id: serial('internal_id').primaryKey(),
+    id: varchar('id').notNull().unique()
   },
   (table) => ({
-    clerkIdIdx: uniqueIndex('managers_clerk_id_idx').on(table.clerkId)
+    idIdx: uniqueIndex('manager_id_idx').on(table.id)
   })
 )
+
+export const managersRelations = relations(managers, ({ many }) => ({
+  contractors: many(contractors),
+  timesheets: many(timesheets),
+  history: many(history)
+}))
 
 export const contractors = pgTable(
   'contractors',
   {
-    id: serial('id').primaryKey(),
-    clerkId: varchar('clerk_id').notNull(),
+    internal_id: serial('internal_id').primaryKey(),
+    id: varchar('id').notNull().unique(),
     approvedHours: integer('approved_hours').notNull(),
     rate: real('rate').notNull(),
-    managerId: integer('manager_id')
+    managerId: varchar('manager_id')
       .references(() => managers.id, { onDelete: 'no action' })
       .notNull()
   },
   (table) => ({
-    clerkIdIdx: uniqueIndex('contractors_clerk_id_idx').on(table.clerkId)
+    idIdx: uniqueIndex('contractor_id_idx').on(table.id)
   })
 )
 
+export const contractorsRelations = relations(contractors, ({ one, many }) => ({
+  timesheets: many(timesheets),
+  history: many(history),
+  manager: one(managers, {
+    fields: [contractors.managerId],
+    references: [managers.id]
+  })
+}))
+
 export const timesheets = pgTable('timesheets', {
   id: serial('id').primaryKey(),
-  slug: varchar('slug')
-    .$defaultFn(() => generateSlug())
-    .notNull(),
   status: status('status').notNull(),
   weekStart: date('week_start'),
-  contractorId: integer('contractor_id').references(() => contractors.id),
   approvedHours: integer('approved_hours').notNull(),
-  rate: real('rate').notNull()
+  rate: real('rate').notNull(),
+  contractorId: varchar('contractor_id')
+    .references(() => contractors.id)
+    .notNull(),
+  managerId: varchar('manager_id')
+    .references(() => managers.id)
+    .notNull()
 })
+
+export const timesheetsRelations = relations(timesheets, ({ one, many }) => ({
+  tasks: many(tasks),
+  history: many(history),
+  contractor: one(contractors, {
+    fields: [timesheets.contractorId],
+    references: [contractors.id]
+  }),
+  manager: one(managers, {
+    fields: [timesheets.managerId],
+    references: [managers.id]
+  })
+}))
 
 export const tasks = pgTable('tasks', {
   id: serial('id').primaryKey(),
@@ -65,7 +95,13 @@ export const tasks = pgTable('tasks', {
     .references(() => timesheets.id, { onDelete: 'cascade' })
     .notNull()
 })
-export type TaskModel = InferSelectModel<typeof tasks>
+
+export const tasksRelations = relations(tasks, ({ one }) => ({
+  timesheet: one(timesheets, {
+    fields: [tasks.timesheetId],
+    references: [timesheets.id]
+  })
+}))
 
 export const history = pgTable('history', {
   id: serial('id').primaryKey(),
@@ -74,8 +110,24 @@ export const history = pgTable('history', {
   fromStatus: status('from_status').notNull(),
   toStatus: status('to_status').notNull(),
   comment: varchar('comment'),
-  timesheetId: integer('timesheet_id').references(() => timesheets.id),
-  contractorId: integer('contractor_id').references(() => contractors.id),
-  managerId: integer('manager_id').references(() => managers.id)
+  timesheetId: integer('timesheet_id')
+    .references(() => timesheets.id)
+    .notNull(),
+  contractorId: varchar('contractor_id').references(() => contractors.id),
+  managerId: varchar('manager_id').references(() => managers.id)
 })
-export type HistoryModel = InferSelectModel<typeof history>
+
+export const historyRelations = relations(history, ({ one }) => ({
+  timesheet: one(timesheets, {
+    fields: [history.timesheetId],
+    references: [timesheets.id]
+  }),
+  contractor: one(contractors, {
+    fields: [history.contractorId],
+    references: [contractors.id]
+  }),
+  manager: one(managers, {
+    fields: [history.managerId],
+    references: [managers.id]
+  })
+}))

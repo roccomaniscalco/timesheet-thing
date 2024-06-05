@@ -137,7 +137,7 @@ function HeaderContent() {
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            <BreadcrumbPage>{timesheet?.slug}</BreadcrumbPage>
+            <BreadcrumbPage>{timesheet?.id}</BreadcrumbPage>
           </BreadcrumbList>
         </Breadcrumb>
       </headerBreadcrumbTunnel.In>
@@ -378,7 +378,7 @@ function ContractorCardHeader() {
       {profile.data ? (
         <CardHeader className="p-0">
           <CardTitle>
-            {profile.data.first_name} {profile.data.last_name}
+            {profile.data.firstName} {profile.data.lastName}
           </CardTitle>
           <CardDescription>{profile.data.email}</CardDescription>
         </CardHeader>
@@ -443,7 +443,7 @@ function HistoryListItem({ historyItem }: HistoryItemProps) {
       />
       <div className="space-y-2">
         <CardDescription>
-          <span className="text-foreground">{profile.data?.first_name}</span>{' '}
+          <span className="text-foreground">{profile.data?.firstName}</span>{' '}
           {historyItem.description}{' '}
           <DistanceAgo date={new Date(historyItem.createdAt)} />
         </CardDescription>
