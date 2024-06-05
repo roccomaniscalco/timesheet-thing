@@ -3,11 +3,10 @@ import * as schema from '@/server/schema'
 import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
 import { zValidator } from '@hono/zod-validator'
 import { neon } from '@neondatabase/serverless'
-import { and, eq, sql, sum } from 'drizzle-orm'
+import { and, eq, not, or } from 'drizzle-orm'
 import { NeonHttpDatabase, drizzle } from 'drizzle-orm/neon-http'
 import { Hono, type Env } from 'hono'
 import { createMiddleware } from 'hono/factory'
-import { HTTPException } from 'hono/http-exception'
 import { z } from 'zod'
 
 type Bindings = {
@@ -45,7 +44,13 @@ const baseApi = new Hono<Options>()
     if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
 
     const timesheets = await c.var.db.query.timesheets.findMany({
-      where: eq(schema.timesheets.contractorId, auth.userId),
+      where: or(
+        eq(schema.timesheets.contractorId, auth.userId),
+        and(
+          eq(schema.timesheets.managerId, auth.userId),
+          not(eq(schema.timesheets.status, 'draft'))
+        )
+      ),
       with: {
         tasks: { columns: { hours: true } },
         contractor: true
@@ -62,7 +67,13 @@ const baseApi = new Hono<Options>()
     const timesheet = await c.var.db.query.timesheets.findFirst({
       where: and(
         eq(schema.timesheets.id, id),
-        eq(schema.timesheets.contractorId, auth.userId)
+        or(
+          eq(schema.timesheets.contractorId, auth.userId),
+          and(
+            eq(schema.timesheets.managerId, auth.userId),
+            not(eq(schema.timesheets.status, 'draft'))
+          )
+        )
       ),
       with: {
         tasks: true,
