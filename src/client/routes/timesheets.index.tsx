@@ -126,7 +126,7 @@ function TimesheetCard(props: TimesheetCardProps) {
             <StatusBadge status={props.status} />
             <div className="flex items-center gap-2 border-none p-0">
               <ClockIcon className="h-4 w-4 text-muted-foreground" />
-              {props.totalHours}h
+              {/* {props.totalHours}h */}
             </div>
           </div>
         </CardContent>

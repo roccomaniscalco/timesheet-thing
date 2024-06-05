@@ -1,5 +1,4 @@
 import { STATUS, WEEKDAY } from '@/constants'
-import { generateSlug } from '@/server/generate-slug'
 import { relations } from 'drizzle-orm'
 import {
   date,
