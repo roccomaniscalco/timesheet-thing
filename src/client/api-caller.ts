@@ -20,7 +20,7 @@ export const timesheetsQueryOptions = () => {
       const res = await api.timesheets.$get()
       if (!res.ok) throw new Error('Failed to get timesheets')
       return res.json()
-    },
+    }
   })
 }
 
@@ -64,6 +64,6 @@ export const profileQueryOptions = (id?: string | null) => {
       return await res.json()
     },
     enabled: !!id,
-    staleTime: 1000 * 60 * 60
+    staleTime: Infinity
   })
 }

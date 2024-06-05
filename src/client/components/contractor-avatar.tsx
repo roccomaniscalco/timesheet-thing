@@ -13,7 +13,20 @@ type ContractorAvatarProps = {
   className?: string
 }
 export function ContractorAvatar(props: ContractorAvatarProps) {
-  const profileQuery = useQuery(profileQueryOptions(props.id))
+  const profileQuery = useQuery({
+    ...profileQueryOptions(props.id),
+    select: (profile) => {
+      if (!profile.imageUrl) {
+        return profile
+      }
+      const params = new URLSearchParams()
+      params.set('width', '160')
+      return {
+        ...profile,
+        imageUrl: `${profile.imageUrl}?${params.toString()}`
+      }
+    }
+  })
 
   if (profileQuery.isPending) {
     return (
