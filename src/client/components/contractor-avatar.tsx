@@ -9,7 +9,7 @@ import { ExclamationTriangleIcon } from '@heroicons/react/16/solid'
 import { useQuery } from '@tanstack/react-query'
 
 type ContractorAvatarProps = {
-  id?: number | null
+  id?: string | null
   className?: string
 }
 export function ContractorAvatar(props: ContractorAvatarProps) {
@@ -35,7 +35,11 @@ export function ContractorAvatar(props: ContractorAvatarProps) {
 
   return (
     <Avatar className={props.className}>
-      <AvatarImage src={profileQuery.data.image_url} />
+      <AvatarImage src={profileQuery.data.imageUrl} />
+      <AvatarFallback>
+        {profileQuery.data.firstName?.[0]}
+        {profileQuery.data.lastName?.[0]}
+      </AvatarFallback>
     </Avatar>
   )
 }

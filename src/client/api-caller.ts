@@ -41,7 +41,7 @@ export const timesheetQueryOptions = (id: string) => {
   })
 }
 
-export const profileQueryOptions = (id?: number | null) => {
+export const profileQueryOptions = (id?: string | null) => {
   return queryOptions({
     queryKey: ['contractor', id],
     queryFn: async () => {

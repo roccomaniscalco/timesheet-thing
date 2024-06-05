@@ -3,11 +3,11 @@ import * as schema from '@/server/schema'
 import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
 import { zValidator } from '@hono/zod-validator'
 import { neon } from '@neondatabase/serverless'
-import { and, desc, eq, not, or, sql, sum } from 'drizzle-orm'
+import { and, eq, sql, sum } from 'drizzle-orm'
 import { NeonHttpDatabase, drizzle } from 'drizzle-orm/neon-http'
 import { Hono, type Env } from 'hono'
-import { HTTPException } from 'hono/http-exception'
 import { createMiddleware } from 'hono/factory'
+import { HTTPException } from 'hono/http-exception'
 import { z } from 'zod'
 
 type Bindings = {
@@ -18,26 +18,12 @@ type Bindings = {
 
 type Variables = {
   db: NeonHttpDatabase<typeof schema>
-  user: User
 }
 
 interface Options extends Env {
   Bindings: Bindings
   Variables: Variables
 }
-
-const publicMetadataSchema = z.discriminatedUnion('role', [
-  z.object({ role: z.literal('contractor'), contractorId: z.number().int() }),
-  z.object({ role: z.literal('manager'), managerId: z.number().int() })
-])
-
-const userSchema = z
-  .object({
-    publicMetadata: publicMetadataSchema
-  })
-  .passthrough()
-
-type User = z.infer<typeof userSchema>
 
 const dbMiddleware = createMiddleware<Options>((c, next) => {
   const sql = neon(c.env.DATABASE_URL)
@@ -46,50 +32,37 @@ const dbMiddleware = createMiddleware<Options>((c, next) => {
   return next()
 })
 
-const userMiddleware = createMiddleware<Options>(async (c, next) => {
-  const clerkClient = c.get('clerk')
-  const auth = getAuth(c)
-  if (!auth?.userId) throw new HTTPException(401, { message: 'Unauthorized' })
-
-  const user = userSchema.parse(await clerkClient.users.getUser(auth.userId))
-  c.set('user', user)
-  return next()
-})
-
-const whereTimesheetRead = (user: User) =>
-  user.publicMetadata.role === 'manager'
-    ? and(
-        eq(schema.timesheets.managerId, user.publicMetadata.managerId),
-        not(eq(schema.timesheets.status, 'draft'))
-      )
-    : eq(schema.timesheets.contractorId, user.publicMetadata.contractorId)
-
 const baseApi = new Hono<Options>()
   .basePath('/api')
   .use(clerkMiddleware())
-  .use(userMiddleware)
   .use(dbMiddleware)
   .onError((e, c) => {
     console.error(e)
     return c.json({ message: 'Internal Server Error' }, 500)
   })
   .get('/timesheets', async (c) => {
-    const timeseheets = await c.var.db.query.timesheets.findMany({
-      where: whereTimesheetRead(c.var.user),
+    const auth = getAuth(c)
+    if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
+
+    const timesheets = await c.var.db.query.timesheets.findMany({
+      where: eq(schema.timesheets.contractorId, auth.userId),
       with: {
-        tasks: true,
-        history: true,
+        tasks: { columns: { hours: true },  },
         contractor: true
       }
     })
-    return c.json(timeseheets, 200)
+
+    return c.json(timesheets, 200)
   })
   .get('/timesheets/:id{[0-9]+}', async (c) => {
+    const auth = getAuth(c)
+    if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
+
     const id = Number.parseInt(c.req.param('id'))
     const timesheet = await c.var.db.query.timesheets.findFirst({
       where: and(
         eq(schema.timesheets.id, id),
-        whereTimesheetRead(c.var.user)
+        eq(schema.timesheets.contractorId, auth.userId)
       ),
       with: {
         tasks: true,
@@ -103,79 +76,26 @@ const baseApi = new Hono<Options>()
 
 const contractor = new Hono<Options>()
   .get('/profile/:id', async (c) => {
-    const id = Number.parseInt(c.req.param('id'))
-
-    const contractor = await c.var.db.query.contractors.findFirst({
-      where: (contractors, { eq }) => eq(contractors.id, id)
-    })
-    if (!contractor) return c.json({ message: 'Not Found' }, 404)
-
-    const res = await fetch(
-      `https://api.clerk.com/v1/users/${contractor.clerkId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${c.env.CLERK_SECRET_KEY}`
-        }
-      }
-    )
-    const clerkUserSchema = z.object({
-      id: z.string(),
-      first_name: z.string(),
-      last_name: z.string(),
-      image_url: z.string(),
-      primary_email_address_id: z.string(),
-      email_addresses: z.array(
-        z.object({
-          id: z.string(),
-          email_address: z.string()
-        })
-      )
-    })
-    const data = await res.json()
-    const parsedData = clerkUserSchema.parse(data)
-    const clerkUser = {
-      id: parsedData.id,
-      first_name: parsedData.first_name,
-      last_name: parsedData.last_name,
-      image_url: parsedData.image_url,
-      email: parsedData.email_addresses.find(
-        (e) => e.id === parsedData.primary_email_address_id
-      )?.email_address
-    }
-    return c.json(clerkUser, 200)
-  })
-  .get('/timesheets', async (c) => {
     const auth = getAuth(c)
     if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
-    const contractor = await c.var.db.query.contractors.findFirst({
-      where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId)
-    })
-    if (!contractor) return c.json({ message: 'Forbidden' }, 403)
 
-    const timesheets = await c.var.db
-      .select({
-        id: schema.timesheets.id,
-        slug: schema.timesheets.slug,
-        status: schema.timesheets.status,
-        weekStart: schema.timesheets.weekStart,
-        totalHours:
-          sql<number>`coalesce(${sum(schema.tasks.hours)}, 0)`.mapWith(Number)
-      })
-      .from(schema.tasks)
-      .where(eq(schema.timesheets.contractorId, contractor.id))
-      .groupBy(schema.timesheets.id)
-      .rightJoin(
-        schema.timesheets,
-        eq(schema.timesheets.id, schema.tasks.timesheetId)
-      )
-      .orderBy(desc(schema.timesheets.id))
-    return c.json(timesheets, 200)
+    const clerkClient = c.get('clerk')
+    const user = await clerkClient.users.getUser(c.req.param('id'))
+    const publicUser = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.emailAddresses.find(
+        (e) => e.id === user.primaryEmailAddressId
+      )?.emailAddress,
+      imageUrl: user.hasImage ? user.imageUrl : undefined
+    }
+    return c.json(publicUser, 200)
   })
   .post('/timesheets', async (c) => {
     const auth = getAuth(c)
     if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
     const contractor = await c.var.db.query.contractors.findFirst({
-      where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId)
+      where: (contractors, { eq }) => eq(contractors.id, auth.userId)
     })
     if (!contractor) return c.json({ message: 'Forbidden' }, 403)
 
@@ -200,7 +120,7 @@ const contractor = new Hono<Options>()
       const auth = getAuth(c)
       if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
       const contractor = await c.var.db.query.contractors.findFirst({
-        where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId)
+        where: (contractors, { eq }) => eq(contractors.id, auth.userId)
       })
       if (!contractor) return c.json({ message: 'Forbidden' }, 403)
 
@@ -215,7 +135,7 @@ const contractor = new Hono<Options>()
             eq(schema.timesheets.contractorId, contractor.id)
           )
         )
-        .returning()
+        .returning({ weekStart: schema.timesheets.weekStart })
       return c.json(timeseheets[0]?.weekStart, 200)
     }
   )
@@ -226,7 +146,7 @@ const contractor = new Hono<Options>()
       const auth = getAuth(c)
       if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
       const contractor = await c.var.db.query.contractors.findFirst({
-        where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId)
+        where: (contractors, { eq }) => eq(contractors.id, auth.userId)
       })
       if (!contractor) return c.json({ message: 'Forbidden' }, 403)
 
@@ -283,7 +203,7 @@ const contractor = new Hono<Options>()
       const auth = getAuth(c)
       if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
       const contractor = await c.var.db.query.contractors.findFirst({
-        where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId)
+        where: (contractors, { eq }) => eq(contractors.id, auth.userId)
       })
       if (!contractor) return c.json({ message: 'Forbidden' }, 403)
 
@@ -303,7 +223,7 @@ const contractor = new Hono<Options>()
     const auth = getAuth(c)
     if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
     const contractor = await c.var.db.query.contractors.findFirst({
-      where: (contractors, { eq }) => eq(contractors.clerkId, auth.userId)
+      where: (contractors, { eq }) => eq(contractors.id, auth.userId)
     })
     if (!contractor) return c.json({ message: 'Forbidden' }, 403)
 

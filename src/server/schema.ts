@@ -20,11 +20,11 @@ export const weekday = pgEnum('weekday', WEEKDAY)
 export const managers = pgTable(
   'managers',
   {
-    id: serial('id').primaryKey(),
-    clerkId: varchar('clerk_id').notNull()
+    internal_id: serial('internal_id').primaryKey(),
+    id: varchar('id').notNull().unique()
   },
   (table) => ({
-    clerkIdIdx: uniqueIndex('managers_clerk_id_idx').on(table.clerkId)
+    idIdx: uniqueIndex('manager_id_idx').on(table.id)
   })
 )
 
@@ -37,16 +37,16 @@ export const managersRelations = relations(managers, ({ many }) => ({
 export const contractors = pgTable(
   'contractors',
   {
-    id: serial('id').primaryKey(),
-    clerkId: varchar('clerk_id').notNull(),
+    internal_id: serial('internal_id').primaryKey(),
+    id: varchar('id').notNull().unique(),
     approvedHours: integer('approved_hours').notNull(),
     rate: real('rate').notNull(),
-    managerId: integer('manager_id')
+    managerId: varchar('manager_id')
       .references(() => managers.id, { onDelete: 'no action' })
       .notNull()
   },
   (table) => ({
-    clerkIdIdx: uniqueIndex('contractors_clerk_id_idx').on(table.clerkId)
+    idIdx: uniqueIndex('contractor_id_idx').on(table.id)
   })
 )
 
@@ -61,15 +61,16 @@ export const contractorsRelations = relations(contractors, ({ one, many }) => ({
 
 export const timesheets = pgTable('timesheets', {
   id: serial('id').primaryKey(),
-  slug: varchar('slug')
-    .$defaultFn(() => generateSlug())
-    .notNull(),
   status: status('status').notNull(),
   weekStart: date('week_start'),
   approvedHours: integer('approved_hours').notNull(),
   rate: real('rate').notNull(),
-  contractorId: integer('contractor_id').references(() => contractors.id).notNull(),
-  managerId: integer('manager_id').references(() => managers.id).notNull()
+  contractorId: varchar('contractor_id')
+    .references(() => contractors.id)
+    .notNull(),
+  managerId: varchar('manager_id')
+    .references(() => managers.id)
+    .notNull()
 })
 
 export const timesheetsRelations = relations(timesheets, ({ one, many }) => ({
@@ -112,8 +113,8 @@ export const history = pgTable('history', {
   timesheetId: integer('timesheet_id')
     .references(() => timesheets.id)
     .notNull(),
-  contractorId: integer('contractor_id').references(() => contractors.id),
-  managerId: integer('manager_id').references(() => managers.id)
+  contractorId: varchar('contractor_id').references(() => contractors.id),
+  managerId: varchar('manager_id').references(() => managers.id)
 })
 
 export const historyRelations = relations(history, ({ one }) => ({

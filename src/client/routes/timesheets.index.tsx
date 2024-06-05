@@ -86,7 +86,7 @@ function TimesheetGrid() {
   const { data: timesheets } = useQuery({
     queryKey: ['get-timesheets'],
     queryFn: async () => {
-      const res = await api.contractor.timesheets.$get()
+      const res = await api.timesheets.$get()
       if (!res.ok) throw new Error('Failed to get timesheets')
       return res.json()
     }
@@ -101,7 +101,7 @@ function TimesheetGrid() {
   )
 }
 
-type Timesheets = InferResponseType<typeof api.contractor.timesheets.$get, 200>
+type Timesheets = InferResponseType<typeof api.timesheets.$get, 200>
 type Timesheet = Timesheets[number]
 
 interface TimesheetCardProps extends Timesheet {}
@@ -119,7 +119,7 @@ function TimesheetCard(props: TimesheetCardProps) {
               ? formatDateRange(getWeekRange(props.weekStart))
               : 'Undated'}
           </CardTitle>
-          <div className="text-sm text-muted-foreground">{props.slug}</div>
+          <div className="text-sm text-muted-foreground">{props.id}</div>
         </CardHeader>
         <CardContent className="grid gap-2">
           <div className="flex items-center justify-between">
