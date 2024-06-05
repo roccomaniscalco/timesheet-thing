@@ -5,12 +5,24 @@ import { hc, type InferResponseType } from 'hono/client'
 
 export const { api } = hc<ApiRoutesType>('/')
 
+export type Timesheets = InferResponseType<typeof api.timesheets.$get, 200>
 export type Timesheet = InferResponseType<
   (typeof api.timesheets)[':id{[0-9]+}']['$get'],
   200
 >
 export type Task = Timesheet['tasks'][number]
 export type HistoryEntry = Timesheet['history'][number]
+
+export const timesheetsQueryOptions = () => {
+  return queryOptions({
+    queryKey: ['timesheets'],
+    queryFn: async () => {
+      const res = await api.timesheets.$get()
+      if (!res.ok) throw new Error('Failed to get timesheets')
+      return res.json()
+    },
+  })
+}
 
 export const timesheetQueryOptions = (id: string) => {
   return queryOptions({
@@ -25,7 +37,7 @@ export const timesheetQueryOptions = (id: string) => {
     select: (timesheet) => {
       return {
         ...timesheet,
-        // Group tasks by day
+        // Group tasks by weekday
         tasksByDay: timesheet.tasks.reduce(
           (acc, curr) => {
             if (!acc[curr.weekday]) {

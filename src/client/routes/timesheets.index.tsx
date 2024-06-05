@@ -1,4 +1,8 @@
-import { api } from '@/client/api-caller'
+import {
+  api,
+  timesheetsQueryOptions,
+  type Timesheets
+} from '@/client/api-caller'
 import { StatusBadge } from '@/client/components/status-badge'
 import {
   Breadcrumb,
@@ -23,7 +27,6 @@ import { UserButton } from '@clerk/clerk-react'
 import { ClockIcon, PlusIcon } from '@heroicons/react/16/solid'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import type { InferResponseType } from 'hono'
 
 export const Route = createFileRoute('/timesheets/')({
   component: TimesheetsPage
@@ -83,50 +86,42 @@ function NewTimesheetButton() {
 }
 
 function TimesheetGrid() {
-  const { data: timesheets } = useQuery({
-    queryKey: ['get-timesheets'],
-    queryFn: async () => {
-      const res = await api.timesheets.$get()
-      if (!res.ok) throw new Error('Failed to get timesheets')
-      return res.json()
-    }
-  })
+  const { data: timesheets } = useQuery(timesheetsQueryOptions())
 
   return (
     <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
       {timesheets?.map((timesheet) => (
-        <TimesheetCard key={timesheet.id} {...timesheet} />
+        <TimesheetCard key={timesheet.id} timesheet={timesheet} />
       ))}
     </div>
   )
 }
 
-type Timesheets = InferResponseType<typeof api.timesheets.$get, 200>
-type Timesheet = Timesheets[number]
-
-interface TimesheetCardProps extends Timesheet {}
-function TimesheetCard(props: TimesheetCardProps) {
+type TimesheetCardProps = {
+  timesheet: Timesheets[number]
+}
+function TimesheetCard({ timesheet }: TimesheetCardProps) {
   return (
     <Link
       className="group cursor-pointer outline-none"
       to="/timesheets/$id"
-      params={{ id: String(props.id) }}
+      params={{ id: String(timesheet.id) }}
     >
       <Card className="outline-none ring-ring group-focus:ring-1">
         <CardHeader>
           <CardTitle className="truncate">
-            {props.weekStart
-              ? formatDateRange(getWeekRange(props.weekStart))
+            {timesheet.weekStart
+              ? formatDateRange(getWeekRange(timesheet.weekStart))
               : 'Undated'}
           </CardTitle>
-          <div className="text-sm text-muted-foreground">{props.id}</div>
+          <div className="text-sm text-muted-foreground">{timesheet.id}</div>
         </CardHeader>
         <CardContent className="grid gap-2">
           <div className="flex items-center justify-between">
-            <StatusBadge status={props.status} />
+            <StatusBadge status={timesheet.status} />
             <div className="flex items-center gap-2 border-none p-0">
               <ClockIcon className="h-4 w-4 text-muted-foreground" />
-              {/* {props.totalHours}h */}
+              {timesheet.tasks.reduce((acc, curr) => acc + curr.hours, 0)}h
             </div>
           </div>
         </CardContent>
