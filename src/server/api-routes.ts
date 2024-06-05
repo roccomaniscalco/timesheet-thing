@@ -47,7 +47,7 @@ const baseApi = new Hono<Options>()
     const timesheets = await c.var.db.query.timesheets.findMany({
       where: eq(schema.timesheets.contractorId, auth.userId),
       with: {
-        tasks: { columns: { hours: true },  },
+        tasks: { columns: { hours: true } },
         contractor: true
       }
     })
