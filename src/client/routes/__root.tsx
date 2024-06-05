@@ -2,7 +2,7 @@ import { Outlet, createRootRoute } from '@tanstack/react-router'
 import tunnel from 'tunnel-rat'
 
 export const Route = createRootRoute({
-  component: () => <RootLayout />
+  component: () => <RootLayout />,
 })
 
 function RootLayout() {

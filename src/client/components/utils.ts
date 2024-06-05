@@ -9,12 +9,12 @@ export function cn(...inputs: ClassValue[]) {
 
 const RangeStart = Intl.DateTimeFormat('en-US', {
   month: 'short',
-  day: 'numeric'
+  day: 'numeric',
 })
 const RangeEnd = Intl.DateTimeFormat('en-US', {
   month: 'short',
   day: 'numeric',
-  year: 'numeric'
+  year: 'numeric',
 })
 export function formatDateRange(dateRange: DateRange) {
   return `${RangeStart.format(dateRange.from)} - ${RangeEnd.format(dateRange.to)}`
@@ -29,7 +29,7 @@ export function getWeekRange(weekStart: string) {
 
 const USDollar = new Intl.NumberFormat('en-US', {
   style: 'currency',
-  currency: 'USD'
+  currency: 'USD',
 })
 export function formatCurrency(amount: number) {
   return USDollar.format(amount)

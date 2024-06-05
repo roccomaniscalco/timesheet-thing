@@ -4,7 +4,7 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   PaperAirplaneIcon,
-  PencilIcon
+  PencilIcon,
 } from '@heroicons/react/16/solid'
 
 const variantClass = {
@@ -15,14 +15,14 @@ const variantClass = {
   approved:
     'border-transparent bg-green-200 text-green-900 dark:bg-green-800 dark:text-green-50',
   rejected:
-    'border-transparent bg-yellow-200 text-yellow-900 dark:bg-yellow-800 dark:text-yellow-50'
+    'border-transparent bg-yellow-200 text-yellow-900 dark:bg-yellow-800 dark:text-yellow-50',
 }
 
 const icon = {
   draft: <PencilIcon className="h-4 w-4" />,
   submitted: <PaperAirplaneIcon className="h-4 w-4" />,
   approved: <CheckCircleIcon className="h-4 w-4" />,
-  rejected: <ExclamationTriangleIcon className="h-4 w-4" />
+  rejected: <ExclamationTriangleIcon className="h-4 w-4" />,
 }
 
 interface StatusBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -41,7 +41,7 @@ export function StatusBadge({
         'inline-flex items-center gap-1.5 rounded border px-2 py-1 text-xs font-semibold capitalize transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
         variantClass[status],
         dense && 'p-0.5 font-medium leading-none',
-        className
+        className,
       )}
       {...props}
     >

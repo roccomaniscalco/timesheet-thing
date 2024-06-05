@@ -9,7 +9,7 @@ import {
   serial,
   uniqueIndex,
   varchar,
-  timestamp
+  timestamp,
 } from 'drizzle-orm/pg-core'
 
 export const status = pgEnum('status', STATUS)
@@ -20,17 +20,17 @@ export const managers = pgTable(
   'managers',
   {
     internal_id: serial('internal_id').primaryKey(),
-    id: varchar('id').notNull().unique()
+    id: varchar('id').notNull().unique(),
   },
   (table) => ({
-    idIdx: uniqueIndex('manager_id_idx').on(table.id)
-  })
+    idIdx: uniqueIndex('manager_id_idx').on(table.id),
+  }),
 )
 
 export const managersRelations = relations(managers, ({ many }) => ({
   contractors: many(contractors),
   timesheets: many(timesheets),
-  history: many(history)
+  history: many(history),
 }))
 
 export const contractors = pgTable(
@@ -42,11 +42,11 @@ export const contractors = pgTable(
     rate: real('rate').notNull(),
     managerId: varchar('manager_id')
       .references(() => managers.id, { onDelete: 'no action' })
-      .notNull()
+      .notNull(),
   },
   (table) => ({
-    idIdx: uniqueIndex('contractor_id_idx').on(table.id)
-  })
+    idIdx: uniqueIndex('contractor_id_idx').on(table.id),
+  }),
 )
 
 export const contractorsRelations = relations(contractors, ({ one, many }) => ({
@@ -54,8 +54,8 @@ export const contractorsRelations = relations(contractors, ({ one, many }) => ({
   history: many(history),
   manager: one(managers, {
     fields: [contractors.managerId],
-    references: [managers.id]
-  })
+    references: [managers.id],
+  }),
 }))
 
 export const timesheets = pgTable('timesheets', {
@@ -69,7 +69,7 @@ export const timesheets = pgTable('timesheets', {
     .notNull(),
   managerId: varchar('manager_id')
     .references(() => managers.id)
-    .notNull()
+    .notNull(),
 })
 
 export const timesheetsRelations = relations(timesheets, ({ one, many }) => ({
@@ -77,12 +77,12 @@ export const timesheetsRelations = relations(timesheets, ({ one, many }) => ({
   history: many(history),
   contractor: one(contractors, {
     fields: [timesheets.contractorId],
-    references: [contractors.id]
+    references: [contractors.id],
   }),
   manager: one(managers, {
     fields: [timesheets.managerId],
-    references: [managers.id]
-  })
+    references: [managers.id],
+  }),
 }))
 
 export const tasks = pgTable('tasks', {
@@ -92,14 +92,14 @@ export const tasks = pgTable('tasks', {
   name: varchar('name').notNull(),
   timesheetId: integer('timesheet_id')
     .references(() => timesheets.id, { onDelete: 'cascade' })
-    .notNull()
+    .notNull(),
 })
 
 export const tasksRelations = relations(tasks, ({ one }) => ({
   timesheet: one(timesheets, {
     fields: [tasks.timesheetId],
-    references: [timesheets.id]
-  })
+    references: [timesheets.id],
+  }),
 }))
 
 export const history = pgTable('history', {
@@ -113,20 +113,20 @@ export const history = pgTable('history', {
     .references(() => timesheets.id)
     .notNull(),
   contractorId: varchar('contractor_id').references(() => contractors.id),
-  managerId: varchar('manager_id').references(() => managers.id)
+  managerId: varchar('manager_id').references(() => managers.id),
 })
 
 export const historyRelations = relations(history, ({ one }) => ({
   timesheet: one(timesheets, {
     fields: [history.timesheetId],
-    references: [timesheets.id]
+    references: [timesheets.id],
   }),
   contractor: one(contractors, {
     fields: [history.contractorId],
-    references: [contractors.id]
+    references: [contractors.id],
   }),
   manager: one(managers, {
     fields: [history.managerId],
-    references: [managers.id]
-  })
+    references: [managers.id],
+  }),
 }))

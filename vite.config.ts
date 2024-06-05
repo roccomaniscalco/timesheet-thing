@@ -6,12 +6,12 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   build: {
     minify: true,
-    outDir: '.dist'
+    outDir: '.dist',
   },
   plugins: [react(), TanStackRouterVite()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
-  }
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 })

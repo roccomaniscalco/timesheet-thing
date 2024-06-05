@@ -14,6 +14,6 @@ export const WEEKDAY = [
   'wednesday',
   'thursday',
   'friday',
-  'saturday'
+  'saturday',
 ] as const
 export type Weekday = (typeof WEEKDAY)[number]

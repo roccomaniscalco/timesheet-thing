@@ -2,7 +2,7 @@ import { profileQueryOptions } from '@/client/api-caller'
 import {
   Avatar,
   AvatarFallback,
-  AvatarImage
+  AvatarImage,
 } from '@/client/components/ui/avatar'
 import { Skeleton } from '@/client/components/ui/skeleton'
 import { ExclamationTriangleIcon } from '@heroicons/react/16/solid'
@@ -23,9 +23,9 @@ export function ContractorAvatar(props: ContractorAvatarProps) {
       params.set('width', '160')
       return {
         ...profile,
-        imageUrl: `${profile.imageUrl}?${params.toString()}`
+        imageUrl: `${profile.imageUrl}?${params.toString()}`,
       }
-    }
+    },
   })
 
   if (profileQuery.isPending) {

@@ -51,9 +51,9 @@ const usersApi = new Hono<Options>() //
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.emailAddresses.find(
-        (e) => e.id === user.primaryEmailAddressId
+        (e) => e.id === user.primaryEmailAddressId,
       )?.emailAddress,
-      imageUrl: user.hasImage ? user.imageUrl : undefined
+      imageUrl: user.hasImage ? user.imageUrl : undefined,
     }
     return c.json(publicUser, 200)
   })
@@ -68,13 +68,13 @@ const timesheetsApi = new Hono<Options>()
         eq(schema.timesheets.contractorId, auth.userId),
         and(
           eq(schema.timesheets.managerId, auth.userId),
-          not(eq(schema.timesheets.status, 'draft'))
-        )
+          not(eq(schema.timesheets.status, 'draft')),
+        ),
       ),
       with: {
         tasks: { columns: { hours: true } },
-        contractor: true
-      }
+        contractor: true,
+      },
     })
 
     return c.json(timesheets, 200)
@@ -83,7 +83,7 @@ const timesheetsApi = new Hono<Options>()
     const auth = getAuth(c)
     if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
     const contractor = await c.var.db.query.contractors.findFirst({
-      where: (contractors, { eq }) => eq(contractors.id, auth.userId)
+      where: (contractors, { eq }) => eq(contractors.id, auth.userId),
     })
     if (!contractor) return c.json({ message: 'Forbidden' }, 403)
 
@@ -94,7 +94,7 @@ const timesheetsApi = new Hono<Options>()
         managerId: contractor.managerId,
         rate: contractor.rate,
         approvedHours: contractor.approvedHours,
-        status: 'draft'
+        status: 'draft',
       })
       .returning()
     if (!newTimesheet[0]) throw new Error('Failed to create timesheet')
@@ -112,15 +112,15 @@ const timesheetsApi = new Hono<Options>()
           eq(schema.timesheets.contractorId, auth.userId),
           and(
             eq(schema.timesheets.managerId, auth.userId),
-            not(eq(schema.timesheets.status, 'draft'))
-          )
-        )
+            not(eq(schema.timesheets.status, 'draft')),
+          ),
+        ),
       ),
       with: {
         tasks: true,
         history: true,
-        contractor: true
-      }
+        contractor: true,
+      },
     })
     if (!timesheet) return c.json({ message: 'Not found' }, 404)
     return c.json(timesheet, 200)
@@ -133,7 +133,7 @@ const timesheetsApi = new Hono<Options>()
       const auth = getAuth(c)
       if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
       const contractor = await c.var.db.query.contractors.findFirst({
-        where: (contractors, { eq }) => eq(contractors.id, auth.userId)
+        where: (contractors, { eq }) => eq(contractors.id, auth.userId),
       })
       if (!contractor) return c.json({ message: 'Forbidden' }, 403)
 
@@ -145,12 +145,12 @@ const timesheetsApi = new Hono<Options>()
         .where(
           and(
             eq(schema.timesheets.id, id),
-            eq(schema.timesheets.contractorId, contractor.id)
-          )
+            eq(schema.timesheets.contractorId, contractor.id),
+          ),
         )
         .returning({ weekStart: schema.timesheets.weekStart })
       return c.json(timeseheets[0]?.weekStart, 200)
-    }
+    },
   )
   .put(
     '/:id/status',
@@ -159,7 +159,7 @@ const timesheetsApi = new Hono<Options>()
       const auth = getAuth(c)
       if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
       const contractor = await c.var.db.query.contractors.findFirst({
-        where: (contractors, { eq }) => eq(contractors.id, auth.userId)
+        where: (contractors, { eq }) => eq(contractors.id, auth.userId),
       })
       if (!contractor) return c.json({ message: 'Forbidden' }, 403)
 
@@ -174,8 +174,8 @@ const timesheetsApi = new Hono<Options>()
           and(
             eq(schema.timesheets.id, timesheetId),
             eq(schema.timesheets.contractorId, contractor.id),
-            eq(schema.timesheets.status, fromStatus)
-          )
+            eq(schema.timesheets.status, fromStatus),
+          ),
         )
         .returning({ status: schema.timesheets.status })
       if (!updatedStatuses[0]) throw new Error('Failed to update status')
@@ -187,13 +187,13 @@ const timesheetsApi = new Hono<Options>()
           timesheetId: timesheetId,
           description: 'changed status',
           fromStatus,
-          toStatus
+          toStatus,
         })
         .returning()
       if (!newHistory[0]) throw new Error('Failed to create history')
 
       return c.json(newHistory[0], 200)
-    }
+    },
   )
   .patch(
     '/tasks',
@@ -208,15 +208,15 @@ const timesheetsApi = new Hono<Options>()
           .number({ message: 'Hours is required' })
           .positive({ message: 'Hours must be positive' })
           .refine((v) => v % 0.25 === 0, {
-            message: 'Hours must be in 0.25 increments'
-          })
-      })
+            message: 'Hours must be in 0.25 increments',
+          }),
+      }),
     ),
     async (c) => {
       const auth = getAuth(c)
       if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
       const contractor = await c.var.db.query.contractors.findFirst({
-        where: (contractors, { eq }) => eq(contractors.id, auth.userId)
+        where: (contractors, { eq }) => eq(contractors.id, auth.userId),
       })
       if (!contractor) return c.json({ message: 'Forbidden' }, 403)
 
@@ -226,17 +226,17 @@ const timesheetsApi = new Hono<Options>()
         .values(task)
         .onConflictDoUpdate({
           target: schema.tasks.id,
-          set: { ...task, id: undefined }
+          set: { ...task, id: undefined },
         })
         .returning()
       return c.json(newTasks[0], 201)
-    }
+    },
   )
   .delete('/tasks/:id', async (c) => {
     const auth = getAuth(c)
     if (!auth?.userId) return c.json({ message: 'Unauthorized' }, 401)
     const contractor = await c.var.db.query.contractors.findFirst({
-      where: (contractors, { eq }) => eq(contractors.id, auth.userId)
+      where: (contractors, { eq }) => eq(contractors.id, auth.userId),
     })
     if (!contractor) return c.json({ message: 'Forbidden' }, 403)
 

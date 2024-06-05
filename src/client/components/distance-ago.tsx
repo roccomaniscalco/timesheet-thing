@@ -1,5 +1,5 @@
-import { formatDistanceAgo } from "@/client/components/utils"
-import { useEffect, useState } from "react"
+import { formatDistanceAgo } from '@/client/components/utils'
+import { useEffect, useState } from 'react'
 
 type DistanceAgoProps = {
   date: Date

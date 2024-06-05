@@ -21,7 +21,7 @@ const BreadcrumbList = React.forwardRef<
     ref={ref}
     className={cn(
       'flex items-center gap-3 text-xl font-semibold leading-none tracking-tight text-muted-foreground',
-      className
+      className,
     )}
     {...props}
   />
@@ -112,5 +112,5 @@ export {
   BreadcrumbLink,
   BreadcrumbPage,
   BreadcrumbSeparator,
-  BreadcrumbEllipsis
+  BreadcrumbEllipsis,
 }

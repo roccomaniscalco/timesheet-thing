@@ -3,7 +3,7 @@ import {
   profileQueryOptions,
   timesheetQueryOptions,
   type HistoryEntry,
-  type Task
+  type Task,
 } from '@/client/api-caller'
 import { ContractorAvatar } from '@/client/components/contractor-avatar'
 import { DistanceAgo } from '@/client/components/distance-ago'
@@ -14,7 +14,7 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator
+  BreadcrumbSeparator,
 } from '@/client/components/ui/breadcrumb'
 import { Button } from '@/client/components/ui/button'
 import { Calendar } from '@/client/components/ui/calendar'
@@ -23,32 +23,32 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from '@/client/components/ui/card'
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormMessage
+  FormMessage,
 } from '@/client/components/ui/form'
 import { Input } from '@/client/components/ui/input'
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger
+  PopoverTrigger,
 } from '@/client/components/ui/popover'
 import {
   ResizableHandle,
   ResizablePanel,
-  ResizablePanelGroup
+  ResizablePanelGroup,
 } from '@/client/components/ui/resizable'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from '@/client/components/ui/select'
 import { Separator } from '@/client/components/ui/separator'
 import { Skeleton } from '@/client/components/ui/skeleton'
@@ -58,24 +58,24 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from '@/client/components/ui/table'
 import {
   cn,
   formatCurrency,
   formatDateRange,
   formatDistanceAgo,
-  getWeekRange
+  getWeekRange,
 } from '@/client/components/utils'
 import {
   headerActionTunnel,
-  headerBreadcrumbTunnel
+  headerBreadcrumbTunnel,
 } from '@/client/routes/__root.js'
 import {
   CONTRACTOR_STATUS,
   WEEKDAY,
   type ContractorStatus,
-  type Weekday
+  type Weekday,
 } from '@/constants'
 import { UserButton, useUser } from '@clerk/clerk-react'
 import {
@@ -86,7 +86,7 @@ import {
   ClockIcon,
   CurrencyDollarIcon,
   PlusIcon,
-  TrashIcon
+  TrashIcon,
 } from '@heroicons/react/16/solid'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -97,7 +97,7 @@ import { useForm, type UseFormReturn } from 'react-hook-form'
 import { z } from 'zod'
 
 export const Route = createFileRoute('/timesheets/$id')({
-  component: TimesheetPage
+  component: TimesheetPage,
 })
 
 function TimesheetPage() {
@@ -159,7 +159,7 @@ function StatusSelect() {
     mutationFn: async (toStatus: ContractorStatus) => {
       const res = await api.timesheets[':id'].status.$put({
         param: { id },
-        json: { toStatus }
+        json: { toStatus },
       })
       if (!res.ok) throw new Error('Failed to update status')
       return await res.json()
@@ -172,10 +172,10 @@ function StatusSelect() {
         return {
           ...prev,
           status: historyEntry.toStatus,
-          history: [historyEntry, ...prev.history]
+          history: [historyEntry, ...prev.history],
         }
       })
-    }
+    },
   })
 
   // Optimistically update status while mutation is pending
@@ -216,7 +216,7 @@ function WeekPicker() {
     mutationFn: async (timesheet: { weekStart: string | null }) => {
       const res = await api.timesheets[':id'].$put({
         param: { id },
-        json: timesheet
+        json: timesheet,
       })
       if (!res.ok) throw new Error('Failed to update timesheet')
       return await res.json()
@@ -227,7 +227,7 @@ function WeekPicker() {
         if (prev === undefined) return undefined
         return { ...prev, weekStart: updatedWeekStart }
       })
-    }
+    },
   })
 
   // Optimistically update week while mutation is pending
@@ -244,7 +244,7 @@ function WeekPicker() {
           variant="outline"
           className={cn(
             'mt-0 justify-start text-left font-normal',
-            !week && 'text-muted-foreground'
+            !week && 'text-muted-foreground',
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -258,7 +258,7 @@ function WeekPicker() {
         <Calendar
           modifiers={{
             // @ts-expect-error
-            selected: week
+            selected: week,
           }}
           onDayClick={(day, modifiers) => {
             if (isManager) return
@@ -399,8 +399,8 @@ function HistoryCard() {
     ...timesheetQueryOptions(id),
     select: (timesheet) =>
       timesheet.history.sort((a, b) =>
-        compareDesc(new Date(a.createdAt), new Date(b.createdAt))
-      )
+        compareDesc(new Date(a.createdAt), new Date(b.createdAt)),
+      ),
   })
 
   return (
@@ -529,8 +529,8 @@ const taskFormSchema = z.object({
     .number({ message: 'Hours is required' })
     .positive({ message: 'Hours must be positive' })
     .refine((v) => v % 0.25 === 0, {
-      message: 'Hours must be in 0.25 increments'
-    })
+      message: 'Hours must be in 0.25 increments',
+    }),
 })
 type TaskForm = z.infer<typeof taskFormSchema>
 
@@ -538,13 +538,13 @@ function CreateTaskRow() {
   const { id } = useParams({ from: '/timesheets/$id' })
   const queryClient = useQueryClient()
   const form = useForm<TaskForm>({
-    resolver: zodResolver(taskFormSchema)
+    resolver: zodResolver(taskFormSchema),
   })
 
   const createTaskMutation = useMutation({
     mutationFn: async (taskForm: TaskForm) => {
       const res = await api.timesheets.tasks.$patch({
-        json: { ...taskForm, timesheetId: Number(id) }
+        json: { ...taskForm, timesheetId: Number(id) },
       })
       if (!res.ok) throw new Error('Failed to create task')
       return await res.json()
@@ -555,7 +555,7 @@ function CreateTaskRow() {
         if (prev === undefined) return undefined
         return { ...prev, tasks: [...prev.tasks, newTask] }
       })
-    }
+    },
   })
 
   // Reset row after successful form submission
@@ -592,8 +592,8 @@ function EditTaskRow({ task }: EditTaskRowProps) {
     defaultValues: {
       weekday: task.weekday,
       name: task.name,
-      hours: task.hours
-    }
+      hours: task.hours,
+    },
   })
 
   const updateTaskMutation = useMutation({
@@ -602,8 +602,8 @@ function EditTaskRow({ task }: EditTaskRowProps) {
         json: {
           ...taskForm,
           timesheetId: task.timesheetId,
-          id: task.id
-        }
+          id: task.id,
+        },
       })
       if (!res.ok) throw new Error('Failed to update task')
       return await res.json()
@@ -617,13 +617,13 @@ function EditTaskRow({ task }: EditTaskRowProps) {
       })
       // Reset form after successful update
       form.reset(updatedTask)
-    }
+    },
   })
 
   const deleteTaskMutation = useMutation({
     mutationFn: async () => {
       const res = await api.timesheets.tasks[':id'].$delete({
-        param: { id: String(task.id) }
+        param: { id: String(task.id) },
       })
       if (!res.ok) throw new Error('Failed to delete task')
       return await res.json()
@@ -634,10 +634,10 @@ function EditTaskRow({ task }: EditTaskRowProps) {
         if (prev === undefined) return undefined
         return {
           ...prev,
-          tasks: prev.tasks.filter((t) => t.id !== deletedTaskId)
+          tasks: prev.tasks.filter((t) => t.id !== deletedTaskId),
         }
       })
-    }
+    },
   })
 
   return (
@@ -649,7 +649,7 @@ function EditTaskRow({ task }: EditTaskRowProps) {
             variant="outline"
             size="icon"
             onClick={form.handleSubmit((data) =>
-              updateTaskMutation.mutate(data)
+              updateTaskMutation.mutate(data),
             )}
           >
             <CheckIcon className="h-4 w-4" />

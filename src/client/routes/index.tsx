@@ -3,7 +3,7 @@ import { SignInButton, SignedIn, SignedOut } from '@clerk/clerk-react'
 import { Navigate, createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({
-  component: Index
+  component: Index,
 })
 
 function Index() {

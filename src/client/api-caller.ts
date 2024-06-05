@@ -20,7 +20,7 @@ export const timesheetsQueryOptions = () => {
       const res = await api.timesheets.$get()
       if (!res.ok) throw new Error('Failed to get timesheets')
       return res.json()
-    }
+    },
   })
 }
 
@@ -29,7 +29,7 @@ export const timesheetQueryOptions = (id: string) => {
     queryKey: ['get-timesheet', id],
     queryFn: async () => {
       const res = await api.timesheets[':id{[0-9]+}'].$get({
-        param: { id }
+        param: { id },
       })
       if (!res.ok) throw new Error('Failed to get timesheet')
       return res.json()
@@ -46,10 +46,10 @@ export const timesheetQueryOptions = (id: string) => {
             acc[curr.weekday].push(curr)
             return acc
           },
-          {} as Record<Weekday, Task[]>
-        )
+          {} as Record<Weekday, Task[]>,
+        ),
       }
-    }
+    },
   })
 }
 
@@ -58,12 +58,12 @@ export const profileQueryOptions = (id?: string | null) => {
     queryKey: ['contractor', id],
     queryFn: async () => {
       const res = await api.users.profile[':id'].$get({
-        param: { id: String(id) }
+        param: { id: String(id) },
       })
       if (!res.ok) throw new Error('Failed to get contractor')
       return await res.json()
     },
     enabled: !!id,
-    staleTime: Infinity
+    staleTime: Infinity,
   })
 }
