@@ -10,50 +10,50 @@
 
 // Import Routes
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as IndexImport } from './routes/index'
-import { Route as TimesheetsIndexImport } from './routes/timesheets.index'
-import { Route as TimesheetsIdImport } from './routes/timesheets.$id'
+import { Route as rootRoute } from "./routes/__root"
+import { Route as IndexImport } from "./routes/index"
+import { Route as TimesheetsIndexImport } from "./routes/timesheets.index"
+import { Route as TimesheetsIdImport } from "./routes/timesheets.$id"
 
 // Create/Update Routes
 
 const IndexRoute = IndexImport.update({
-  path: '/',
-  getParentRoute: () => rootRoute
+  path: "/",
+  getParentRoute: () => rootRoute,
 } as any)
 
 const TimesheetsIndexRoute = TimesheetsIndexImport.update({
-  path: '/timesheets/',
-  getParentRoute: () => rootRoute
+  path: "/timesheets/",
+  getParentRoute: () => rootRoute,
 } as any)
 
 const TimesheetsIdRoute = TimesheetsIdImport.update({
-  path: '/timesheets/$id',
-  getParentRoute: () => rootRoute
+  path: "/timesheets/$id",
+  getParentRoute: () => rootRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
+    "/": {
+      id: "/"
+      path: "/"
+      fullPath: "/"
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/timesheets/$id': {
-      id: '/timesheets/$id'
-      path: '/timesheets/$id'
-      fullPath: '/timesheets/$id'
+    "/timesheets/$id": {
+      id: "/timesheets/$id"
+      path: "/timesheets/$id"
+      fullPath: "/timesheets/$id"
       preLoaderRoute: typeof TimesheetsIdImport
       parentRoute: typeof rootRoute
     }
-    '/timesheets/': {
-      id: '/timesheets/'
-      path: '/timesheets'
-      fullPath: '/timesheets'
+    "/timesheets/": {
+      id: "/timesheets/"
+      path: "/timesheets"
+      fullPath: "/timesheets"
       preLoaderRoute: typeof TimesheetsIndexImport
       parentRoute: typeof rootRoute
     }
@@ -65,7 +65,7 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren({
   IndexRoute,
   TimesheetsIdRoute,
-  TimesheetsIndexRoute
+  TimesheetsIndexRoute,
 })
 
 /* prettier-ignore-end */
