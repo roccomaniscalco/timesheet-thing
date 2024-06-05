@@ -6,6 +6,7 @@ import {
   type Task
 } from '@/client/api-caller'
 import { ContractorAvatar } from '@/client/components/contractor-avatar'
+import { DistanceAgo } from '@/client/components/distance-ago'
 import { StatusBadge } from '@/client/components/status-badge'
 import {
   Breadcrumb,
@@ -455,23 +456,6 @@ function HistoryListItem({ historyItem }: HistoryItemProps) {
       </div>
     </li>
   )
-}
-
-type DistanceAgoProps = {
-  date: Date
-}
-function DistanceAgo(props: DistanceAgoProps) {
-  const [distanceAgo, setDistanceAgo] = useState(formatDistanceAgo(props.date))
-
-  // Update distanceAgo every second
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDistanceAgo(formatDistanceAgo(props.date))
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [props.date])
-
-  return <span className="tabular-nums">{distanceAgo}</span>
 }
 
 // Left contents
