@@ -64,8 +64,7 @@ import {
   cn,
   formatCurrency,
   formatDateRange,
-  formatDistanceAgo,
-  getWeekRange,
+  getWeekRange
 } from '@/client/components/utils'
 import {
   headerActionTunnel,
@@ -92,7 +91,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, createFileRoute, useParams } from '@tanstack/react-router'
 import { compareDesc, startOfWeek } from 'date-fns'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useForm, type UseFormReturn } from 'react-hook-form'
 import { z } from 'zod'
 

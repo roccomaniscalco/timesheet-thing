@@ -16,6 +16,9 @@ const RangeEnd = Intl.DateTimeFormat('en-US', {
   day: 'numeric',
   year: 'numeric',
 })
+export function formatRangeStart(date: Date) {
+  return RangeStart.format(date)
+}
 export function formatDateRange(dateRange: DateRange) {
   return `${RangeStart.format(dateRange.from)} - ${RangeEnd.format(dateRange.to)}`
 }
