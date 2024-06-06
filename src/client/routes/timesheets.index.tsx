@@ -194,7 +194,7 @@ const columns = [
     },
   }),
   columnHelper.accessor('status', {
-    header: 'Status',
+    header: () => <div className='w-28'>Status</div>,
     cell: (info) => {
       const status = info.getValue()
       return <StatusBadge status={status} />
@@ -287,7 +287,11 @@ function TimesheetTable(props: TimesheetTableProps) {
                 </TableRow>
               ))
             ) : (
-              <></>
+              <TableRow>
+                <TableCell colSpan={columns.length} className="text-center p-8">
+                  No timesheets found
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>
