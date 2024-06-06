@@ -37,6 +37,7 @@ import {
   TableRow,
 } from '@/client/components/ui/table'
 import {
+  formatCurrency,
   formatDateRange,
   formatRangeStart,
   getWeekRange,
@@ -52,7 +53,9 @@ import {
   ArrowUpIcon,
   ArrowsUpDownIcon,
   ClockIcon,
+  ExclamationTriangleIcon,
   PlusIcon,
+  ShieldExclamationIcon,
   XMarkIcon,
 } from '@heroicons/react/16/solid'
 import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
@@ -68,7 +71,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { compareAsc } from 'date-fns'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 
 export const Route = createFileRoute('/timesheets/')({
   component: TimesheetsPage,
@@ -205,7 +208,7 @@ const columns = [
       <Button
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         variant="ghost"
-        className="-ml-[16px] gap-1"
+        className="gap-1"
       >
         ID
         {column.getIsSorted() ? (
@@ -219,13 +222,14 @@ const columns = [
         )}
       </Button>
     ),
+    cell: (info) => <div className="pl-4">{info.getValue()}</div>,
   }),
   columnHelper.accessor('weekStart', {
     header: ({ column }) => (
       <Button
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         variant="ghost"
-        className="-ml-[16px] gap-1"
+        className="gap-1"
       >
         Week of
         {column.getIsSorted() ? (
@@ -241,10 +245,10 @@ const columns = [
     ),
     cell: (info) => {
       const weekStart = info.getValue()
-      if (!weekStart) return '–'
+      if (!weekStart) return <div className="pl-4">–</div>
       const weekRange = getWeekRange(weekStart)
       const formattedWeekStart = formatRangeStart(weekRange.from)
-      return formattedWeekStart
+      return <div className="pl-4">{formattedWeekStart}</div>
     },
     sortingFn: (a, b) => {
       return compareAsc(
@@ -259,8 +263,8 @@ const columns = [
       const contractorId = info.row.original.contractorId
       const profile = info.getValue()
       return (
-        <div className="flex items-center gap-3">
-          <ContractorAvatar id={contractorId} className="h-[26px] w-[26px]" />
+        <div className="flex items-center gap-2">
+          <ContractorAvatar id={contractorId} className="h-5 w-5" />
           <span>
             {profile.firstName} {profile.lastName}
           </span>
@@ -280,7 +284,27 @@ const columns = [
     cell: (info) => {
       const tasks = info.getValue()
       const totalHours = tasks.reduce((acc, curr) => acc + curr.hours, 0)
+      const approvedHours = info.row.original.approvedHours
+
+      if (totalHours > approvedHours) {
+        return (
+          <div className="flex items-center gap-2">
+            {totalHours}
+            <ShieldExclamationIcon className="h-4 w-4 text-yellow-400" />
+          </div>
+        )
+      }
       return totalHours
+    },
+  }),
+  columnHelper.accessor('rate', {
+    header: 'Pay',
+    cell: (info) => {
+      const rate = info.getValue()
+      const tasks = info.row.original.tasks
+      const totalHours = tasks.reduce((acc, curr) => acc + curr.hours, 0)
+      const pay = rate * totalHours
+      return formatCurrency(pay)
     },
   }),
 ]
