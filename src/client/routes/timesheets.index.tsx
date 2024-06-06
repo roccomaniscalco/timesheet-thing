@@ -3,6 +3,7 @@ import {
   timesheetsQueryOptions,
   type Timesheets,
 } from '@/client/api-caller'
+import { ContractorAvatar } from '@/client/components/contractor-avatar'
 import { StatusBadge } from '@/client/components/status-badge'
 import {
   Breadcrumb,
@@ -19,15 +20,30 @@ import {
   CardTitle,
 } from '@/client/components/ui/card'
 import {
-  cn,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/client/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/client/components/ui/table'
+import {
   formatDateRange,
   formatRangeStart,
-  getWeekRange,
+  getWeekRange
 } from '@/client/components/utils'
 import {
   headerActionTunnel,
   headerBreadcrumbTunnel,
 } from '@/client/routes/__root.js'
+import { STATUS, type Status } from '@/constants'
 import { UserButton } from '@clerk/clerk-react'
 import { ClockIcon, PlusIcon, XMarkIcon } from '@heroicons/react/16/solid'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -37,29 +53,12 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
+  getSortedRowModel,
   useReactTable,
-  type ColumnDef,
   type ColumnFiltersState,
+  type SortingState
 } from '@tanstack/react-table'
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/client/components/ui/table'
-import { STATUS, type Status } from '@/constants'
-import { ContractorAvatar } from '@/client/components/contractor-avatar'
 import { useState } from 'react'
-import {
-  Select,
-  SelectContent,
-  SelectTrigger,
-  SelectItem,
-  SelectValue,
-} from '@/client/components/ui/select'
 
 export const Route = createFileRoute('/timesheets/')({
   component: TimesheetsPage,
@@ -170,7 +169,16 @@ type Timesheet = Timesheets[number]
 
 const columnHelper = createColumnHelper<Timesheet>()
 const columns = [
-  columnHelper.accessor('id', { header: 'ID' }),
+  columnHelper.accessor('id', {
+    header: ({ column }) => (
+      <Button
+        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        variant="ghost"
+      >
+        ID
+      </Button>
+    ),
+  }),
   columnHelper.accessor('weekStart', {
     header: 'Week Of',
     cell: (info) => {
@@ -194,7 +202,7 @@ const columns = [
     },
   }),
   columnHelper.accessor('status', {
-    header: () => <div className='w-28'>Status</div>,
+    header: () => <div className="w-28">Status</div>,
     cell: (info) => {
       const status = info.getValue()
       return <StatusBadge status={status} />
@@ -215,14 +223,18 @@ type TimesheetTableProps = {
 }
 function TimesheetTable(props: TimesheetTableProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [sorting, setSorting] = useState<SortingState>([])
   const table = useReactTable({
     data: props.timesheets,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
     state: {
       columnFilters,
+      sorting,
     },
   })
 
@@ -288,7 +300,7 @@ function TimesheetTable(props: TimesheetTableProps) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center p-8">
+                <TableCell colSpan={columns.length} className="p-8 text-center">
                   No timesheets found
                 </TableCell>
               </TableRow>
