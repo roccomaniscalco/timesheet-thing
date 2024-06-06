@@ -1,6 +1,8 @@
 import {
   api,
+  profileQueryOptions,
   timesheetsQueryOptions,
+  type Profile,
   type Timesheets,
 } from '@/client/api-caller'
 import { ContractorAvatar } from '@/client/components/contractor-avatar'
@@ -45,8 +47,14 @@ import {
 } from '@/client/routes/__root.js'
 import { STATUS, type Status } from '@/constants'
 import { UserButton } from '@clerk/clerk-react'
-import { ClockIcon, PlusIcon, XMarkIcon } from '@heroicons/react/16/solid'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import {
+  ArrowsUpDownIcon,
+  ChevronUpDownIcon,
+  ClockIcon,
+  PlusIcon,
+  XMarkIcon,
+} from '@heroicons/react/16/solid'
+import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   createColumnHelper,
@@ -59,7 +67,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { compareAsc, compareDesc } from 'date-fns'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/react/16/solid'
 
 export const Route = createFileRoute('/timesheets/')({
@@ -67,7 +75,22 @@ export const Route = createFileRoute('/timesheets/')({
 })
 
 function TimesheetsPage() {
-  const { data: timesheets } = useQuery(timesheetsQueryOptions())
+  const timesheetsQuery = useQuery(timesheetsQueryOptions())
+  const profilesQuery = useQueries({
+    queries:
+      [...new Set(timesheetsQuery.data?.map((t) => t.contractorId))]?.map(
+        (contractorId) => profileQueryOptions(contractorId),
+      ) ?? [],
+    combine: (results) => ({
+      data: results.reduce<Record<string, Profile>>((acc, curr) => {
+        if (curr.data) {
+          acc[curr.data.id] = curr.data
+        }
+        return acc
+      }, {}),
+      isSuccess: results.every((r) => r.isSuccess),
+    }),
+  })
 
   return (
     <div className="p-4 pt-8">
@@ -88,7 +111,12 @@ function TimesheetsPage() {
         <NewTimesheetButton />
       </headerActionTunnel.In>
 
-      {timesheets && <TimesheetTable timesheets={timesheets} />}
+      {timesheetsQuery.isSuccess && profilesQuery.isSuccess && (
+        <TimesheetTable
+          timesheets={timesheetsQuery.data}
+          profiles={profilesQuery.data}
+        />
+      )}
     </div>
   )
 }
@@ -168,8 +196,9 @@ function TimesheetCard({ timesheet }: TimesheetCardProps) {
 }
 
 type Timesheet = Timesheets[number]
+type TimesheetWithProfile = Timesheet & { profile: Profile }
 
-const columnHelper = createColumnHelper<Timesheet>()
+const columnHelper = createColumnHelper<TimesheetWithProfile>()
 const columns = [
   columnHelper.accessor('id', {
     header: ({ column }) => (
@@ -179,10 +208,14 @@ const columns = [
         className="-ml-[16px] gap-1"
       >
         ID
-        {column.getIsSorted() && column.getIsSorted() === 'asc' ? (
-          <ArrowDownIcon className="h-4 w-4" />
+        {column.getIsSorted() ? (
+          column.getIsSorted() === 'asc' ? (
+            <ArrowDownIcon className="h-4 w-4" />
+          ) : (
+            <ArrowUpIcon className="h-4 w-4" />
+          )
         ) : (
-          <ArrowUpIcon className="h-4 w-4" />
+          <ArrowsUpDownIcon className="h-4 w-4" />
         )}
       </Button>
     ),
@@ -195,10 +228,14 @@ const columns = [
         className="-ml-[16px] gap-1"
       >
         Week of
-        {column.getIsSorted() && column.getIsSorted() === 'asc' ? (
-          <ArrowDownIcon className="h-4 w-4" />
+        {column.getIsSorted() ? (
+          column.getIsSorted() === 'asc' ? (
+            <ArrowDownIcon className="h-4 w-4" />
+          ) : (
+            <ArrowUpIcon className="h-4 w-4" />
+          )
         ) : (
-          <ArrowUpIcon className="h-4 w-4" />
+          <ArrowsUpDownIcon className="h-4 w-4" />
         )}
       </Button>
     ),
@@ -216,14 +253,17 @@ const columns = [
       )
     },
   }),
-  columnHelper.accessor('contractor', {
+  columnHelper.accessor('profile', {
     header: 'Contractor',
     cell: (info) => {
-      const contractor = info.getValue()
+      const contractorId = info.row.original.contractorId
+      const profile = info.getValue()
       return (
-        <div className="flex items-center gap-2">
-          <ContractorAvatar id={contractor.id} className="h-[26px] w-[26px]" />
-          <span>{contractor.id}</span>
+        <div className="flex items-center gap-3">
+          <ContractorAvatar id={contractorId} className="h-[26px] w-[26px]" />
+          <span>
+            {profile.firstName} {profile.lastName}
+          </span>
         </div>
       )
     },
@@ -247,12 +287,21 @@ const columns = [
 
 type TimesheetTableProps = {
   timesheets: Timesheets
+  profiles: Record<string, Profile>
 }
-function TimesheetTable(props: TimesheetTableProps) {
+function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
+
+  const timesheetsWithProfile = useMemo(() => {
+    return timesheets.map((timesheet) => ({
+      ...timesheet,
+      profile: profiles[timesheet.contractorId] as Profile,
+    }))
+  }, [timesheets, profiles])
+
   const table = useReactTable({
-    data: props.timesheets,
+    data: timesheetsWithProfile,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onColumnFiltersChange: setColumnFilters,

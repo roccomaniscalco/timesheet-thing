@@ -53,6 +53,10 @@ export const timesheetQueryOptions = (id: string) => {
   })
 }
 
+export type Profile = InferResponseType<
+  (typeof api.users.profile)[':id']['$get'],
+  200
+>
 export const profileQueryOptions = (id?: string | null) => {
   return queryOptions({
     queryKey: ['contractor', id],
@@ -63,6 +67,7 @@ export const profileQueryOptions = (id?: string | null) => {
       if (!res.ok) throw new Error('Failed to get contractor')
       return await res.json()
     },
+    select: (profile) => ({ ...profile, id: String(id) }),
     enabled: !!id,
     staleTime: Infinity,
   })
