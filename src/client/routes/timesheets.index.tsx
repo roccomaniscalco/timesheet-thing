@@ -175,10 +175,9 @@ const columns = [
     header: 'Week Of',
     cell: (info) => {
       const weekStart = info.getValue()
-      if (!weekStart) {
-        return '–'
-      }
-      const formattedWeekStart = formatRangeStart(new Date(weekStart))
+      if (!weekStart) return '–'
+      const weekRange = getWeekRange(weekStart)
+      const formattedWeekStart = formatRangeStart(weekRange.from)
       return formattedWeekStart
     },
   }),
