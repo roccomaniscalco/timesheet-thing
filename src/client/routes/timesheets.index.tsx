@@ -37,7 +37,7 @@ import {
 import {
   formatDateRange,
   formatRangeStart,
-  getWeekRange
+  getWeekRange,
 } from '@/client/components/utils'
 import {
   headerActionTunnel,
@@ -56,9 +56,11 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnFiltersState,
-  type SortingState
+  type SortingState,
 } from '@tanstack/react-table'
+import { compareAsc, compareDesc } from 'date-fns'
 import { useState } from 'react'
+import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/react/16/solid'
 
 export const Route = createFileRoute('/timesheets/')({
   component: TimesheetsPage,
@@ -174,19 +176,44 @@ const columns = [
       <Button
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         variant="ghost"
+        className="-ml-[16px] gap-1"
       >
         ID
+        {column.getIsSorted() && column.getIsSorted() === 'asc' ? (
+          <ArrowDownIcon className="h-4 w-4" />
+        ) : (
+          <ArrowUpIcon className="h-4 w-4" />
+        )}
       </Button>
     ),
   }),
   columnHelper.accessor('weekStart', {
-    header: 'Week Of',
+    header: ({ column }) => (
+      <Button
+        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        variant="ghost"
+        className="-ml-[16px] gap-1"
+      >
+        Week of
+        {column.getIsSorted() && column.getIsSorted() === 'asc' ? (
+          <ArrowDownIcon className="h-4 w-4" />
+        ) : (
+          <ArrowUpIcon className="h-4 w-4" />
+        )}
+      </Button>
+    ),
     cell: (info) => {
       const weekStart = info.getValue()
       if (!weekStart) return '–'
       const weekRange = getWeekRange(weekStart)
       const formattedWeekStart = formatRangeStart(weekRange.from)
       return formattedWeekStart
+    },
+    sortingFn: (a, b) => {
+      return compareAsc(
+        new Date(a.getValue('weekStart')),
+        new Date(b.getValue('weekStart')),
+      )
     },
   }),
   columnHelper.accessor('contractor', {
