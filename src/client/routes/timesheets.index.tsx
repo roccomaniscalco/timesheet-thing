@@ -53,9 +53,7 @@ import {
   ArrowUpIcon,
   ArrowsUpDownIcon,
   ClockIcon,
-  ExclamationTriangleIcon,
   PlusIcon,
-  ShieldExclamationIcon,
   XMarkIcon,
 } from '@heroicons/react/16/solid'
 import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
@@ -71,7 +69,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { compareAsc } from 'date-fns'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 
 export const Route = createFileRoute('/timesheets/')({
   component: TimesheetsPage,
@@ -280,7 +278,7 @@ const columns = [
     },
   }),
   columnHelper.accessor('tasks', {
-    header: 'Hours',
+    header: () => <div className="text-right">Hours</div>,
     cell: (info) => {
       const tasks = info.getValue()
       const totalHours = tasks.reduce((acc, curr) => acc + curr.hours, 0)
@@ -288,23 +286,26 @@ const columns = [
 
       if (totalHours > approvedHours) {
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2 tabular-nums">
             {totalHours}
-            <ShieldExclamationIcon className="h-4 w-4 text-yellow-400" />
           </div>
         )
       }
-      return totalHours
+      return <div className="text-right">{totalHours}</div>
     },
   }),
   columnHelper.accessor('rate', {
-    header: 'Pay',
+    header: () => <div className="pr-4 text-right">Pay</div>,
     cell: (info) => {
       const rate = info.getValue()
       const tasks = info.row.original.tasks
       const totalHours = tasks.reduce((acc, curr) => acc + curr.hours, 0)
       const pay = rate * totalHours
-      return formatCurrency(pay)
+      return (
+        <div className="pr-4 text-right tabular-nums">
+          {formatCurrency(pay)}
+        </div>
+      )
     },
   }),
 ]
@@ -424,7 +425,7 @@ function StatusSelect(props: StatusSelectProps) {
         value={props.value ?? ''}
         onValueChange={(value) => props.onValueChange(value as Status)}
       >
-        <SelectTrigger className="w-fit gap-2 pl-1 data-[placeholder]:pl-4">
+        <SelectTrigger className="flex w-fit gap-2 pl-1 data-[placeholder]:pl-4">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent align="start">

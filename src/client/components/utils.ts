@@ -33,9 +33,10 @@ export function getWeekRange(weekStart: string) {
 const USDollar = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
+  currencyDisplay: 'code',
 })
 export function formatCurrency(amount: number) {
-  return USDollar.format(amount)
+  return USDollar.format(amount).replace('USD', '')
 }
 
 export function formatDistanceAgo(date: Date) {
