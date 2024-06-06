@@ -48,8 +48,9 @@ import {
 import { STATUS, type Status } from '@/constants'
 import { UserButton } from '@clerk/clerk-react'
 import {
+  ArrowDownIcon,
+  ArrowUpIcon,
   ArrowsUpDownIcon,
-  ChevronUpDownIcon,
   ClockIcon,
   PlusIcon,
   XMarkIcon,
@@ -66,9 +67,8 @@ import {
   type ColumnFiltersState,
   type SortingState,
 } from '@tanstack/react-table'
-import { compareAsc, compareDesc } from 'date-fns'
+import { compareAsc } from 'date-fns'
 import { useMemo, useState } from 'react'
-import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/react/16/solid'
 
 export const Route = createFileRoute('/timesheets/')({
   component: TimesheetsPage,
