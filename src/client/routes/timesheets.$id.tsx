@@ -287,7 +287,7 @@ function ResizablePanels(props: ResizablePanelsProps) {
       autoSaveId="timesheet-resizable-panels"
     >
       <ResizablePanel
-        className="p-4"
+        className="p-4 pt-8"
         style={{ overflow: 'auto' }}
         minSize={60}
         defaultSize={70}
@@ -296,7 +296,7 @@ function ResizablePanels(props: ResizablePanelsProps) {
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel
-        className="p-4"
+        className="p-4 pt-8"
         style={{ overflow: 'auto' }}
         collapsible
         minSize={20}
@@ -448,9 +448,9 @@ function HistoryListItem({ historyItem }: HistoryItemProps) {
           <DistanceAgo date={new Date(historyItem.createdAt)} />
         </CardDescription>
         <div className="flex items-center gap-2">
-          <StatusBadge status={historyItem.fromStatus} dense />
+          <StatusBadge status={historyItem.fromStatus} />
           <ArrowRightIcon className="h-3 w-3 text-muted-foreground" />
-          <StatusBadge status={historyItem.toStatus} dense />
+          <StatusBadge status={historyItem.toStatus} />
         </div>
       </div>
     </li>
