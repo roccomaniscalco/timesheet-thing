@@ -224,6 +224,7 @@ type TimesheetWithProfile = Timesheet & { profile: Profile }
 const columnHelper = createColumnHelper<TimesheetWithProfile>()
 const columns = [
   columnHelper.accessor('id', {
+    size: 20,
     header: ({ column }) => (
       <Button
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
@@ -247,6 +248,7 @@ const columns = [
     ),
   }),
   columnHelper.accessor('weekStart', {
+    size: 60,
     header: ({ column }) => (
       <Button
         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
@@ -386,18 +388,16 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
           <TableHeader className="border-b">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead className="text-nowrap" key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  )
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead className="text-nowrap" key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
