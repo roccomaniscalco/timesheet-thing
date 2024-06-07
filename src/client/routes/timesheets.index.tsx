@@ -91,7 +91,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { compareAsc } from 'date-fns'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 export const Route = createFileRoute('/timesheets/')({
   component: TimesheetsPage,
@@ -380,13 +380,6 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center">
         <FilterBuilder />
-        {/* <StatusSelect
-          items={STATUS}
-          value={table.getColumn('status')?.getFilterValue() as Status}
-          onValueChange={(status) => {
-            table.getColumn('status')?.setFilterValue(status)
-          }}
-        /> */}
       </div>
       <div className="rounded-md border">
         <Table>
@@ -480,6 +473,18 @@ function FilterBuilder() {
 
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState('')
+
+  useEffect(() => {
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === 'f') {
+        e.preventDefault()
+        setOpen((open) => !open)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeydown)
+    return () => document.removeEventListener('keydown', handleKeydown)
+  }, [])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
