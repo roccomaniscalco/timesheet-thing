@@ -21,6 +21,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@/client/components/ui/card'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/client/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/client/components/ui/popover'
 import { Progress } from '@/client/components/ui/progress'
 import {
   Select,
@@ -48,14 +61,21 @@ import {
   headerActionTunnel,
   headerBreadcrumbTunnel,
 } from '@/client/routes/__root.js'
-import { STATUS, type Status } from '@/constants'
+import { type Status } from '@/constants'
 import { UserButton } from '@clerk/clerk-react'
 import {
   ArrowDownIcon,
   ArrowUpIcon,
   ArrowsUpDownIcon,
+  BanknotesIcon,
+  CalendarIcon,
+  CheckIcon,
+  ChevronUpDownIcon,
   ClockIcon,
+  FunnelIcon,
+  PaperAirplaneIcon,
   PlusIcon,
+  UserIcon,
   XMarkIcon,
 } from '@heroicons/react/16/solid'
 import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
@@ -222,7 +242,9 @@ const columns = [
         )}
       </Button>
     ),
-    cell: (info) => <div className="pl-4 text-muted-foreground">{info.getValue()}</div>,
+    cell: (info) => (
+      <div className="pl-4 text-muted-foreground">{info.getValue()}</div>
+    ),
   }),
   columnHelper.accessor('weekStart', {
     header: ({ column }) => (
@@ -357,13 +379,14 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center">
-        <StatusSelect
+        <FilterBuilder />
+        {/* <StatusSelect
           items={STATUS}
           value={table.getColumn('status')?.getFilterValue() as Status}
           onValueChange={(status) => {
             table.getColumn('status')?.setFilterValue(status)
           }}
-        />
+        /> */}
       </div>
       <div className="rounded-md border">
         <Table>
@@ -423,6 +446,78 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
         </Table>
       </div>
     </div>
+  )
+}
+
+function FilterBuilder() {
+  const columns = [
+    {
+      Icon: CalendarIcon,
+      label: 'Week of',
+      value: 'week of',
+    },
+    {
+      Icon: UserIcon,
+      label: 'Contractor',
+      value: 'contractor',
+    },
+    {
+      Icon: PaperAirplaneIcon,
+      label: 'Status',
+      value: 'status',
+    },
+    {
+      Icon: ClockIcon,
+      label: 'Hours',
+      value: 'hours',
+    },
+    {
+      Icon: BanknotesIcon,
+      label: 'Pay',
+      value: 'pay',
+    },
+  ]
+
+  const [open, setOpen] = useState(false)
+  const [value, setValue] = useState('')
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="gap-2"
+          role="combobox"
+          aria-expanded={open}
+        >
+          <FunnelIcon className="h-4 w-4" />
+          Filter
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-fit p-0">
+        <Command>
+          <CommandInput placeholder="Filter..." kbd="f" />
+          <CommandList>
+            <CommandGroup>
+              {columns.map((framework) => (
+                <CommandItem
+                  key={framework.value}
+                  value={framework.value}
+                  onSelect={(currentValue) => {
+                    setValue(currentValue === value ? '' : currentValue)
+                    setOpen(false)
+                  }}
+                >
+                  <framework.Icon className="mr-2 h-4 w-4" />
+                  {framework.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   )
 }
 
