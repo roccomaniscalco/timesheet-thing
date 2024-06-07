@@ -21,6 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/client/components/ui/card'
+import { Progress } from '@/client/components/ui/progress'
 import {
   Select,
   SelectContent,
@@ -37,6 +38,7 @@ import {
   TableRow,
 } from '@/client/components/ui/table'
 import {
+  cn,
   formatCurrency,
   formatDateRange,
   formatRangeStart,
@@ -220,7 +222,7 @@ const columns = [
         )}
       </Button>
     ),
-    cell: (info) => <div className="pl-4">{info.getValue()}</div>,
+    cell: (info) => <div className="pl-4 text-muted-foreground">{info.getValue()}</div>,
   }),
   columnHelper.accessor('weekStart', {
     header: ({ column }) => (
@@ -283,15 +285,26 @@ const columns = [
       const tasks = info.getValue()
       const totalHours = tasks.reduce((acc, curr) => acc + curr.hours, 0)
       const approvedHours = info.row.original.approvedHours
+      const progress = (totalHours / approvedHours) * 100
+      const roundedProgress = Math.floor(progress / 25) * 25
 
-      if (totalHours > approvedHours) {
-        return (
-          <div className="flex items-center justify-end gap-2 tabular-nums">
-            {totalHours}
-          </div>
-        )
-      }
-      return <div className="text-right">{totalHours}</div>
+      const progressColor = {
+        0: '*:bg-violet-300 dark:*:bg-violet-950',
+        25: '*:bg-violet-400 dark:*:bg-violet-900',
+        50: '*:bg-violet-500 dark:*:bg-violet-700',
+        75: '*:bg-violet-700 dark:*:bg-violet-500',
+        100: '*:bg-violet-900 dark:*:bg-violet-300',
+      }[roundedProgress]
+
+      return (
+        <div className="flex items-center justify-end gap-2 tabular-nums">
+          {totalHours}
+          <Progress
+            value={progress}
+            className={cn('w-8 bg-accent', progressColor)}
+          />
+        </div>
+      )
     },
   }),
   columnHelper.accessor('rate', {
