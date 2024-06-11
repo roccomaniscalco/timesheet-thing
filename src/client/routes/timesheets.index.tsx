@@ -626,17 +626,13 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
 
   return (
     <div className="flex gap-0.5 text-sm">
-      <div className="flex items-center gap-1 rounded-l-md px-2 py-1.5 text-xs bg-secondary">
+      <div className="flex items-center gap-1 rounded-l-md bg-secondary px-2 py-1.5 text-xs">
         <SignalIcon className="h-4 w-4 text-muted-foreground" />
         Status
       </div>
 
       <IsOrIsNotSelect column={column} />
-      <Button
-        variant="secondary"
-        size="sm"
-        className="gap-1 rounded-none px-2"
-      >
+      <Button variant="secondary" size="sm" className="gap-1 rounded-none px-2">
         {statuses.map((status) => (
           <StatusBadge status={status} iconOnly={!oneStatus} key={status} />
         ))}
@@ -657,40 +653,34 @@ type IsOrIsNotSelectProps = {
   column: Column<TimesheetWithProfile>
 }
 function IsOrIsNotSelect({ column }: IsOrIsNotSelectProps) {
-  const options = {
-    is: { label: 'is', plural: 'is any of', inverted: false },
-    not: { label: 'is not', plural: 'is not', inverted: true },
-  }
+  const options = [
+    { label: 'is', plural: 'is any of', inverted: false },
+    { label: 'is not', plural: 'is not', inverted: true },
+  ] as const
 
   const filter = column.getFilterValue() as StatusFilterValue
   const oneStatus = filter.statuses.length === 1
 
   return (
     <Select
-      onValueChange={(optionKey: keyof typeof options) => {
+      value={filter.inverted.toString()}
+      onValueChange={(inverted: 'true' | 'false') => {
         column.setFilterValue((filter: StatusFilterValue) => {
           return {
             ...filter,
-            inverted: options[optionKey].inverted,
+            inverted: JSON.parse(inverted),
           }
         })
       }}
     >
-      <SelectTrigger
-        asChild
-        className="rounded-none border-none px-2 py-0.5"
-      >
-        <Button
-          variant="secondary"
-          size="sm"
-          className="rounded-none px-2"
-        >
+      <SelectTrigger asChild className="rounded-none border-none px-2 py-0.5">
+        <Button variant="secondary" size="sm" className="rounded-none px-2">
           <SelectValue />
         </Button>
       </SelectTrigger>
       <SelectContent>
-        {Object.entries(options).map(([key, option]) => (
-          <SelectItem value={key} key={key}>
+        {options.map((option) => (
+          <SelectItem value={option.inverted.toString()} key={option.label}>
             {oneStatus ? option.label : option.plural}
           </SelectItem>
         ))}
