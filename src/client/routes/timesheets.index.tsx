@@ -643,7 +643,7 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
         variant="secondary"
         size="sm"
         className="rounded-l-none bg-accent/50 px-2"
-        onClick={() => column.setFilterValue([])}
+        onClick={() => column.setFilterValue({ inverted: false, statuses: [] })}
       >
         <XMarkIcon className="h-4 w-4" />
       </Button>
