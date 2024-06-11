@@ -558,39 +558,3 @@ function FilterBuilder(props: FilterBuilderProps) {
     </Popover>
   )
 }
-
-type StatusSelectProps = {
-  items: readonly Status[]
-  value?: Status
-  onValueChange: (status?: Status) => void
-}
-function StatusSelect(props: StatusSelectProps) {
-  return (
-    <div className="flex items-center gap-2">
-      <Select
-        value={props.value ?? ''}
-        onValueChange={(value) => props.onValueChange(value as Status)}
-      >
-        <SelectTrigger className="flex w-fit gap-2 pl-1 data-[placeholder]:pl-4">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent align="start">
-          {props.items.map((item) => (
-            <SelectItem value={item} key={item}>
-              <StatusBadge status={item} />
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {props.value && (
-        <Button
-          size="icon"
-          variant="outline"
-          onClick={() => props.onValueChange()}
-        >
-          <XMarkIcon className="h-4 w-4" />
-        </Button>
-      )}
-    </div>
-  )
-}
