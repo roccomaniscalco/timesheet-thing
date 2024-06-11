@@ -397,7 +397,7 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <FilterViewer table={table} />
         <FilterBuilder table={table} />
       </div>
@@ -654,8 +654,8 @@ type IsOrIsNotSelectProps = {
 }
 function IsOrIsNotSelect({ column }: IsOrIsNotSelectProps) {
   const options = [
-    { label: 'is', plural: 'is any of', inverted: false },
-    { label: 'is not', plural: 'is not', inverted: true },
+    { label: 'is', plural: 'is any of', inverted: false, },
+    { label: 'is not', plural: 'is not', inverted: true, },
   ] as const
 
   const filter = column.getFilterValue() as StatusFilterValue
