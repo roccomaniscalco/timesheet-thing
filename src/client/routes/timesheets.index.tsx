@@ -655,15 +655,21 @@ type IsOrIsNotSelectProps = {
   column: Column<TimesheetWithProfile>
 }
 function IsOrIsNotSelect({ column }: IsOrIsNotSelectProps) {
-  const options = ['is', 'is not'] as const
+  const options = {
+    is: { label: 'is', plural: 'is any of', inverted: false },
+    not: { label: 'is not', plural: 'is not', inverted: true },
+  }
+
+  const filter = column.getFilterValue() as StatusFilterValue
+  const oneStatus = filter.statuses.length === 1
 
   return (
     <Select
-      onValueChange={() => {
+      onValueChange={(optionKey: keyof typeof options) => {
         column.setFilterValue((filter: StatusFilterValue) => {
           return {
             ...filter,
-            inverted: !filter?.inverted,
+            inverted: options[optionKey].inverted,
           }
         })
       }}
@@ -681,9 +687,9 @@ function IsOrIsNotSelect({ column }: IsOrIsNotSelectProps) {
         </Button>
       </SelectTrigger>
       <SelectContent>
-        {options.map((option) => (
-          <SelectItem value={option} key={option}>
-            {option}
+        {Object.entries(options).map(([key, option]) => (
+          <SelectItem value={key} key={key}>
+            {oneStatus ? option.label : option.plural}
           </SelectItem>
         ))}
       </SelectContent>
