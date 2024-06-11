@@ -609,9 +609,14 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
           <StatusBadge status={status} iconOnly={!oneStatus} />
         ))}
       </div>
-      <div className="content-center rounded-r-md bg-accent/50 px-2 py-1.5">
+      <Button
+        variant="secondary"
+        size="sm"
+        className="rounded-l-none bg-accent/50 px-2"
+        onClick={() => column.setFilterValue([])}
+      >
         <XMarkIcon className="h-4 w-4" />
-      </div>
+      </Button>
     </div>
   )
 }
