@@ -600,15 +600,25 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
 
   return (
     <div className="flex gap-0.5 text-sm">
-      <div className="rounded-l-md bg-accent/50 px-2 py-1.5">Status</div>
-      <div className="bg-accent/50 px-2 py-1.5">
-        {oneStatus ? 'is' : 'is any of'}
+      <div className="content-center rounded-l-md bg-accent/50 px-2 py-1.5 text-xs">
+        Status
       </div>
-      <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5">
+      <Button
+        variant="secondary"
+        size="sm"
+        className="rounded-none bg-accent/50 px-2"
+      >
+        {oneStatus ? 'is' : 'is any of'}
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        className="gap-1 rounded-none bg-accent/50 px-2"
+      >
         {statuses.map((status) => (
           <StatusBadge status={status} iconOnly={!oneStatus} />
         ))}
-      </div>
+      </Button>
       <Button
         variant="secondary"
         size="sm"
