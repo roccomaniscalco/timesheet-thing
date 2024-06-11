@@ -87,6 +87,8 @@ import {
   useReactTable,
   type Column,
   type ColumnFiltersState,
+  type FilterFn,
+  type FilterFnOption,
   type SortingState,
   type Table as TableType,
 } from '@tanstack/react-table'
@@ -221,6 +223,11 @@ function TimesheetCard({ timesheet }: TimesheetCardProps) {
 type Timesheet = Timesheets[number]
 type TimesheetWithProfile = Timesheet & { profile: Profile }
 
+type StatusFilterValue = {
+  inverted: boolean
+  statuses: Status[]
+}
+
 const columnHelper = createColumnHelper<TimesheetWithProfile>()
 const columns = [
   columnHelper.accessor('id', {
@@ -298,14 +305,12 @@ const columns = [
   }),
   columnHelper.accessor('status', {
     header: () => <div className="w-28">Status</div>,
-    cell: (info) => {
-      const status = info.getValue()
-      return <StatusBadge status={status} />
-    },
-    filterFn: (row, columnId, filterValue: string[]) => {
-      if (!filterValue.length) return true
-      const rowValue = row.getValue(columnId) as string
-      return filterValue.includes(rowValue)
+    cell: (info) => <StatusBadge status={info.getValue()} />,
+    filterFn: (row, columnId, filterValue: StatusFilterValue) => {
+      if (filterValue.statuses.length === 0) return true
+      const rowValue = row.getValue(columnId) as Status
+      const includesStatus = filterValue.statuses.includes(rowValue)
+      return filterValue.inverted ? !includesStatus : includesStatus
     },
   }),
   columnHelper.accessor('tasks', {
@@ -357,7 +362,15 @@ type TimesheetTableProps = {
   profiles: Record<string, Profile>
 }
 function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([
+    {
+      id: 'status',
+      value: {
+        inverted: false,
+        statuses: [],
+      },
+    },
+  ])
   const [sorting, setSorting] = useState<SortingState>([])
 
   const timesheetsWithProfile = useMemo(() => {
@@ -553,21 +566,28 @@ function FilterBuilder(props: FilterBuilderProps) {
                     value={status}
                     onSelect={(status) => {
                       const column = props.table.getColumn('status')
-                      column?.setFilterValue((prev: string[] = []) => {
-                        if (prev.includes(status)) {
-                          return prev.filter((s) => s !== status)
-                        }
-                        return [...prev, status]
-                      })
+                      column?.setFilterValue(
+                        ({ statuses, inverted }: StatusFilterValue) => {
+                          if (statuses.includes(status as Status)) {
+                            return {
+                              inverted,
+                              statuses: statuses.filter((s) => s !== status),
+                            }
+                          }
+                          return { inverted, statuses: [...statuses, status] }
+                        },
+                      )
                       toggleOpen()
                     }}
                   >
                     <StatusBadge status={status} />
                     {(
-                      props.table.getColumn('status')?.getFilterValue() as
-                        | string[]
-                        | undefined
-                    )?.includes(status) && <CheckIcon className="h-4 w-4" />}
+                      props.table
+                        .getColumn('status')
+                        ?.getFilterValue() as StatusFilterValue
+                    ).statuses.includes(status) && (
+                      <CheckIcon className="h-4 w-4" />
+                    )}
                   </CommandItem>
                 ))}
             </CommandGroup>
@@ -597,9 +617,9 @@ type StatusFilterViewerProps = {
   column: Column<TimesheetWithProfile>
 }
 function StatusFilterViewer({ column }: StatusFilterViewerProps) {
-  const statuses = column.getFilterValue() as Status[] | undefined
+  const { statuses } = column.getFilterValue() as StatusFilterValue
 
-  if (!statuses || statuses.length === 0) {
+  if (statuses.length === 0) {
     return null
   }
 
@@ -640,7 +660,16 @@ function IsOrIsNotSelect({ column }: IsOrIsNotSelectProps) {
   const options = ['is', 'is not'] as const
 
   return (
-    <Select>
+    <Select
+      onValueChange={() => {
+        column.setFilterValue((filter: StatusFilterValue) => {
+          return {
+            ...filter,
+            inverted: !filter?.inverted,
+          }
+        })
+      }}
+    >
       <SelectTrigger
         asChild
         className="rounded-none border-none bg-accent/50 px-2 py-0.5"
@@ -653,7 +682,7 @@ function IsOrIsNotSelect({ column }: IsOrIsNotSelectProps) {
           <SelectValue />
         </Button>
       </SelectTrigger>
-      <SelectContent align="end">
+      <SelectContent>
         {options.map((option) => (
           <SelectItem value={option} key={option}>
             {option}
