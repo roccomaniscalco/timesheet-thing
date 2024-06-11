@@ -26,7 +26,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList,
+  CommandList
 } from '@/client/components/ui/command'
 import {
   Popover,
@@ -34,13 +34,6 @@ import {
   PopoverTrigger,
 } from '@/client/components/ui/popover'
 import { Progress } from '@/client/components/ui/progress'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/client/components/ui/select'
 import {
   Table,
   TableBody,
@@ -60,8 +53,7 @@ import {
   headerActionTunnel,
   headerBreadcrumbTunnel,
 } from '@/client/routes/__root.js'
-import { STATUS, type Status } from '@/constants'
-import { status } from '@/server/schema'
+import { STATUS } from '@/constants'
 import { UserButton } from '@clerk/clerk-react'
 import {
   ArrowDownIcon,
@@ -69,12 +61,12 @@ import {
   ArrowsUpDownIcon,
   BanknotesIcon,
   CalendarIcon,
+  CheckIcon,
   ClockIcon,
   FunnelIcon,
   PaperAirplaneIcon,
   PlusIcon,
-  UserIcon,
-  XMarkIcon,
+  UserIcon
 } from '@heroicons/react/16/solid'
 import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
@@ -87,7 +79,7 @@ import {
   useReactTable,
   type ColumnFiltersState,
   type SortingState,
-  type Table as TableType,
+  type Table as TableType
 } from '@tanstack/react-table'
 import { compareAsc } from 'date-fns'
 import { useEffect, useMemo, useState } from 'react'
@@ -300,6 +292,11 @@ const columns = [
     cell: (info) => {
       const status = info.getValue()
       return <StatusBadge status={status} />
+    },
+    filterFn: (row, columnId, filterValue: string[]) => {
+      if (!filterValue.length) return true
+      const rowValue = row.getValue(columnId) as string
+      return filterValue.includes(rowValue)
     },
   }),
   columnHelper.accessor('tasks', {
@@ -541,14 +538,25 @@ function FilterBuilder(props: FilterBuilderProps) {
               {page === 'status' &&
                 STATUS.map((status) => (
                   <CommandItem
+                    className="justify-between"
                     key={status}
                     value={status}
-                    onSelect={(s) => {
-                      props.table.getColumn('status')?.setFilterValue(s)
+                    onSelect={(status) => {
+                      const column = props.table.getColumn('status')
+                      column?.setFilterValue((prev: string[] = []) => {
+                        if (prev.includes(status)) {
+                          return prev.filter((s) => s !== status)
+                        }
+                        return [...prev, status]
+                      })
                       toggleOpen()
                     }}
                   >
                     <StatusBadge status={status} />
+                    {(props.table
+                      .getColumn('status')
+                      ?.getFilterValue() as string[] | undefined)
+                      ?.includes(status) && <CheckIcon className='w-4 h-4' />}
                   </CommandItem>
                 ))}
             </CommandGroup>
