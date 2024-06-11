@@ -35,6 +35,12 @@ import {
 } from '@/client/components/ui/popover'
 import { Progress } from '@/client/components/ui/progress'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from '@/client/components/ui/select'
+import {
   Table,
   TableBody,
   TableCell,
@@ -69,6 +75,7 @@ import {
   UserIcon,
   XMarkIcon,
 } from '@heroicons/react/16/solid'
+import { SelectTrigger } from '@radix-ui/react-select'
 import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
@@ -603,13 +610,8 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
       <div className="content-center rounded-l-md bg-accent/50 px-2 py-1.5 text-xs">
         Status
       </div>
-      <Button
-        variant="secondary"
-        size="sm"
-        className="rounded-none bg-accent/50 px-2"
-      >
-        {oneStatus ? 'is' : 'is any of'}
-      </Button>
+
+      <IsOrIsNotSelect column={column} />
       <Button
         variant="secondary"
         size="sm"
@@ -628,5 +630,36 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
         <XMarkIcon className="h-4 w-4" />
       </Button>
     </div>
+  )
+}
+
+type IsOrIsNotSelectProps = {
+  column: Column<TimesheetWithProfile>
+}
+function IsOrIsNotSelect({ column }: IsOrIsNotSelectProps) {
+  const options = ['is', 'is not'] as const
+
+  return (
+    <Select>
+      <SelectTrigger
+        asChild
+        className="rounded-none border-none bg-accent/50 px-2 py-0.5"
+      >
+        <Button
+          variant="secondary"
+          size="sm"
+          className="rounded-none bg-accent/50 px-2"
+        >
+          <SelectValue />
+        </Button>
+      </SelectTrigger>
+      <SelectContent align="end">
+        {options.map((option) => (
+          <SelectItem value={option} key={option}>
+            {option}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }
