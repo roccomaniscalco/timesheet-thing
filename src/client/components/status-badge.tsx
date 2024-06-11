@@ -29,19 +29,24 @@ interface StatusBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   status: Status
   iconOnly?: boolean
 }
-export function StatusBadge({ className, status, ...props }: StatusBadgeProps) {
+export function StatusBadge({
+  className,
+  status,
+  iconOnly,
+  ...props
+}: StatusBadgeProps) {
   return (
     <div
       className={cn(
         'inline-flex items-center gap-1 rounded border px-1 py-0.5 text-xs font-semibold capitalize transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
         variantClass[status],
         className,
-        props.iconOnly && "px-0.5"
+        iconOnly && 'px-0.5',
       )}
       {...props}
     >
       {icon[status]}
-      {!props.iconOnly && status}
+      {!iconOnly && status}
     </div>
   )
 }
