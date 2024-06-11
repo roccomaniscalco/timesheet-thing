@@ -26,7 +26,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList
+  CommandList,
 } from '@/client/components/ui/command'
 import {
   Popover,
@@ -66,7 +66,7 @@ import {
   FunnelIcon,
   PaperAirplaneIcon,
   PlusIcon,
-  UserIcon
+  UserIcon,
 } from '@heroicons/react/16/solid'
 import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
@@ -79,7 +79,7 @@ import {
   useReactTable,
   type ColumnFiltersState,
   type SortingState,
-  type Table as TableType
+  type Table as TableType,
 } from '@tanstack/react-table'
 import { compareAsc } from 'date-fns'
 import { useEffect, useMemo, useState } from 'react'
@@ -377,6 +377,7 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center">
+        <FilterViewer columnFilters={columnFilters} />
         <FilterBuilder table={table} />
       </div>
       <div className="rounded-md border">
@@ -553,10 +554,11 @@ function FilterBuilder(props: FilterBuilderProps) {
                     }}
                   >
                     <StatusBadge status={status} />
-                    {(props.table
-                      .getColumn('status')
-                      ?.getFilterValue() as string[] | undefined)
-                      ?.includes(status) && <CheckIcon className='w-4 h-4' />}
+                    {(
+                      props.table.getColumn('status')?.getFilterValue() as
+                        | string[]
+                        | undefined
+                    )?.includes(status) && <CheckIcon className="h-4 w-4" />}
                   </CommandItem>
                 ))}
             </CommandGroup>
@@ -564,5 +566,20 @@ function FilterBuilder(props: FilterBuilderProps) {
         </Command>
       </PopoverContent>
     </Popover>
+  )
+}
+
+type FilterViewerProps = {
+  columnFilters: ColumnFiltersState
+}
+function FilterViewer(props: FilterViewerProps) {
+  return (
+    <ul>
+      {props.columnFilters.map((filter) => (
+        <li>
+          {filter.id} is in {filter.value?.toString()}
+        </li>
+      ))}
+    </ul>
   )
 }
