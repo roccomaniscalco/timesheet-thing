@@ -40,6 +40,7 @@ const CommandInput = React.forwardRef<
     kbd?: string
   }
 >(({ className, kbd, ...props }, ref) => (
+  // eslint-disable-next-line react/no-unknown-property -- temp fix while using wrong cmdk package
   <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
     <MagnifyingGlassIcon className="mr-2 h-4 w-4 shrink-0 opacity-50" />
     <CommandPrimitive.Input

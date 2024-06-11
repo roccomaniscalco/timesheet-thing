@@ -256,7 +256,7 @@ function WeekPicker() {
       >
         <Calendar
           modifiers={{
-            // @ts-expect-error
+            // @ts-expect-error done this way in the docs
             selected: week,
           }}
           onDayClick={(day, modifiers) => {
@@ -562,7 +562,7 @@ function CreateTaskRow() {
     if (form.formState.isSubmitSuccessful) {
       form.reset()
     }
-  }, [form.formState.isSubmitSuccessful])
+  }, [form])
 
   return (
     <BaseTaskRow

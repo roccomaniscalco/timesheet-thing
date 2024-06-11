@@ -603,7 +603,7 @@ function FilterViewer(props: FilterViewerProps) {
   return (
     <ul>
       {props.table.getAllFlatColumns().map((column) => (
-        <li>
+        <li key={column.id}>
           {column.id === 'status' && <StatusFilterViewer column={column} />}
         </li>
       ))}
@@ -636,7 +636,7 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
         className="gap-1 rounded-none bg-accent/50 px-2"
       >
         {statuses.map((status) => (
-          <StatusBadge status={status} iconOnly={!oneStatus} />
+          <StatusBadge status={status} iconOnly={!oneStatus} key={status} />
         ))}
       </Button>
       <Button
