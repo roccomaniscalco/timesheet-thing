@@ -51,9 +51,11 @@ const CommandInput = React.forwardRef<
       {...props}
     />
 
-    <kbd className="inline-block h-5 min-w-5 rounded border border-muted-foreground/20 bg-muted text-center align-baseline font-mono text-xs uppercase leading-[160%] text-muted-foreground">
-      {kbd}
-    </kbd>
+    {kbd && (
+      <kbd className="inline-block h-5 min-w-5 text-nowrap rounded border border-muted-foreground/20 bg-muted text-center align-baseline font-mono text-xs uppercase leading-[160%] text-muted-foreground">
+        {kbd}
+      </kbd>
+    )}
   </div>
 ))
 

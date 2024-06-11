@@ -23,7 +23,6 @@ import {
 } from '@/client/components/ui/card'
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
@@ -61,7 +60,8 @@ import {
   headerActionTunnel,
   headerBreadcrumbTunnel,
 } from '@/client/routes/__root.js'
-import { type Status } from '@/constants'
+import { STATUS, type Status } from '@/constants'
+import { status } from '@/server/schema'
 import { UserButton } from '@clerk/clerk-react'
 import {
   ArrowDownIcon,
@@ -69,8 +69,6 @@ import {
   ArrowsUpDownIcon,
   BanknotesIcon,
   CalendarIcon,
-  CheckIcon,
-  ChevronUpDownIcon,
   ClockIcon,
   FunnelIcon,
   PaperAirplaneIcon,
@@ -89,6 +87,7 @@ import {
   useReactTable,
   type ColumnFiltersState,
   type SortingState,
+  type Table as TableType,
 } from '@tanstack/react-table'
 import { compareAsc } from 'date-fns'
 import { useEffect, useMemo, useState } from 'react'
@@ -381,7 +380,7 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center">
-        <FilterBuilder />
+        <FilterBuilder table={table} />
       </div>
       <div className="rounded-md border">
         <Table>
@@ -442,8 +441,11 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
   )
 }
 
-function FilterBuilder() {
-  const columns = [
+type FilterBuilderProps = {
+  table: TableType<TimesheetWithProfile>
+}
+function FilterBuilder(props: FilterBuilderProps) {
+  const filters = [
     {
       Icon: CalendarIcon,
       label: 'Week of',
@@ -472,13 +474,18 @@ function FilterBuilder() {
   ]
 
   const [open, setOpen] = useState(false)
+  const [page, setPage] = useState('filter')
   const [value, setValue] = useState('')
 
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
+      if (e.metaKey) return
+      const textInputs = ['input', 'textarea']
+      const activeElementTag = document.activeElement?.tagName?.toLowerCase()
+      if (activeElementTag && textInputs.includes(activeElementTag)) return
       if (e.key === 'f') {
         e.preventDefault()
-        setOpen((open) => !open)
+        toggleOpen()
       }
     }
 
@@ -486,8 +493,14 @@ function FilterBuilder() {
     return () => document.removeEventListener('keydown', handleKeydown)
   }, [])
 
+  const toggleOpen = () => {
+    setOpen((prev) => !prev)
+    setPage('filter')
+    setValue('')
+  }
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={toggleOpen}>
       <PopoverTrigger asChild>
         <Button
           size="sm"
@@ -502,22 +515,42 @@ function FilterBuilder() {
       </PopoverTrigger>
       <PopoverContent align="start" className="w-fit p-0">
         <Command>
-          <CommandInput placeholder="Filter..." kbd="f" />
+          <CommandInput
+            className="placeholder:capitalize"
+            placeholder={`${page}...`}
+            kbd={page === 'filter' ? 'f' : undefined}
+            value={value}
+            onValueChange={setValue}
+          />
           <CommandList>
             <CommandGroup>
-              {columns.map((framework) => (
-                <CommandItem
-                  key={framework.value}
-                  value={framework.value}
-                  onSelect={(currentValue) => {
-                    setValue(currentValue === value ? '' : currentValue)
-                    setOpen(false)
-                  }}
-                >
-                  <framework.Icon className="mr-2 h-4 w-4" />
-                  {framework.label}
-                </CommandItem>
-              ))}
+              {page === 'filter' &&
+                filters.map((filter) => (
+                  <CommandItem
+                    key={filter.value}
+                    value={filter.value}
+                    onSelect={(page) => {
+                      setPage(page)
+                      setValue('')
+                    }}
+                  >
+                    <filter.Icon className="mr-2 h-4 w-4" />
+                    {filter.label}
+                  </CommandItem>
+                ))}
+              {page === 'status' &&
+                STATUS.map((status) => (
+                  <CommandItem
+                    key={status}
+                    value={status}
+                    onSelect={(s) => {
+                      props.table.getColumn('status')?.setFilterValue(s)
+                      toggleOpen()
+                    }}
+                  >
+                    <StatusBadge status={status} />
+                  </CommandItem>
+                ))}
             </CommandGroup>
           </CommandList>
         </Command>
