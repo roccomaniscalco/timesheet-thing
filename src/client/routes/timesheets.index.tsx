@@ -53,7 +53,7 @@ import {
   headerActionTunnel,
   headerBreadcrumbTunnel,
 } from '@/client/routes/__root.js'
-import { STATUS } from '@/constants'
+import { STATUS, type Status } from '@/constants'
 import { UserButton } from '@clerk/clerk-react'
 import {
   ArrowDownIcon,
@@ -67,6 +67,7 @@ import {
   PaperAirplaneIcon,
   PlusIcon,
   UserIcon,
+  XMarkIcon,
 } from '@heroicons/react/16/solid'
 import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
@@ -577,9 +578,39 @@ function FilterViewer(props: FilterViewerProps) {
     <ul>
       {props.columnFilters.map((filter) => (
         <li>
-          {filter.id} is in {filter.value?.toString()}
+          {filter.id === 'status' && (
+            <StatusFilterViewer statuses={filter.value as Status[] | undefined} />
+          )}
         </li>
       ))}
     </ul>
+  )
+}
+
+type StatusFilterViewerProps = {
+  statuses: Status[] | undefined
+}
+function StatusFilterViewer({ statuses }: StatusFilterViewerProps) {
+  if (!statuses || statuses.length === 0) {
+    return null
+  }
+
+  const oneStatus = statuses.length === 1
+
+  return (
+    <div className="flex gap-0.5 text-sm">
+      <div className="rounded-l-md bg-accent/50 px-2 py-1.5">Status</div>
+      <div className="bg-accent/50 px-2 py-1.5">
+        {oneStatus ? 'is' : 'is any of'}
+      </div>
+      <div className="flex items-center gap-1 bg-accent/50 px-2 py-0.5">
+        {statuses.map((status) => (
+          <StatusBadge status={status} iconOnly={!oneStatus} />
+        ))}
+      </div>
+      <div className="content-center rounded-r-md bg-accent/50 px-2 py-1.5">
+        <XMarkIcon className="h-4 w-4" />
+      </div>
+    </div>
   )
 }

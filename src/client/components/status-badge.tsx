@@ -27,26 +27,21 @@ const icon = {
 
 interface StatusBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   status: Status
-  dense?: boolean
+  iconOnly?: boolean
 }
-export function StatusBadge({
-  className,
-  status,
-  dense,
-  ...props
-}: StatusBadgeProps) {
+export function StatusBadge({ className, status, ...props }: StatusBadgeProps) {
   return (
     <div
       className={cn(
         'inline-flex items-center gap-1 rounded border px-1 py-0.5 text-xs font-semibold capitalize transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
         variantClass[status],
-        dense && 'p-0.5 font-medium leading-none',
         className,
+        props.iconOnly && "px-0.5"
       )}
       {...props}
     >
-      {!dense && icon[status]}
-      {status}
+      {icon[status]}
+      {!props.iconOnly && status}
     </div>
   )
 }
