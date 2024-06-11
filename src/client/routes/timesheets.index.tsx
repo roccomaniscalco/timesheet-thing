@@ -72,6 +72,7 @@ import {
   FunnelIcon,
   PaperAirplaneIcon,
   PlusIcon,
+  SignalIcon,
   UserIcon,
   XMarkIcon,
 } from '@heroicons/react/16/solid'
@@ -475,7 +476,7 @@ function FilterBuilder(props: FilterBuilderProps) {
       value: 'contractor',
     },
     {
-      Icon: PaperAirplaneIcon,
+      Icon: SignalIcon,
       label: 'Status',
       value: 'status',
     },
@@ -625,7 +626,8 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
 
   return (
     <div className="flex gap-0.5 text-sm">
-      <div className="content-center rounded-l-md bg-accent/50 px-2 py-1.5 text-xs">
+      <div className="flex items-center gap-1 rounded-l-md bg-accent/50 px-2 py-1.5 text-xs">
+        <SignalIcon className="h-4 w-4 text-muted-foreground" />
         Status
       </div>
 
