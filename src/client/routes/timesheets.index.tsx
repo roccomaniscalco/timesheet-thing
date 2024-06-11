@@ -78,6 +78,7 @@ import {
   getFilteredRowModel,
   getSortedRowModel,
   useReactTable,
+  type Column,
   type ColumnFiltersState,
   type SortingState,
   type Table as TableType,
@@ -378,7 +379,7 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center">
-        <FilterViewer columnFilters={columnFilters} />
+        <FilterViewer table={table} />
         <FilterBuilder table={table} />
       </div>
       <div className="rounded-md border">
@@ -571,16 +572,14 @@ function FilterBuilder(props: FilterBuilderProps) {
 }
 
 type FilterViewerProps = {
-  columnFilters: ColumnFiltersState
+  table: TableType<TimesheetWithProfile>
 }
 function FilterViewer(props: FilterViewerProps) {
   return (
     <ul>
-      {props.columnFilters.map((filter) => (
+      {props.table.getAllFlatColumns().map((column) => (
         <li>
-          {filter.id === 'status' && (
-            <StatusFilterViewer statuses={filter.value as Status[] | undefined} />
-          )}
+          {column.id === 'status' && <StatusFilterViewer column={column} />}
         </li>
       ))}
     </ul>
@@ -588,9 +587,11 @@ function FilterViewer(props: FilterViewerProps) {
 }
 
 type StatusFilterViewerProps = {
-  statuses: Status[] | undefined
+  column: Column<TimesheetWithProfile>
 }
-function StatusFilterViewer({ statuses }: StatusFilterViewerProps) {
+function StatusFilterViewer({ column }: StatusFilterViewerProps) {
+  const statuses = column.getFilterValue() as Status[] | undefined
+
   if (!statuses || statuses.length === 0) {
     return null
   }
