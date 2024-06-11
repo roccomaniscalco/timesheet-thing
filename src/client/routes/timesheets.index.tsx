@@ -626,7 +626,7 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
 
   return (
     <div className="flex gap-0.5 text-sm">
-      <div className="flex items-center gap-1 rounded-l-md bg-accent/50 px-2 py-1.5 text-xs">
+      <div className="flex items-center gap-1 rounded-l-md px-2 py-1.5 text-xs bg-secondary">
         <SignalIcon className="h-4 w-4 text-muted-foreground" />
         Status
       </div>
@@ -635,7 +635,7 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
       <Button
         variant="secondary"
         size="sm"
-        className="gap-1 rounded-none bg-accent/50 px-2"
+        className="gap-1 rounded-none px-2"
       >
         {statuses.map((status) => (
           <StatusBadge status={status} iconOnly={!oneStatus} key={status} />
@@ -644,7 +644,7 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
       <Button
         variant="secondary"
         size="sm"
-        className="rounded-l-none bg-accent/50 px-2"
+        className="rounded-l-none px-2"
         onClick={() => column.setFilterValue({ inverted: false, statuses: [] })}
       >
         <XMarkIcon className="h-4 w-4" />
@@ -678,12 +678,12 @@ function IsOrIsNotSelect({ column }: IsOrIsNotSelectProps) {
     >
       <SelectTrigger
         asChild
-        className="rounded-none border-none bg-accent/50 px-2 py-0.5"
+        className="rounded-none border-none px-2 py-0.5"
       >
         <Button
           variant="secondary"
           size="sm"
-          className="rounded-none bg-accent/50 px-2"
+          className="rounded-none px-2"
         >
           <SelectValue />
         </Button>
