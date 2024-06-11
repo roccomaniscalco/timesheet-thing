@@ -87,8 +87,6 @@ import {
   useReactTable,
   type Column,
   type ColumnFiltersState,
-  type FilterFn,
-  type FilterFnOption,
   type SortingState,
   type Table as TableType,
 } from '@tanstack/react-table'
