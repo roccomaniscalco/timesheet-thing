@@ -1,4 +1,8 @@
 {
   "typescript.preferences.importModuleSpecifier": "non-relative",
-  "cSpell.words": ["timesheet", "timesheets"]
+  "cSpell.words": [
+    "timesheet",
+    "timesheets"
+  ],
+  "typescript.tsdk": "node_modules/typescript/lib"
 }
