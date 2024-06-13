@@ -70,7 +70,6 @@ import {
   CheckIcon,
   ClockIcon,
   FunnelIcon,
-  PaperAirplaneIcon,
   PlusIcon,
   SignalIcon,
   UserIcon,
@@ -226,6 +225,10 @@ type StatusFilterValue = {
   inverted: boolean
   statuses: Status[]
 }
+type ContractorFilterValue = {
+  inverted: boolean
+  contractorIds: string[]
+}
 
 const columnHelper = createColumnHelper<TimesheetWithProfile>()
 const columns = [
@@ -288,6 +291,7 @@ const columns = [
     },
   }),
   columnHelper.accessor('profile', {
+    id: 'contractor',
     header: 'Contractor',
     cell: (info) => {
       const contractorId = info.row.original.contractorId
@@ -300,6 +304,12 @@ const columns = [
           </span>
         </div>
       )
+    },
+    filterFn: (row, columnId, filterValue: ContractorFilterValue) => {
+      if (filterValue.contractorIds.length === 0) return true
+      const rowValue = row.getValue(columnId) as string
+      const includesContractor = filterValue.contractorIds.includes(rowValue)
+      return filterValue.inverted ? !includesContractor : includesContractor
     },
   }),
   columnHelper.accessor('status', {
@@ -369,6 +379,13 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
         statuses: [],
       },
     },
+    {
+      id: 'contractor',
+      value: {
+        inverted: false,
+        contractorIds: [],
+      },
+    },
   ])
   const [sorting, setSorting] = useState<SortingState>([])
 
@@ -399,7 +416,7 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <FilterViewer table={table} />
-        <FilterBuilder table={table} />
+        <FilterBuilder table={table} profiles={profiles} />
       </div>
       <div className="rounded-md border">
         <Table>
@@ -462,6 +479,7 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
 
 type FilterBuilderProps = {
   table: TableType<TimesheetWithProfile>
+  profiles: Record<string, Profile>
 }
 function FilterBuilder(props: FilterBuilderProps) {
   const filters = [
@@ -589,6 +607,50 @@ function FilterBuilder(props: FilterBuilderProps) {
                     )}
                   </CommandItem>
                 ))}
+              {page === 'contractor' &&
+                Object.entries(props.profiles).map(([id, profile]) => (
+                  <CommandItem
+                    className="gap-2"
+                    key={id}
+                    value={id}
+                    keywords={[profile.firstName, profile.lastName]}
+                    onSelect={(id) => {
+                      const column = props.table.getColumn('contractor')
+                      column?.setFilterValue(
+                        ({
+                          contractorIds,
+                          inverted,
+                        }: ContractorFilterValue) => {
+                          if (contractorIds.includes(id)) {
+                            return {
+                              inverted,
+                              contractorIds: contractorIds.filter(
+                                (cId) => cId !== id,
+                              ),
+                            }
+                          }
+                          return {
+                            inverted,
+                            contractorIds: [...contractorIds, id],
+                          }
+                        },
+                      )
+                      toggleOpen()
+                    }}
+                  >
+                    <ContractorAvatar id={id} className="h-5 w-5" />
+                    <span className="flex-1">
+                      {profile.firstName} {profile.lastName}
+                    </span>
+                    {(
+                      props.table
+                        .getColumn('contractor')
+                        ?.getFilterValue() as ContractorFilterValue
+                    ).contractorIds.includes(id) && (
+                      <CheckIcon className="h-4 w-4" />
+                    )}
+                  </CommandItem>
+                ))}
             </CommandGroup>
           </CommandList>
         </Command>
@@ -654,8 +716,8 @@ type IsOrIsNotSelectProps = {
 }
 function IsOrIsNotSelect({ column }: IsOrIsNotSelectProps) {
   const options = [
-    { label: 'is', plural: 'is any of', inverted: false, },
-    { label: 'is not', plural: 'is not', inverted: true, },
+    { label: 'is', plural: 'is any of', inverted: false },
+    { label: 'is not', plural: 'is not', inverted: true },
   ] as const
 
   const filter = column.getFilterValue() as StatusFilterValue
