@@ -221,13 +221,9 @@ function TimesheetCard({ timesheet }: TimesheetCardProps) {
 type Timesheet = Timesheets[number]
 type TimesheetWithProfile = Timesheet & { profile: Profile }
 
-type StatusFilterValue = {
+type ListFilter<TValue = unknown> = {
   inverted: boolean
-  statuses: Status[]
-}
-type ContractorFilterValue = {
-  inverted: boolean
-  contractorIds: string[]
+  values: TValue[]
 }
 
 const columnHelper = createColumnHelper<TimesheetWithProfile>()
@@ -305,20 +301,20 @@ const columns = [
         </div>
       )
     },
-    filterFn: (row, columnId, filterValue: ContractorFilterValue) => {
-      if (filterValue.contractorIds.length === 0) return true
-      const rowValue = row.getValue(columnId) as string
-      const includesContractor = filterValue.contractorIds.includes(rowValue)
+    filterFn: (row, columnId, filterValue: ListFilter) => {
+      if (filterValue.values.length === 0) return true
+      const rowValue = row.getValue(columnId) as Profile
+      const includesContractor = filterValue.values.includes(rowValue.id)
       return filterValue.inverted ? !includesContractor : includesContractor
     },
   }),
   columnHelper.accessor('status', {
     header: () => <div className="w-28">Status</div>,
     cell: (info) => <StatusBadge status={info.getValue()} />,
-    filterFn: (row, columnId, filterValue: StatusFilterValue) => {
-      if (filterValue.statuses.length === 0) return true
+    filterFn: (row, columnId, filterValue: ListFilter) => {
+      if (filterValue.values.length === 0) return true
       const rowValue = row.getValue(columnId) as Status
-      const includesStatus = filterValue.statuses.includes(rowValue)
+      const includesStatus = filterValue.values.includes(rowValue)
       return filterValue.inverted ? !includesStatus : includesStatus
     },
   }),
@@ -376,14 +372,14 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
       id: 'status',
       value: {
         inverted: false,
-        statuses: [],
+        values: [],
       },
     },
     {
       id: 'contractor',
       value: {
         inverted: false,
-        contractorIds: [],
+        values: [],
       },
     },
   ])
@@ -584,14 +580,14 @@ function FilterBuilder(props: FilterBuilderProps) {
                     onSelect={(status) => {
                       const column = props.table.getColumn('status')
                       column?.setFilterValue(
-                        ({ statuses, inverted }: StatusFilterValue) => {
-                          if (statuses.includes(status as Status)) {
+                        ({ values, inverted }: ListFilter) => {
+                          if (values.includes(status)) {
                             return {
                               inverted,
-                              statuses: statuses.filter((s) => s !== status),
+                              values: values.filter((s) => s !== status),
                             }
                           }
-                          return { inverted, statuses: [...statuses, status] }
+                          return { inverted, values: [...values, status] }
                         },
                       )
                       toggleOpen()
@@ -601,8 +597,8 @@ function FilterBuilder(props: FilterBuilderProps) {
                     {(
                       props.table
                         .getColumn('status')
-                        ?.getFilterValue() as StatusFilterValue
-                    ).statuses.includes(status) && (
+                        ?.getFilterValue() as ListFilter
+                    ).values.includes(status) && (
                       <CheckIcon className="h-4 w-4" />
                     )}
                   </CommandItem>
@@ -617,22 +613,14 @@ function FilterBuilder(props: FilterBuilderProps) {
                     onSelect={(id) => {
                       const column = props.table.getColumn('contractor')
                       column?.setFilterValue(
-                        ({
-                          contractorIds,
-                          inverted,
-                        }: ContractorFilterValue) => {
-                          if (contractorIds.includes(id)) {
+                        ({ values, inverted }: ListFilter) => {
+                          if (values.includes(id)) {
                             return {
                               inverted,
-                              contractorIds: contractorIds.filter(
-                                (cId) => cId !== id,
-                              ),
+                              values: values.filter((cId) => cId !== id),
                             }
                           }
-                          return {
-                            inverted,
-                            contractorIds: [...contractorIds, id],
-                          }
+                          return { inverted, values: [...values, id] }
                         },
                       )
                       toggleOpen()
@@ -645,10 +633,8 @@ function FilterBuilder(props: FilterBuilderProps) {
                     {(
                       props.table
                         .getColumn('contractor')
-                        ?.getFilterValue() as ContractorFilterValue
-                    ).contractorIds.includes(id) && (
-                      <CheckIcon className="h-4 w-4" />
-                    )}
+                        ?.getFilterValue() as ListFilter
+                    ).values.includes(id) && <CheckIcon className="h-4 w-4" />}
                   </CommandItem>
                 ))}
             </CommandGroup>
@@ -664,13 +650,14 @@ type FilterViewerProps = {
 }
 function FilterViewer(props: FilterViewerProps) {
   return (
-    <ul>
-      {props.table.getAllFlatColumns().map((column) => (
-        <li key={column.id}>
-          {column.id === 'status' && <StatusFilterViewer column={column} />}
-        </li>
+    <div className='flex gap-2'>
+      {props.table.getAllFlatColumns().map((c) => (
+        <>
+          {c.id === 'status' && <StatusFilterViewer column={c} />}
+          {c.id === 'contractor' && <ContractorFilterViewer column={c} />}
+        </>
       ))}
-    </ul>
+    </div>
   )
 }
 
@@ -678,13 +665,13 @@ type StatusFilterViewerProps = {
   column: Column<TimesheetWithProfile>
 }
 function StatusFilterViewer({ column }: StatusFilterViewerProps) {
-  const { statuses } = column.getFilterValue() as StatusFilterValue
+  const { values } = column.getFilterValue() as ListFilter<Status>
 
-  if (statuses.length === 0) {
+  if (values.length === 0) {
     return null
   }
 
-  const oneStatus = statuses.length === 1
+  const oneStatus = values.length === 1
 
   return (
     <div className="flex gap-0.5 text-sm">
@@ -695,7 +682,7 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
 
       <IsOrIsNotSelect column={column} />
       <Button variant="secondary" size="sm" className="gap-1 rounded-none px-2">
-        {statuses.map((status) => (
+        {values.map((status) => (
           <StatusBadge status={status} iconOnly={!oneStatus} key={status} />
         ))}
       </Button>
@@ -703,7 +690,44 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
         variant="secondary"
         size="sm"
         className="rounded-l-none px-2"
-        onClick={() => column.setFilterValue({ inverted: false, statuses: [] })}
+        onClick={() => column.setFilterValue({ inverted: false, values: [] })}
+      >
+        <XMarkIcon className="h-4 w-4" />
+      </Button>
+    </div>
+  )
+}
+
+type ContractorFilterViewerProps = {
+  column: Column<TimesheetWithProfile>
+}
+function ContractorFilterViewer({ column }: ContractorFilterViewerProps) {
+  const { values } = column.getFilterValue() as ListFilter<string>
+
+  if (values.length === 0) {
+    return null
+  }
+
+  const oneStatus = values.length === 1
+
+  return (
+    <div className="flex gap-0.5 text-sm">
+      <div className="flex items-center gap-1 rounded-l-md bg-secondary px-2 py-1.5 text-xs">
+        <UserIcon className="h-4 w-4 text-muted-foreground" />
+        Contractor
+      </div>
+
+      <IsOrIsNotSelect column={column} />
+      <Button variant="secondary" size="sm" className="gap-1 rounded-none px-2">
+        {values.map((id) => (
+          <ContractorAvatar id={id} key={id} className='h-5 w-5' />
+        ))}
+      </Button>
+      <Button
+        variant="secondary"
+        size="sm"
+        className="rounded-l-none px-2"
+        onClick={() => column.setFilterValue({ inverted: false, values: [] })}
       >
         <XMarkIcon className="h-4 w-4" />
       </Button>
@@ -720,14 +744,14 @@ function IsOrIsNotSelect({ column }: IsOrIsNotSelectProps) {
     { label: 'is not', plural: 'is not', inverted: true },
   ] as const
 
-  const filter = column.getFilterValue() as StatusFilterValue
-  const oneStatus = filter.statuses.length === 1
+  const filter = column.getFilterValue() as ListFilter
+  const oneStatus = filter.values.length === 1
 
   return (
     <Select
       value={filter.inverted.toString()}
       onValueChange={(inverted: 'true' | 'false') => {
-        column.setFilterValue((filter: StatusFilterValue) => {
+        column.setFilterValue((filter: ListFilter) => {
           return {
             ...filter,
             inverted: JSON.parse(inverted),
