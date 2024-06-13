@@ -410,10 +410,8 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <FilterViewer table={table} />
-        <FilterBuilder table={table} profiles={profiles} />
-      </div>
+      <FilterBuilder table={table} profiles={profiles} />
+
       <div className="rounded-md border">
         <Table>
           <TableHeader className="border-b">
@@ -533,130 +531,124 @@ function FilterBuilder(props: FilterBuilderProps) {
   }
 
   return (
-    <Popover open={open} onOpenChange={toggleOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="gap-2"
-          role="combobox"
-          aria-expanded={open}
-        >
-          <FunnelIcon className="h-4 w-4" />
-          Filter
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-fit p-0">
-        <Command>
-          <CommandInput
-            className="placeholder:capitalize"
-            placeholder={`${page}...`}
-            kbd={page === 'filter' ? 'f' : undefined}
-            value={value}
-            onValueChange={setValue}
-          />
-          <CommandList>
-            <CommandGroup>
-              {page === 'filter' &&
-                filters.map((filter) => (
-                  <CommandItem
-                    key={filter.value}
-                    value={filter.value}
-                    onSelect={(page) => {
-                      setPage(page)
-                      setValue('')
-                    }}
-                  >
-                    <filter.Icon className="mr-2 h-4 w-4" />
-                    {filter.label}
-                  </CommandItem>
-                ))}
-              {page === 'status' &&
-                STATUS.map((status) => (
-                  <CommandItem
-                    className="justify-between"
-                    key={status}
-                    value={status}
-                    onSelect={(status) => {
-                      const column = props.table.getColumn('status')
-                      column?.setFilterValue(
-                        ({ values, inverted }: ListFilter) => {
-                          if (values.includes(status)) {
-                            return {
-                              inverted,
-                              values: values.filter((s) => s !== status),
-                            }
-                          }
-                          return { inverted, values: [...values, status] }
-                        },
-                      )
-                      toggleOpen()
-                    }}
-                  >
-                    <StatusBadge status={status} />
-                    {(
-                      props.table
-                        .getColumn('status')
-                        ?.getFilterValue() as ListFilter
-                    ).values.includes(status) && (
-                      <CheckIcon className="h-4 w-4" />
-                    )}
-                  </CommandItem>
-                ))}
-              {page === 'contractor' &&
-                Object.entries(props.profiles).map(([id, profile]) => (
-                  <CommandItem
-                    className="gap-2"
-                    key={id}
-                    value={id}
-                    keywords={[profile.firstName, profile.lastName]}
-                    onSelect={(id) => {
-                      const column = props.table.getColumn('contractor')
-                      column?.setFilterValue(
-                        ({ values, inverted }: ListFilter) => {
-                          if (values.includes(id)) {
-                            return {
-                              inverted,
-                              values: values.filter((cId) => cId !== id),
-                            }
-                          }
-                          return { inverted, values: [...values, id] }
-                        },
-                      )
-                      toggleOpen()
-                    }}
-                  >
-                    <ContractorAvatar id={id} className="h-5 w-5" />
-                    <span className="flex-1">
-                      {profile.firstName} {profile.lastName}
-                    </span>
-                    {(
-                      props.table
-                        .getColumn('contractor')
-                        ?.getFilterValue() as ListFilter
-                    ).values.includes(id) && <CheckIcon className="h-4 w-4" />}
-                  </CommandItem>
-                ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  )
-}
-
-type FilterViewerProps = {
-  table: TableType<TimesheetWithProfile>
-}
-function FilterViewer(props: FilterViewerProps) {
-  return (
-    <div className='flex gap-2'>
-      {props.table.getAllFlatColumns().map((c) => (
+    <div className="flex items-center gap-2">
+      {props.table.getVisibleFlatColumns().map((c) => (
         <>
           {c.id === 'status' && <StatusFilterViewer column={c} />}
           {c.id === 'contractor' && <ContractorFilterViewer column={c} />}
         </>
       ))}
+      <Popover open={open} onOpenChange={toggleOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="gap-2"
+            role="combobox"
+            aria-expanded={open}
+          >
+            <FunnelIcon className="h-4 w-4" />
+            Filter
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-fit p-0">
+          <Command>
+            <CommandInput
+              className="placeholder:capitalize"
+              placeholder={`${page}...`}
+              kbd={page === 'filter' ? 'f' : undefined}
+              value={value}
+              onValueChange={setValue}
+            />
+            <CommandList>
+              <CommandGroup>
+                {page === 'filter' &&
+                  filters.map((filter) => (
+                    <CommandItem
+                      key={filter.value}
+                      value={filter.value}
+                      onSelect={(page) => {
+                        setPage(page)
+                        setValue('')
+                      }}
+                    >
+                      <filter.Icon className="mr-2 h-4 w-4" />
+                      {filter.label}
+                    </CommandItem>
+                  ))}
+                {page === 'status' &&
+                  STATUS.map((status) => (
+                    <CommandItem
+                      className="justify-between"
+                      key={status}
+                      value={status}
+                      onSelect={(status) => {
+                        const column = props.table.getColumn('status')
+                        column?.setFilterValue(
+                          ({ values, inverted }: ListFilter) => {
+                            if (values.includes(status)) {
+                              return {
+                                inverted,
+                                values: values.filter((s) => s !== status),
+                              }
+                            }
+                            return { inverted, values: [...values, status] }
+                          },
+                        )
+                        toggleOpen()
+                      }}
+                    >
+                      <StatusBadge status={status} />
+                      {(
+                        props.table
+                          .getColumn('status')
+                          ?.getFilterValue() as ListFilter
+                      ).values.includes(status) && (
+                        <CheckIcon className="h-4 w-4" />
+                      )}
+                    </CommandItem>
+                  ))}
+                {page === 'contractor' &&
+                  Object.entries(props.profiles).map(([id, profile]) => (
+                    <CommandItem
+                      className="gap-2"
+                      key={id}
+                      value={id}
+                      keywords={[profile.firstName, profile.lastName]}
+                      onSelect={(id) => {
+                        const column = props.table.getColumn('contractor')
+                        column?.setFilterValue(
+                          ({ values, inverted }: ListFilter) => {
+                            if (values.includes(id)) {
+                              return {
+                                inverted,
+                                values: values.filter((cId) => cId !== id),
+                              }
+                            }
+                            return { inverted, values: [...values, id] }
+                          },
+                        )
+                        toggleOpen()
+                      }}
+                    >
+                      <ContractorAvatar id={id} className="h-5 w-5" />
+                      <span className="flex-1">
+                        {profile.firstName} {profile.lastName}
+                      </span>
+                      {(
+                        props.table
+                          .getColumn('contractor')
+                          ?.getFilterValue() as ListFilter
+                      ).values.includes(id) && (
+                        <CheckIcon className="h-4 w-4" />
+                      )}
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   )
 }
@@ -720,7 +712,7 @@ function ContractorFilterViewer({ column }: ContractorFilterViewerProps) {
       <IsOrIsNotSelect column={column} />
       <Button variant="secondary" size="sm" className="gap-1 rounded-none px-2">
         {values.map((id) => (
-          <ContractorAvatar id={id} key={id} className='h-5 w-5' />
+          <ContractorAvatar id={id} key={id} className="h-5 w-5" />
         ))}
       </Button>
       <Button
