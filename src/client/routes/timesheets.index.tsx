@@ -87,11 +87,18 @@ import {
   useReactTable,
   type Column,
   type ColumnFiltersState,
+  type FilterFn,
   type SortingState,
   type Table as TableType,
 } from '@tanstack/react-table'
 import { compareAsc } from 'date-fns'
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
+
+declare module '@tanstack/react-table' {
+  interface FilterFns {
+    filterList: FilterFn<unknown>
+  }
+}
 
 export const Route = createFileRoute('/timesheets/')({
   component: TimesheetsPage,
@@ -286,12 +293,12 @@ const columns = [
       )
     },
   }),
-  columnHelper.accessor('profile', {
+  columnHelper.accessor('contractor.id', {
     id: 'contractor',
     header: 'Contractor',
     cell: (info) => {
-      const contractorId = info.row.original.contractorId
-      const profile = info.getValue()
+      const contractorId = info.getValue()
+      const profile = info.row.original.profile
       return (
         <div className="flex items-center gap-2">
           <ContractorAvatar id={contractorId} className="h-5 w-5" />
@@ -301,22 +308,12 @@ const columns = [
         </div>
       )
     },
-    filterFn: (row, columnId, filterValue: ListFilter) => {
-      if (filterValue.values.length === 0) return true
-      const rowValue = row.getValue(columnId) as Profile
-      const includesContractor = filterValue.values.includes(rowValue.id)
-      return filterValue.inverted ? !includesContractor : includesContractor
-    },
+    filterFn: 'filterList',
   }),
   columnHelper.accessor('status', {
     header: () => <div className="w-28">Status</div>,
     cell: (info) => <StatusBadge status={info.getValue()} />,
-    filterFn: (row, columnId, filterValue: ListFilter) => {
-      if (filterValue.values.length === 0) return true
-      const rowValue = row.getValue(columnId) as Status
-      const includesStatus = filterValue.values.includes(rowValue)
-      return filterValue.inverted ? !includesStatus : includesStatus
-    },
+    filterFn: 'filterList',
   }),
   columnHelper.accessor('tasks', {
     header: () => <div className="text-right">Hours</div>,
@@ -403,6 +400,14 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
     state: {
       columnFilters,
       sorting,
+    },
+    filterFns: {
+      filterList: (row, columnId, filterValue: ListFilter) => {
+        if (filterValue.values.length === 0) return true
+        const rowValue = row.getValue(columnId)
+        const includesStatus = filterValue.values.includes(rowValue)
+        return filterValue.inverted ? !includesStatus : includesStatus
+      },
     },
   })
 
@@ -533,10 +538,10 @@ function FilterBuilder(props: FilterBuilderProps) {
   return (
     <div className="flex items-center gap-2">
       {props.table.getVisibleFlatColumns().map((c) => (
-        <>
+        <Fragment key={c.id}>
           {c.id === 'status' && <StatusFilterViewer column={c} />}
           {c.id === 'contractor' && <ContractorFilterViewer column={c} />}
-        </>
+        </Fragment>
       ))}
       <Popover open={open} onOpenChange={toggleOpen}>
         <PopoverTrigger asChild>
