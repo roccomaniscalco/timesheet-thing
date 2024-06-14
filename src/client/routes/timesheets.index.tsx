@@ -182,48 +182,14 @@ const columnHelper = createColumnHelper<TimesheetWithProfile>()
 const columns = [
   columnHelper.accessor('id', {
     size: 20,
-    header: ({ column }) => (
-      <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        variant="ghost"
-        className="gap-1"
-      >
-        ID
-        {column.getIsSorted() ? (
-          column.getIsSorted() === 'asc' ? (
-            <ArrowDownIcon className="h-4 w-4" />
-          ) : (
-            <ArrowUpIcon className="h-4 w-4" />
-          )
-        ) : (
-          <ArrowsUpDownIcon className="h-4 w-4" />
-        )}
-      </Button>
-    ),
+    header: "ID",
     cell: (info) => (
       <div className="pl-4 text-muted-foreground">{info.getValue()}</div>
     ),
   }),
   columnHelper.accessor('weekStart', {
     size: 60,
-    header: ({ column }) => (
-      <Button
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        variant="ghost"
-        className="gap-1"
-      >
-        Week of
-        {column.getIsSorted() ? (
-          column.getIsSorted() === 'asc' ? (
-            <ArrowDownIcon className="h-4 w-4" />
-          ) : (
-            <ArrowUpIcon className="h-4 w-4" />
-          )
-        ) : (
-          <ArrowsUpDownIcon className="h-4 w-4" />
-        )}
-      </Button>
-    ),
+    header: "Week of",
     cell: (info) => {
       const weekStart = info.getValue()
       if (!weekStart) return <div className="pl-4">–</div>
