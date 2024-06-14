@@ -53,10 +53,12 @@ export const timesheetQueryOptions = (id: string) => {
   })
 }
 
-export type Profile = InferResponseType<
+type ProfileRes = InferResponseType<
   (typeof api.users.profile)[':id']['$get'],
   200
 >
+export type Profile = ProfileRes & { id: string }
+
 export const profileQueryOptions = (id?: string | null) => {
   return queryOptions({
     queryKey: ['contractor', id],

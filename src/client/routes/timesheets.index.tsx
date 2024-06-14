@@ -108,14 +108,11 @@ function TimesheetsPage() {
   const timesheetsQuery = useQuery(timesheetsQueryOptions())
   const profilesQuery = useQueries({
     queries:
-      [...new Set(timesheetsQuery.data?.map((t) => t.contractorId))]?.map(
-        (contractorId) => profileQueryOptions(contractorId),
-      ) ?? [],
+      timesheetsQuery.data?.map((t) => profileQueryOptions(t.contractorId)) ??
+      [],
     combine: (results) => ({
       data: results.reduce<Record<string, Profile>>((acc, curr) => {
-        if (curr.data) {
-          acc[curr.data.id] = curr.data
-        }
+        if (curr.data) acc[curr.data.id] = curr.data
         return acc
       }, {}),
       isSuccess: results.every((r) => r.isSuccess),
