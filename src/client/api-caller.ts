@@ -5,7 +5,6 @@ import { hc, type InferResponseType } from 'hono/client'
 
 export const { api } = hc<ApiRoutesType>('/')
 
-export type Timesheets = InferResponseType<typeof api.timesheets.$get, 200>
 export type Timesheet = InferResponseType<
   (typeof api.timesheets)[':id{[0-9]+}']['$get'],
   200
@@ -13,6 +12,8 @@ export type Timesheet = InferResponseType<
 export type Task = Timesheet['tasks'][number]
 export type HistoryEntry = Timesheet['history'][number]
 
+type TimesheetsRes = InferResponseType<typeof api.timesheets.$get, 200>
+export type Timesheets = (TimesheetsRes[number] & { hours: number })[]
 export const timesheetsQueryOptions = () => {
   return queryOptions({
     queryKey: ['timesheets'],
@@ -21,6 +22,12 @@ export const timesheetsQueryOptions = () => {
       if (!res.ok) throw new Error('Failed to get timesheets')
       return res.json()
     },
+    select: (timesheets) =>
+      timesheets.map((t) => ({
+        ...t,
+        // Sum of hours for all tasks
+        hours: t.tasks.reduce((acc, curr) => acc + curr.hours, 0),
+      })),
   })
 }
 
@@ -58,7 +65,6 @@ type ProfileRes = InferResponseType<
   200
 >
 export type Profile = ProfileRes & { id: string }
-
 export const profileQueryOptions = (id?: string | null) => {
   return queryOptions({
     queryKey: ['contractor', id],

@@ -226,13 +226,13 @@ const columns = [
     cell: (info) => <StatusBadge status={info.getValue()} />,
     filterFn: 'filterList',
   }),
-  columnHelper.accessor('tasks', {
+  columnHelper.accessor('hours', {
+    id: 'hours',
     header: () => <div className="text-right">Hours</div>,
     cell: (info) => {
-      const tasks = info.getValue()
-      const totalHours = tasks.reduce((acc, curr) => acc + curr.hours, 0)
+      const hours = info.getValue()
       const approvedHours = info.row.original.approvedHours
-      const progress = (totalHours / approvedHours) * 100
+      const progress = (hours / approvedHours) * 100
       const roundedProgress = Math.floor(progress / 25) * 25
 
       const progressColor = {
@@ -245,7 +245,7 @@ const columns = [
 
       return (
         <div className="flex items-center justify-end gap-2 tabular-nums">
-          {totalHours}
+          {hours}
           <Progress
             value={progress}
             className={cn('w-8 bg-accent', progressColor)}
@@ -258,9 +258,8 @@ const columns = [
     header: () => <div className="pr-4 text-right">Pay</div>,
     cell: (info) => {
       const rate = info.getValue()
-      const tasks = info.row.original.tasks
-      const totalHours = tasks.reduce((acc, curr) => acc + curr.hours, 0)
-      const pay = rate * totalHours
+      const hours = info.row.original.hours
+      const pay = rate * hours
       return (
         <div className="pr-4 text-right tabular-nums">
           {formatCurrency(pay)}
