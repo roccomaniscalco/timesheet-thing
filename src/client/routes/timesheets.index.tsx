@@ -16,12 +16,6 @@ import {
 } from '@/client/components/ui/breadcrumb'
 import { Button } from '@/client/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/client/components/ui/card'
-import {
   Command,
   CommandGroup,
   CommandInput,
@@ -51,7 +45,6 @@ import {
 import {
   cn,
   formatCurrency,
-  formatDateRange,
   formatRangeStart,
   getWeekRange,
 } from '@/client/components/utils'
@@ -77,7 +70,7 @@ import {
 } from '@heroicons/react/16/solid'
 import { SelectTrigger } from '@radix-ui/react-select'
 import { useMutation, useQueries, useQuery } from '@tanstack/react-query'
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   createColumnHelper,
   flexRender,
@@ -174,51 +167,6 @@ function NewTimesheetButton() {
       New Timesheet
       <PlusIcon className="h-4 w-4" />
     </Button>
-  )
-}
-
-function TimesheetGrid() {
-  const { data: timesheets } = useQuery(timesheetsQueryOptions())
-
-  return (
-    <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-      {timesheets?.map((timesheet) => (
-        <TimesheetCard key={timesheet.id} timesheet={timesheet} />
-      ))}
-    </div>
-  )
-}
-
-type TimesheetCardProps = {
-  timesheet: Timesheets[number]
-}
-function TimesheetCard({ timesheet }: TimesheetCardProps) {
-  return (
-    <Link
-      className="group cursor-pointer outline-none"
-      to="/timesheets/$id"
-      params={{ id: String(timesheet.id) }}
-    >
-      <Card className="outline-none ring-ring group-focus:ring-1">
-        <CardHeader>
-          <CardTitle className="truncate">
-            {timesheet.weekStart
-              ? formatDateRange(getWeekRange(timesheet.weekStart))
-              : 'Undated'}
-          </CardTitle>
-          <div className="text-sm text-muted-foreground">{timesheet.id}</div>
-        </CardHeader>
-        <CardContent className="grid gap-2">
-          <div className="flex items-center justify-between">
-            <StatusBadge status={timesheet.status} />
-            <div className="flex items-center gap-2 border-none p-0">
-              <ClockIcon className="h-4 w-4 text-muted-foreground" />
-              {timesheet.tasks.reduce((acc, curr) => acc + curr.hours, 0)}h
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
   )
 }
 
