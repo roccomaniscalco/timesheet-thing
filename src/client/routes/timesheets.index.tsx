@@ -182,20 +182,20 @@ const columnHelper = createColumnHelper<TimesheetWithProfile>()
 const columns = [
   columnHelper.accessor('id', {
     size: 20,
-    header: "ID",
+    header: () => <div className="pl-4">ID</div>,
     cell: (info) => (
       <div className="pl-4 text-muted-foreground">{info.getValue()}</div>
     ),
   }),
   columnHelper.accessor('weekStart', {
     size: 60,
-    header: "Week of",
+    header: 'Week of',
     cell: (info) => {
       const weekStart = info.getValue()
-      if (!weekStart) return <div className="pl-4">–</div>
+      if (!weekStart) return <div>–</div>
       const weekRange = getWeekRange(weekStart)
       const formattedWeekStart = formatRangeStart(weekRange.from)
-      return <div className="pl-4">{formattedWeekStart}</div>
+      return <div>{formattedWeekStart}</div>
     },
     sortingFn: (a, b) => {
       return compareAsc(
@@ -222,7 +222,7 @@ const columns = [
     filterFn: 'filterList',
   }),
   columnHelper.accessor('status', {
-    header: () => <div className="w-28">Status</div>,
+    header: () => <div className="w-24">Status</div>,
     cell: (info) => <StatusBadge status={info.getValue()} />,
     filterFn: 'filterList',
   }),
