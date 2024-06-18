@@ -55,9 +55,6 @@ import {
 import { STATUS, type Status } from '@/constants'
 import { UserButton } from '@clerk/clerk-react'
 import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  ArrowsUpDownIcon,
   BanknotesIcon,
   CalendarIcon,
   CheckIcon,
@@ -450,7 +447,9 @@ function FilterBuilder(props: FilterBuilderProps) {
       {props.table.getVisibleFlatColumns().map((c) => (
         <Fragment key={c.id}>
           {c.id === 'status' && <StatusFilterViewer column={c} />}
-          {c.id === 'contractor' && <ContractorFilterViewer column={c} />}
+          {c.id === 'contractor' && (
+            <ContractorFilterViewer column={c} profiles={props.profiles} />
+          )}
         </Fragment>
       ))}
       <Popover open={open} onOpenChange={toggleOpen}>
@@ -607,8 +606,12 @@ function StatusFilterViewer({ column }: StatusFilterViewerProps) {
 
 type ContractorFilterViewerProps = {
   column: Column<TimesheetWithProfile>
+  profiles: Record<string, Profile>
 }
-function ContractorFilterViewer({ column }: ContractorFilterViewerProps) {
+function ContractorFilterViewer({
+  column,
+  profiles,
+}: ContractorFilterViewerProps) {
   const { values } = column.getFilterValue() as ListFilter<string>
 
   if (values.length === 0) {
@@ -627,7 +630,14 @@ function ContractorFilterViewer({ column }: ContractorFilterViewerProps) {
       <IsOrIsNotSelect column={column} />
       <Button variant="secondary" size="sm" className="gap-1 rounded-none px-2">
         {values.map((id) => (
-          <ContractorAvatar id={id} key={id} className="h-5 w-5" />
+          <>
+            <ContractorAvatar id={id} key={id} className="h-5 w-5" />
+            {oneStatus && (
+              <p className="pl-1">
+                {profiles[id]?.firstName} {profiles[id]?.lastName}
+              </p>
+            )}
+          </>
         ))}
       </Button>
       <Button
