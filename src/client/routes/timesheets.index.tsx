@@ -6,6 +6,7 @@ import {
   type Timesheets,
 } from '@/client/api-caller'
 import { ContractorAvatar } from '@/client/components/contractor-avatar'
+import { HoursLineChart } from '@/client/components/hours-line-chart'
 import { StatusBadge } from '@/client/components/status-badge'
 import {
   Breadcrumb,
@@ -28,6 +29,11 @@ import {
   PopoverTrigger,
 } from '@/client/components/ui/popover'
 import { Progress } from '@/client/components/ui/progress'
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/client/components/ui/resizable'
 import {
   Select,
   SelectContent,
@@ -110,7 +116,7 @@ function TimesheetsPage() {
   })
 
   return (
-    <div className="p-4 pt-8">
+    <>
       <headerBreadcrumbTunnel.In>
         <Breadcrumb>
           <BreadcrumbList>
@@ -128,13 +134,56 @@ function TimesheetsPage() {
         <NewTimesheetButton />
       </headerActionTunnel.In>
 
-      {timesheetsQuery.isSuccess && profilesQuery.isSuccess && (
-        <TimesheetTable
-          timesheets={timesheetsQuery.data}
-          profiles={profilesQuery.data}
-        />
-      )}
-    </div>
+      <ResizablePanels
+        left={
+          <>
+            {timesheetsQuery.isSuccess && profilesQuery.isSuccess && (
+              <TimesheetTable
+                timesheets={timesheetsQuery.data}
+                profiles={profilesQuery.data}
+              />
+            )}
+          </>
+        }
+        right={
+          <>
+            <HoursLineChart />
+          </>
+        }
+      />
+    </>
+  )
+}
+
+type ResizablePanelsProps = {
+  left: React.ReactNode
+  right: React.ReactNode
+}
+function ResizablePanels(props: ResizablePanelsProps) {
+  return (
+    <ResizablePanelGroup
+      direction="horizontal"
+      autoSaveId="timesheet-index-resizable-panels"
+    >
+      <ResizablePanel
+        className="p-4 pt-8"
+        style={{ overflow: 'auto' }}
+        minSize={60}
+        defaultSize={70}
+      >
+        {props.left}
+      </ResizablePanel>
+      <ResizableHandle withHandle />
+      <ResizablePanel
+        className="p-4 pt-8"
+        style={{ overflow: 'auto' }}
+        collapsible
+        minSize={20}
+        defaultSize={30}
+      >
+        <div className="flex flex-col gap-6 overflow-hidden">{props.right}</div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   )
 }
 

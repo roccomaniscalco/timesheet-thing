@@ -284,7 +284,7 @@ function ResizablePanels(props: ResizablePanelsProps) {
   return (
     <ResizablePanelGroup
       direction="horizontal"
-      autoSaveId="timesheet-resizable-panels"
+      autoSaveId="timesheet-id-resizable-panels"
     >
       <ResizablePanel
         className="p-4 pt-8"
