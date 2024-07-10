@@ -1,6 +1,9 @@
-import { ArrowTrendingUpIcon } from '@heroicons/react/16/solid'
-import { CartesianGrid, Line, LineChart, XAxis } from 'recharts'
-
+import {
+  profileQueryOptions,
+  timesheetsQueryOptions,
+  type Profile,
+} from '@/client/api-caller'
+import { ContractorAvatar } from '@/client/components/contractor-avatar'
 import {
   Card,
   CardContent,
@@ -15,38 +18,83 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/client/components/ui/chart'
-const chartData = [
-  { month: 'January', desktop: 186, mobile: 80 },
-  { month: 'February', desktop: 305, mobile: 200 },
-  { month: 'March', desktop: 237, mobile: 120 },
-  { month: 'April', desktop: 73, mobile: 190 },
-  { month: 'May', desktop: 209, mobile: 130 },
-  { month: 'June', desktop: 214, mobile: 140 },
-]
-
-const chartConfig = {
-  desktop: {
-    label: 'Desktop',
-    color: 'hsl(var(--chart-1))',
-  },
-  mobile: {
-    label: 'Mobile',
-    color: 'hsl(var(--chart-2))',
-  },
-} satisfies ChartConfig
+import {
+  formatDateRange,
+  formatRangeStart,
+  getWeekRange,
+} from '@/client/components/utils'
+import { ArrowTrendingUpIcon, ClockIcon } from '@heroicons/react/16/solid'
+import { useQueries, useQuery } from '@tanstack/react-query'
+import { compareAsc } from 'date-fns'
+import { CartesianGrid, Line, LineChart, XAxis, type DotProps } from 'recharts'
 
 export function HoursLineChart() {
+  const timesheetsQuery = useQuery(timesheetsQueryOptions())
+  const profilesQuery = useQueries({
+    queries:
+      timesheetsQuery.data?.map((t) => profileQueryOptions(t.contractorId)) ??
+      [],
+    combine: (results) => ({
+      data: results.reduce<Record<string, Profile>>((acc, curr) => {
+        if (curr.data) acc[curr.data.id] = curr.data
+        return acc
+      }, {}),
+      isSuccess: results.every((r) => r.isSuccess),
+    }),
+  })
+
+  if (!timesheetsQuery.isSuccess || !profilesQuery.isSuccess) {
+    return null
+  }
+
+  const formattedTimesheets = timesheetsQuery.data
+    .reduce<{ weekStart: string; [key: string]: string | number }[]>(
+      (acc, timesheet) => {
+        const index = acc.findIndex((t) => t.weekStart === timesheet.weekStart)
+        const weekStart = timesheet.weekStart
+
+        if (!weekStart) return acc
+        if (index === -1) {
+          acc.push({ weekStart, [timesheet.contractorId]: timesheet.hours })
+          return acc
+        }
+        acc[index]![timesheet.contractorId] = timesheet.hours
+        return acc
+      },
+      [],
+    )
+    .sort((tA, tB) =>
+      compareAsc(new Date(tA.weekStart), new Date(tB.weekStart)),
+    )
+  const firstWeekStart = formattedTimesheets[0]?.weekStart
+
+  const uniqueContractorIds = [
+    ...new Set(timesheetsQuery.data.map((timesheet) => timesheet.contractorId)),
+  ]
+  const chartConfig = uniqueContractorIds.reduce<ChartConfig>(
+    (acc, curr, idx) => {
+      acc[curr] = {
+        label: <>{profilesQuery.data[curr]?.firstName}</>,
+        color: `hsl(var(--chart-${idx + 1}))`,
+      }
+      return acc
+    },
+    {},
+  )
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Line Chart - Multiple</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardTitle className="flex gap-2">
+          <ClockIcon className="h-4 w-4" />
+          Hours
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
           <LineChart
             accessibilityLayer
-            data={chartData}
+            data={formattedTimesheets}
             margin={{
               left: 12,
               right: 12,
@@ -54,43 +102,67 @@ export function HoursLineChart() {
           >
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="month"
+              dataKey="weekStart"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 3)}
+              tickFormatter={(weekStart) => {
+                const weekRange = getWeekRange(weekStart)
+                return formatRangeStart(weekRange.from)
+              }}
             />
-            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-            <Line
-              dataKey="desktop"
-              type="monotone"
-              stroke="var(--color-desktop)"
-              strokeWidth={2}
-              dot={false}
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(weekStart) => {
+                    const weekRange = getWeekRange(weekStart)
+                    return formatDateRange(weekRange)
+                  }}
+                />
+              }
             />
-            <Line
-              dataKey="mobile"
-              type="monotone"
-              stroke="var(--color-mobile)"
-              strokeWidth={2}
-              dot={false}
-            />
+            {uniqueContractorIds.map((contractorId) => (
+              <Line
+                key={contractorId}
+                dataKey={contractorId}
+                type="monotone"
+                stroke={`var(--color-${contractorId})`}
+                strokeWidth={2}
+                isAnimationActive={false}
+                dot={
+                  <ContractorDot
+                    imageUrl={profilesQuery.data[contractorId]?.imageUrl}
+                    firstWeekStart={firstWeekStart}
+                  />
+                }
+              />
+            ))}
           </LineChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter>
-        <div className="flex w-full items-start gap-2 text-sm">
-          <div className="grid gap-2">
-            <div className="flex items-center gap-2 font-medium leading-none">
-              Trending up by 5.2% this month{' '}
-              <ArrowTrendingUpIcon className="h-4 w-4" />
-            </div>
-            <div className="flex items-center gap-2 leading-none text-muted-foreground">
-              Showing total visitors for the last 6 months
-            </div>
-          </div>
-        </div>
-      </CardFooter>
     </Card>
   )
+}
+
+interface ContractorDotProps extends DotProps {
+  imageUrl: string
+  firstWeekStart: string
+  payload: {
+    weekStart: string
+  }
+}
+
+function ContractorDot(props: ContractorDotProps) {
+  if (props.payload.weekStart === props.firstWeekStart) {
+    return (
+      <image
+        clipPath="inset(0% round 15px)"
+        x={props.cx! - 10}
+        y={props.cy! - 10}
+        width={20}
+        height={20}
+        xlinkHref={props.imageUrl}
+      />
+    )
+  }
 }

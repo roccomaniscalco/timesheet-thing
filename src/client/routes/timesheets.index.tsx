@@ -16,6 +16,7 @@ import {
   BreadcrumbSeparator,
 } from '@/client/components/ui/breadcrumb'
 import { Button } from '@/client/components/ui/button'
+import { Card } from '@/client/components/ui/card'
 import {
   Command,
   CommandGroup,
@@ -168,7 +169,8 @@ function ResizablePanels(props: ResizablePanelsProps) {
       <ResizablePanel
         className="p-4 pt-8"
         style={{ overflow: 'auto' }}
-        minSize={60}
+        collapsible
+        minSize={30}
         defaultSize={70}
       >
         {props.left}
@@ -373,7 +375,7 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
     <div className="flex flex-col gap-4">
       <FilterBuilder table={table} profiles={profiles} />
 
-      <div className="rounded-md border">
+      <Card>
         <Table>
           <TableHeader className="border-b">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -427,7 +429,7 @@ function TimesheetTable({ timesheets, profiles }: TimesheetTableProps) {
             )}
           </TableBody>
         </Table>
-      </div>
+      </Card>
     </div>
   )
 }
