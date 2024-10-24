@@ -24,17 +24,18 @@ interface Options extends Env {
   Variables: Variables
 }
 
-const dbMiddleware = createMiddleware<Options>((c, next) => {
-  const sql = neon(c.env.DATABASE_URL)
-  const db = drizzle(sql, { schema })
-  c.set('db', db)
-  return next()
-})
+const dbMiddleware = () =>
+  createMiddleware<Options>((c, next) => {
+    const sql = neon(c.env.DATABASE_URL)
+    const db = drizzle(sql, { schema })
+    c.set('db', db)
+    return next()
+  })
 
 const baseApi = new Hono<Options>()
   .basePath('/api')
   .use(clerkMiddleware())
-  .use(dbMiddleware)
+  .use(dbMiddleware())
   .onError((e, c) => {
     console.error(e)
     return c.json({ message: 'Internal Server Error' }, 500)
